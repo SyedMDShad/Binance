@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Multi-Entry Profit Calculator v4</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f0f2f5; }
+    .card { background: #fff; max-width: 700px; margin: auto; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    h1 { text-align: center; margin-bottom: 20px; }
+    label { display: block; margin-top: 15px; font-weight: bold; color: #333; }
+    .grid { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
+    .grid input { flex: 1; min-width: 80px; padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
+    input[type="number"] { box-sizing: border-box; }
+    button { display: block; width: 100%; padding: 12px; margin-top: 20px; font-size: 1em; color: #fff; background: #007bff; border: none; border-radius: 4px; cursor: pointer; }
+    button:hover { background: #0056b3; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { padding: 12px; text-align: right; }
+    th { background: #007bff; color: #fff; font-weight: normal; }
+    td { background: #f9f9f9; }
+    .result-row td:first-child { text-align: left; font-weight: bold; }
+    .profit-positive { background: #d4edda !important; color: #155724 !important; }
+    .profit-negative { background: #f8d7da !important; color: #721c24 !important; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Multi‑Entry Profit Calculator</h1>
+    <label>Fee per Trade (%)</label>
+    <div class="grid">
+      <input id="fee" type="number" value="0.1" step="0.01">
+    </div>
+    <label>Investment Amounts (USDT)</label>
+    <div class="grid">
+      <input id="inv1" type="number" value="1000" step="any">
+      <input id="inv2" type="number" step="any">
+      <input id="inv3" type="number" step="any">
+      <input id="inv4" type="number" step="any">
+      <input id="inv5" type="number" step="any">
+    </div>
+    <label>Buy Prices (USDT)</label>
+    <div class="grid">
+      <input id="buy1" type="number" step="any">
+      <input id="buy2" type="number" step="any">
+      <input id="buy3" type="number" step="any">
+      <input id="buy4" type="number" step="any">
+      <input id="buy5" type="number" step="any">
+    </div>
+    <label>Sell Prices (USDT)</label>
+    <div class="grid">
+      <input id="sell1" type="number" step="any">
+      <input id="sell2" type="number" step="any">
+      <input id="sell3" type="number" step="any">
+      <input id="sell4" type="number" step="any">
+      <input id="sell5" type="number" step="any">
+    </div>
+    <button onclick="calculate()">Calculate Profit</button>
+    <table id="results">
+      <thead>
+        <tr><th>Metric</th><th>Value</th></tr>
+      </thead>
+      <tbody>
+        <tr class="result-row"><td>Total Invested</td><td id="res-invested">—</td></tr>
+        <tr class="result-row"><td>Avg Buy Price</td><td id="res-buy">—</td></tr>
+        <tr class="result-row"><td>Avg Sell Price</td><td id="res-sell">—</td></tr>
+        <tr class="result-row"><td>Coins Bought</td><td id="res-coins">—</td></tr>
+        <tr class="result-row"><td>Net Profit</td><td id="res-profit">—</td></tr>
+        <tr class="result-row"><td>ROI</td><td id="res-roi">—</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <script>
+    function calculate() {
+      const fee = parseFloat(document.getElementById('fee').value) / 100;
+      const invs = [1,2,3,4,5].map(i => parseFloat(document.getElementById('inv'+i).value) || 0);
+      const buys = [1,2,3,4,5].map(i => parseFloat(document.getElementById('buy'+i).value) || 0);
+      const sells = [1,2,3,4,5].map(i => parseFloat(document.getElementById('sell'+i).value) || 0);
+      const totalInv = invs.reduce((a,b)=>a+b,0);
+      const coins = invs.map((inv,i)=> inv>0 && buys[i]>0 ? (inv / buys[i]) * (1 - fee) : 0);
+      const totalCoins = coins.reduce((a,b)=>a+b,0);
+      const avgBuy = totalInv > 0 ? totalInv / totalCoins : 0;
+      const totalReturn = coins.map((c,i)=> c * sells[i] * (1 - fee)).reduce((a,b)=>a+b,0);
+      const avgSell = totalCoins > 0 ? totalReturn / totalCoins : 0;
+      const profit = totalReturn - totalInv;
+      const roi = totalInv>0 ? (profit / totalInv) * 100 : 0;
+
+      document.getElementById('res-invested').textContent = totalInv.toFixed(2) + ' USDT';
+      document.getElementById('res-buy').textContent = avgBuy.toFixed(8) + ' USDT';
+      document.getElementById('res-sell').textContent = avgSell.toFixed(8) + ' USDT';
+      document.getElementById('res-coins').textContent = totalCoins.toFixed(6);
+      document.getElementById('res-profit').textContent = profit.toFixed(2) + ' USDT';
+      document.getElementById('res-roi').textContent = roi.toFixed(2) + '%';
+
+      const cell = document.getElementById('res-profit');
+      cell.classList.remove('profit-positive','profit-negative');
+      cell.classList.add(profit>=0 ? 'profit-positive' : 'profit-negative');
+    }
+  </script>
+</body>
+</html>
