@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Crypto Tracker + Profit Calculator</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin:8px; }
+    #clock { font-weight: bold; color: #0070f3; }
+    #timestamp, #metrics, #error { font-size:0.9em; color:#555; margin:6px 0; }
+    table { width:100%; border-collapse:collapse; margin-top:6px; }
+    th, td { border:1px solid #ddd; padding:4px; text-align:right; font-size:0.9em; }
+    th { background:#f4f4f4; text-align:left; }
+    .sortable { cursor:pointer; text-decoration:underline; }
+    .rsi.green { color:green; } .rsi.red { color:red; }
+    .highlight-btc { background:#fee2e2; } .highlight-top4 { background:#fef3c7; }
+    .calc-row { display:flex; gap:4px; align-items:center; }
+    .btn { width:24px; height:24px; border:none; background:#ccc; border-radius:4px; cursor:pointer; }
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button { -webkit-appearance:none; margin:0; }
+    input[type=number] { -moz-appearance:textfield; }
+    .input { flex:1; padding:4px; border:1px solid #ccc; border-radius:4px; text-align:right; font-size:0.9em; }
+    .buy { background:#e6ffed; }
+    .sell { background:#ffe6e6; }
+    .profit { font-weight:bold; text-align:center; background:#add8e6; color:black; }
+    .profit-positive { color:green; } .profit-negative { color:red; }
+    .clickable { cursor:pointer; }
+    a { color:inherit; text-decoration:none; }
+  </style>
+</head>
+<body>
+  <div id="clock">BD Time: --:--:--</div>
+  <div id="timestamp">Loading...</div>
+  <div id="metrics"></div>
+  <div id="error"></div>
+  <table>
+    <thead>
+      <tr>
+        <td colspan="8">
+          <div class="calc-row">
+            <button class="btn" onclick="step('fee',-1)">–</button>
+            <input id="fee" class="input" type="number" value="0.2" step="0.1"/>
+            <button class="btn" onclick="step('fee',1)">+</button>
+            <button class="btn" onclick="step('inv',-1)">–</button>
+            <input id="inv" class="input" type="number" value="1000" step="1"/>
+            <button class="btn" onclick="step('inv',1)">+</button>
+            <button class="btn" onclick="step('buy',-1)">–</button>
+            <input id="buy" class="input buy" type="number" step="any" placeholder="Buy"/>
+            <button class="btn" onclick="step('buy',1)">+</button>
+            <button class="btn" onclick="step('sell',-1)">–</button>
+            <input id="sell" class="input sell" type="number" step="any" placeholder="Sell"/>
+            <button class="btn" onclick="step('sell',1)">+</button>
+            <div id="profit" class="input profit">0.00 USDT</div>
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <th class="sortable" data-key="coin">Coin</th>
+        <th class="sortable" data-key="rsi">RSI (15m)</th>
+        <th class="sortable" data-key="low">24h Low</th>
+        <th class="sortable" data-key="high">24h High</th>
+        <th class="sortable" data-key="last">Current</th>
+        <th class="sortable" data-key="pH">$1,000 Low to High</th>
+        <th class="sortable" data-key="pCH">$1,000 Current to High</th>
+        <th class="sortable" data-key="type">Type</th>
+      </tr>
+    </thead>
+    <tbody id="body"></tbody>
+  </table>
+
+<script>
+  // initial sort on Current→High descending
+  let sortKey = 'pCH', sortDir = -1, tableData = [];
+
+  function tick() {
+    const now = new Date();
+    document.getElementById('clock').textContent =
+      'BD Time: ' + now.toLocaleTimeString('en-US', { timeZone:'Asia/Dhaka', hour12:true });
+  }
+  setInterval(tick,1000); tick();
+
+  function updateTimestamp() {
+    const now = new Date();
+    document.getElementById('timestamp').textContent =
+      'Updated: ' +
+      now.toLocaleTimeString('en-US',{ timeZone:'America/New_York', hour12:true }) +
+      ' NYC | ' +
+      now.toLocaleTimeString('en-US',{ timeZone:'Asia/Dhaka', hour12:true }) +
+      ' BDT';
+  }
+
+  // Calculator
+  function step(id, dir) {
+    const inp = document.getElementById(id);
+    let v = parseFloat(inp.value) || 0;
+    let st = id==='fee'?0.1:(id==='inv'?1:(Math.pow(10, -((inp.value.split('.')[1]||'').length||1))));
+    v += dir*st;
+    let d = id==='fee'?1:(id==='inv'?0:(inp.value.split('.')[1]||'').length);
+    inp.value = v.toFixed(d);
+    updateCalc();
+  }
+  function updateCalc() {
+    const fee = (parseFloat(document.getElementById('fee').value)||0)/100;
+    const inv = parseFloat(document.getElementById('inv').value)||0;
+    const buy = parseFloat(document.getElementById('buy').value)||0;
+    const sell = parseFloat(document.getElementById('sell').value)||0;
+    const coinsAmt = buy>0 ? (inv/buy)*(1-fee) : 0;
+    const prof = (coinsAmt*sell*(1-fee)) - inv;
+    const pf = document.getElementById('profit');
+    pf.textContent = prof.toFixed(2) + ' USDT';
+    pf.classList.toggle('profit-positive', prof>=0);
+    pf.classList.toggle('profit-negative', prof<0);
+  }
+  updateCalc();
+
+  // Data
+  const precision = {BTCUSDT:2,ETHUSDT:2,TRUMPUSDT:2,DOTUSDT:2,SOLUSDT:2,AUCTIONUSDT:2,LINKUSDT:2,BCHUSDT:2,PNUTUSDT:5,SUIUSDT:4,XRPUSDT:4,GUNUSDT:3,BABYUSDT:3,ONDOUSDT:4,DOGEUSDT:5,XLMUSDT:4,ADAUSDT:4,TONUSDT:2,ORCAUSDT:2,BERAUSDT:2,ENAUSDT:4,PEPEUSDT:8,SHIBUSDT:8,WIFUSDT:4,MOVEUSDT:4};
+  const coins = [
+    {symbol:'BTCUSDT',name:'BTC', label:'Layer 1', highlight:'btc'},
+    {symbol:'PEPEUSDT',name:'PEPE', label:'Meme 😂', highlight:'top4'},
+    {symbol:'XRPUSDT',name:'XRP', label:'Payments 💳', highlight:'top4'},
+    {symbol:'SUIUSDT',name:'SUI', label:'Layer 1', highlight:'top4'},
+    {symbol:'WIFUSDT',name:'WIF', label:'Meme 🎉'},
+    {symbol:'BABYUSDT',name:'BABY', label:'DeFi 🟠'},
+    {symbol:'ORCAUSDT',name:'ORCA', label:'DeFi 🟡'},
+    {symbol:'GUNUSDT',name:'GUN', label:'Utility 🔧'},
+    {symbol:'PNUTUSDT',name:'PNUT', label:'Meme 😂'},
+    {symbol:'MOVEUSDT',name:'MOVE', label:'Layer 2 🔵'},
+    {symbol:'SHIBUSDT',name:'SHIB', label:'Meme 😂'},
+    {symbol:'SOLUSDT',name:'SOL', label:'Layer 1 ⚖️'},
+    {symbol:'TRUMPUSDT',name:'TRUMP', label:'Meme 😂'},
+    {symbol:'BCHUSDT',name:'BCH', label:'Fork 🍴'},
+    {symbol:'ENAUSDT',name:'ENA', label:'DeFi 🏦'},
+    {symbol:'DOGEUSDT',name:'DOGE', label:'Meme 😂'},
+    {symbol:'ADAUSDT',name:'ADA', label:'Layer 1 ⚖️'},
+    {symbol:'TONUSDT',name:'TON', label:'Layer 1 ⚖️'},
+    {symbol:'AUCTIONUSDT',name:'AUCTION', label:'DeFi 🏦'},
+    {symbol:'ONDOUSDT',name:'ONDO', label:'DeFi 🔵'},
+    {symbol:'DOTUSDT',name:'DOT', label:'Layer 1 ⚖️'},
+    {symbol:'LINKUSDT',name:'LINK', label:'Oracle 📊'},
+    {symbol:'XLMUSDT',name:'XLM', label:'Payments 💳'},
+    {symbol:'ETHUSDT',name:'ETH', label:'Layer 1 ⚖️'},
+    {symbol:'BERAUSDT',name:'BERA', label:'Layer 1 ⚖️'}
+  ];
+
+  async function getRSI(sym){
+    const kl = await fetch(`https://api.binance.com/api/v3/klines?symbol=${sym}&interval=15m&limit=15`).then(r=>r.json());
+    let gains=0, losses=0;
+    const closes = kl.map(c=>+c[4]);
+    for(let i=1;i<closes.length;i++){ const d = closes[i]-closes[i-1]; d>0?gains+=d:losses-=d; }
+    const rs = gains/(losses||1);
+    return 100-(100/(1+rs));
+  }
+
+  async function loadData(){
+    // metrics
+    const [g,f] = await Promise.all([
+      fetch('https://api.coingecko.com/api/v3/global').then(r=>r.json()),
+      fetch('https://api.alternative.me/fng/?limit=1').then(r=>r.json())
+    ]);
+    const mcap = g.data.total_market_cap.usd/1e9;
+    const chg  = g.data.market_cap_change_percentage_24h_usd;
+    const fgv  = f.data[0].value;
+    const fgc  = f.data[0].value_classification;
+    document.getElementById('metrics').innerHTML =
+      `Total Market Cap: $${mcap.toFixed(2)}B (${chg.toFixed(2)}%)<br>` +
+      `Fear & Greed: <span style="color:${fgc.includes('Fear')?'red':'green'}">${fgv}</span> (${fgc})`;
+    updateTimestamp();
+
+    // table data
+    tableData = await Promise.all(coins.map(async c => {
+      const d = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${c.symbol}`).then(r=>r.json());
+      return {
+        ...c,
+        low:+d.lowPrice,
+        high:+d.highPrice,
+        last:+d.lastPrice,
+        prev:+d.prevClosePrice,
+        rsi: await getRSI(c.symbol),
+        pH: ((+d.highPrice - +d.lowPrice)/+d.lowPrice)*1000,
+        pCH: ((+d.highPrice - +d.lastPrice)/+d.lastPrice)*1000
+      };
+    }));
+    renderTable();
+  }
+
+  function renderTable(){
+    let data = [...tableData];
+    if(sortKey){
+      data.sort((a,b)=>{
+        let va = sortKey==='coin'?a.name:sortKey==='type'?a.label:a[sortKey];
+        let vb = sortKey==='coin'?b.name:sortKey==='type'?b.label:b[sortKey];
+        if(['low','high','last','pH','pCH','rsi'].includes(sortKey)){
+          va=parseFloat(va); vb=parseFloat(vb);
+        }
+        return (va>vb?1:va<vb?-1:0)*sortDir;
+      });
+    }
+    const tb = document.getElementById('body');
+    tb.innerHTML = '';
+    data.forEach(r=>{
+      const pct = ((r.last-r.prev)/r.prev)*100;
+      const tr = document.createElement('tr');
+      if(r.highlight==='btc') tr.classList.add('highlight-btc');
+      if(r.highlight==='top4') tr.classList.add('highlight-top4');
+      tr.innerHTML =
+        `<td style="text-align:left"><a href="https://www.binance.com/en/trade/${r.symbol}?type=spot" target="_blank">${r.name}</a> <span style="color:${pct<0?'red':'green'};font-size:0.8em">(${pct.toFixed(1)}%)</span></td>`+
+        `<td class="rsi ${r.rsi<30?'green':r.rsi>70?'red':''}">${r.rsi.toFixed(1)}</td>`+
+        `<td class="low clickable">${r.low.toFixed(precision[r.symbol])}</td>`+
+        `<td class="high clickable">${r.high.toFixed(precision[r.symbol])}</td>`+
+        `<td class="last clickable">${r.last.toFixed(precision[r.symbol])}</td>`+
+        `<td>$${r.pH.toFixed(2)}</td>`+
+        `<td>$${r.pCH.toFixed(2)}</td>`+
+        `<td style="text-align:left">${r.label}</td>`;
+      tb.appendChild(tr);
+    });
+    // sorting
+    document.querySelectorAll('th.sortable').forEach(th=>{
+      th.onclick = ()=>{
+        const key = th.dataset.key;
+        sortDir = (sortKey===key?-sortDir:1);
+        sortKey = key;
+        renderTable();
+      };
+    });
+    // feed clicks
+    document.querySelectorAll('.low.clickable').forEach(c=>c.onclick=()=>{buy.value=c.textContent;updateCalc();});
+    document.querySelectorAll('.high.clickable,.last.clickable').forEach(c=>c.onclick=()=>{sell.value=c.textContent;updateCalc();});
+  }
+
+  loadData();
+  setInterval(loadData,60000);
+</script>
+</body>
+</html>
