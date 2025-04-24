@@ -1,0 +1,1139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Crypto Tracker + Profit Calculator</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* Base styles */
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f0f2f5; /* Light gray background */
+      color: #495057; /* Dark text color */
+    }
+    /* Custom styles for specific elements */
+    .profit-positive { color: #0ab39c; /* Velzon success green */ }
+    .profit-negative { color: #f06548; /* Velzon danger red */ }
+    .pct-green { color: #0ab39c; } /* Green for positive percentage change */
+    .pct-red { color: #f06548; } /* Red for negative percentage change */
+    .rsi.green { color: #0ab39c; } /* Green for low RSI */
+    .rsi.red { color: #f06548; } /* Red for high RSI */
+    /* Combined signal/suggestion colors */
+    .signal-suggestion .ma-signal.bullish { color: #0ab39c; }
+    .signal-suggestion .ma-signal.bearish { color: #f06548; }
+    .signal-suggestion .suggestion-text.buy-color { color: #0ab39c; }
+    .suggestion-text.sell-color { color: #f06548; }
+    /* Styles for Pressure indicators */
+    .pressure.buy { color: #0ab39c; } /* Green for Buy Pressure */
+    .pressure.sell { color: #f06548; } /* Red for Sell Pressure */
+    .pressure.neutral { color: #626c76; } /* Gray for Neutral Pressure */
+
+    /* Custom background colors for header cards */
+    /* Removed individual card styles as they are now combined */
+
+    /* Styling for the individual smaller pressure displays */
+    .small-pressure-display {
+        padding: 0.1rem 0.3rem; /* Very small padding */
+        border-radius: 0.25rem; /* Match button border-radius */
+        background-color: #e9ecef; /* Match button background */
+        color: #495057; /* Match button text color */
+        font-weight: 500; /* Match button font weight */
+        display: inline-block; /* Allow it to sit inline with buttons */
+        text-align: center; /* Center text */
+        font-size: 0.65rem; /* Even smaller font size */
+        white-space: nowrap; /* Prevent text wrapping */
+    }
+    /* Apply pressure colors directly to the small-pressure-display spans */
+    .small-pressure-display.buy { color: #0ab39c; }
+    .small-pressure-display.sell { color: #f06548; }
+    .small-pressure-display.neutral { color: #626c76; }
+
+
+    /* Style the select dropdown arrow */
+    #inv {
+        background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%2F%3E%3Cpath%20fill%3D%22%23495057%22%20d%3D%22M287%2C114.7L159.2%2C242.5c-8.8%2C8.8-23.2%2C8.8-32%2C0l-128-128c-8.8-8.8-8.8-23.2%2C0-32s23.2-8.8%2C32%2C0l112%2C112l112-112c8.8-8.8%2C23.2-8.8%2C32%2C0S295.8%2C105.9%2C287%2C114.7z%22%2F%3E%3C%2FSVG%3E');
+        background-repeat: no-repeat;
+        background-position: right 0.75rem top 50%;
+        background-size: 0.65em auto;
+        padding-right: 2.5rem; /* Increased padding */
+        -webkit-appearance: none; /* Remove default appearance */
+        -moz-appearance: none;
+        appearance: none;
+    }
+
+     /* Highlight for clickable suggestion row */
+    .highlight-suggestion { background-color: #e0e7ff !important; } /* Lighter blue highlight */
+
+    /* Custom highlight colors for specific coins */
+    .highlight-btc-red { background-color: #fee2e2 !important; } /* Light Red */
+    .highlight-sui-yellow { background-color: #fef9c3 !important; } /* Light Yellow */
+    .highlight-pepe-green { background-color: #dcfce7 !important; } /* Light Green */
+    /* Keep other generic highlights if needed */
+    .highlight-sui-xrp { background-color: #e9eef4; } /* Consistent light highlight color */
+
+
+    /* Table styles */
+    table {
+        border-collapse: collapse;
+        width: 100%;
+    }
+    th, td {
+        padding: 0.75rem 1rem; /* Adjusted padding */
+        border-bottom: 1px solid #e9eef4; /* Lighter border for rows */
+        text-align: left;
+        font-size: 0.875rem; /* Font size for table data */
+        vertical-align: middle; /* Align content vertically */
+    }
+    th {
+        background-color: #f8f9fa; /* Light background for headers */
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.8rem; /* Smaller font size for headers */
+        color: #626c76; /* Darker gray for header text */
+    }
+    tbody tr:hover {
+        background-color: #e9eef4; /* Hover effect on rows */
+    }
+    /* Apply highlight color even on hover */
+    tbody tr.highlight-btc-red:hover,
+    tbody tr.highlight-sui-yellow:hover,
+    tbody tr.highlight-pepe-green:hover {
+       /* Keep original highlight color on hover */
+    }
+
+    .text-right { text-align: right; }
+    .text-left { text-align: left; }
+    .clickable { cursor: pointer; }
+
+    /* Style for the main data container (card) */
+    .data-container {
+        background-color: #ffffff; /* Card background color */
+        border-radius: 0.5rem;
+        box-shadow: 0 0.75rem 1.5rem rgba(18,38,63,.03); /* Velzon-like shadow */
+        padding: 1.5rem;
+        margin-top: 1.5rem; /* Add margin */
+    }
+
+    /* Style for form inputs and selects */
+    .input {
+        border: 1px solid #ced4da; /* Light border */
+        border-radius: 0.25rem;
+        padding: 0.5rem 0.9rem; /* Adjusted padding */
+        color: #495057;
+        background-color: #ffffff;
+        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+        font-size: 0.875rem; /* Consistent font size */
+    }
+    .input:focus {
+        border-color: #86b7fe; /* Blue focus border */
+        outline: 0;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25); /* Blue focus shadow */
+    }
+    /* Remove number input spinners */
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button { -webkit-appearance:none; margin:0; }
+    input[type=number] { -moz-appearance:textfield; }
+
+    /* Style for buttons */
+    .btn {
+        display: inline-flex; /* Use flex for centering content */
+        align-items: center;
+        justify-content: center;
+        font-weight: 500; /* Medium font weight */
+        line-height: 1.5;
+        color: #495057;
+        text-align: center;
+        text-decoration: none;
+        vertical-align: middle;
+        cursor: pointer;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        user-select: none;
+        background-color: #e9ecef; /* Light background */
+        border: 1px solid transparent;
+        padding: 0.5rem 0.9rem; /* Adjusted padding */
+        font-size: 0.875rem; /* Smaller font size */
+        border-radius: 0.25rem;
+        transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    }
+    .btn:hover {
+        color: #495057;
+        background-color: #d3d9df;
+        border-color: #c6cd D2;
+    }
+    .btn-sm { /* Smaller button variant */
+        padding: 0.3rem 0.6rem;
+        font-size: 0.75rem;
+    }
+    .btn-rsi { /* RSI Button specific styles */
+        background-color: #e9ecef;
+        color: #495057;
+        border: 1px solid #ced4da;
+    }
+    .btn-rsi.active { /* Active RSI button style */
+        background-color: #0ab39c; /* Use success green */
+        color: #ffffff;
+        border-color: #0ab39c;
+    }
+    .btn-refresh { /* Refresh Button specific styles */
+        background-color: #e9ecef;
+        color: #495057;
+        border: 1px solid #ced4da;
+    }
+     .btn-refresh.active { /* Active Refresh button style */
+        background-color: #0ab39c; /* Use success green */
+        color: #ffffff;
+        border-color: #0ab39c;
+    }
+
+    /* Style for the combined RSI and Refresh button container */
+    .button-controls-container {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between; /* Push items to ends */
+        align-items: center;
+        gap: 1rem; /* Space between button groups */
+        margin-bottom: 1rem; /* Add some bottom margin */
+    }
+    .rsi-buttons, .refresh-buttons {
+        display: flex;
+        gap: 0.5rem; /* Space between buttons within a group */
+        align-items: center;
+    }
+     /* Container for the three small pressure displays */
+    .pressure-displays-small {
+        display: flex;
+        gap: 0.5rem; /* Space between the small pressure divs */
+        align-items: center;
+        flex-wrap: wrap; /* Allow wrapping on small screens */
+    }
+
+
+     /* Specific styles for buy/sell inputs */
+    .buy {
+        background-color: #eaf6f5; /* Light greenish */
+        border-color: #d3edea;
+        color: #0ab39c;
+    }
+     .sell {
+        background-color: #fef0ee; /* Light reddish */
+        border-color: #fcd9d2;
+        color: #f06548;
+    }
+
+    /* Specific style for profit display */
+    .profit {
+        font-weight: 700; /* Bolder font */
+        padding: 0.75rem 1.25rem !important; /* Increased padding */
+        font-size: 1.125rem !important; /* Larger font size (text-lg) */
+        border-width: 2px; /* Add border */
+        border-style: solid;
+    }
+    /* Enhance positive/negative profit styles */
+     .profit-positive {
+        color: #087a6a; /* Darker Success Green */
+        background-color: #d1fdee; /* Lighter Success Green background */
+        border-color: #a3e9dd; /* Success Green border */
+     }
+     .profit-negative {
+         color: #d6472c; /* Darker Danger Red */
+         background-color: #fde8e4; /* Lighter Danger Red background */
+         border-color: #fcc5ba; /* Danger Red border */
+     }
+
+    /* Style for the smaller suggestion text within the merged cell */
+    .suggestion-text {
+        font-size: 0.75rem; /* text-xs */
+        color: #6b7280; /* gray-500 */
+        display: block; /* Ensure it takes its own line */
+        margin-top: 0.1rem; /* Small top margin */
+    }
+    /* Apply specific suggestion colors to the smaller text */
+    .suggestion-text.buy-color { color: #0ab39c !important; }
+    .suggestion-text.sell-color { color: #f06548 !important; }
+
+    /* Style for the sort arrow span - REMOVED */
+
+    /* Style for smaller font in table cells (for ATH/ATL) */
+    .text-xxs {
+        font-size: 0.65rem; /* Even smaller font size */
+    }
+
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .calc-row > div { /* Stack calculator elements vertically */
+            width: 100%;
+            margin-bottom: 0.5rem;
+        }
+        .calc-row > div:last-child { margin-bottom: 0; }
+        /* Allow button groups to wrap */
+        .button-controls-container { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+        .rsi-buttons, .refresh-buttons { flex-wrap: wrap; justify-content: center; }
+        th, td { padding: 0.5rem; font-size: 0.8rem; }
+        th { font-size: 0.7rem; }
+        .profit { font-size: 1rem !important; padding: 0.6rem 1rem !important; }
+        .header-cards { grid-template-columns: 1fr; } /* Stack header cards */
+         .pressure-displays-small { min-width: auto; width: 100%; justify-content: center; } /* Center small pressure displays on small screens */
+         .small-pressure-display { flex-grow: 1; } /* Allow small pressure displays to grow */
+    }
+  </style>
+</head>
+<body class="p-4 md:p-8">
+  <div class="max-w-7xl mx-auto">
+    <div id="clock" class="font-bold text-blue-600 text-lg md:text-xl mb-1">BD Time: --:--:--</div>
+    <div id="timestamp" class="text-xs md:text-sm text-gray-600 mb-2">Loading...</div>
+    <div id="metrics" class="text-xs md:text-sm text-gray-600 mb-4"></div>
+    <div id="error" class="text-sm text-red-600 mb-4"></div>
+
+
+    <div class="data-container">
+      <div class="flex flex-wrap items-center gap-3 mb-6 calc-row">
+        <div class="flex items-center gap-1">
+           <label for="fee" class="text-gray-600 text-xs md:text-sm mr-1">Fee%:</label>
+           <button class="btn btn-sm" onclick="step('fee',-1)">–</button>
+           <input id="fee" class="input text-right w-16" type="number" value="0.15" step="0.001" oninput="updateCalc()"/>
+           <button class="btn btn-sm" onclick="step('fee',1)">+</button>
+        </div>
+        <div class="flex items-center gap-1">
+           <label for="inv" class="text-gray-600 text-xs md:text-sm mr-1">Invest:</label>
+           <select id="inv" class="input text-right w-24 appearance-none" onchange="updateCalc(); renderTable();">
+              <option value="25">25</option>
+              <option value="50">50</option>
+              <option value="100">100</option>
+              <option value="200">200</option>
+              <option value="300">300</option>
+              <option value="400">400</option>
+              <option value="500">500</option>
+              <option value="600">600</option>
+              <option value="700">700</option>
+              <option value="800">800</option>
+              <option value="900">900</option>
+              <option value="1000" selected>1000</option>
+              <option value="1111">1111</option>
+              <option value="1222">1222</option>
+              <option value="1333">1333</option>
+              <option value="1444">1444</option>
+              <option value="1500">1500</option>
+              <option value="2000">2000</option>
+              <option value="3000">3000</option>
+              <option value="4000">4000</option>
+              <option value="5000">5000</option>
+              <option value="10000">10000</option>
+           </select>
+        </div>
+        <div class="flex items-center gap-1 flex-grow min-w-[150px]">
+           <label for="buy" class="text-gray-600 text-xs md:text-sm mr-1">Buy:</label>
+           <button class="btn btn-sm" onclick="step('buy',-1)">–</button>
+           <input id="buy" class="input buy text-right flex-grow" type="number" step="any" placeholder="Buy Price" oninput="updateCalc()"/>
+           <button class="btn btn-sm" onclick="step('buy',1)">+</button>
+        </div>
+        <div class="flex items-center gap-1 flex-grow min-w-[150px]">
+            <label for="sell" class="text-gray-600 text-xs md:text-sm mr-1">Sell:</label>
+           <button class="btn btn-sm" onclick="step('sell',-1)">–</button>
+           <input id="sell" class="input sell text-right flex-grow" type="number" step="any" placeholder="Sell Price" oninput="updateCalc()"/>
+           <button class="btn btn-sm" onclick="step('sell',1)">+</button>
+         </div>
+         <div id="profit" class="input profit text-center flex-grow min-w-[150px] md:min-w-[180px]">0.00 USDT</div>
+      </div>
+
+      <div class="button-controls-container">
+          <div class="rsi-buttons">
+              <span class="text-sm font-medium self-center">RSI:</span>
+              <button class="btn btn-sm btn-rsi" data-interval="1m" onclick="selectRsiInterval(this)">1m</button>
+              <button class="btn btn-sm btn-rsi" data-interval="3m" onclick="selectRsiInterval(this)">3m</button>
+              <button class="btn btn-sm btn-rsi" data-interval="5m" onclick="selectRsiInterval(this)">5m</button>
+              <button class="btn btn-sm btn-rsi active" data-interval="15m" onclick="selectRsiInterval(this)">15m</button>
+              <button class="btn btn-sm btn-rsi" data-interval="30m" onclick="selectRsiInterval(this)">30m</button>
+              <button class="btn btn-sm btn-rsi" data-interval="1h" onclick="selectRsiInterval(this)">1h</button>
+              <button class="btn btn-sm btn-rsi" data-interval="6h" onclick="selectRsiInterval(this)">6h</button>
+              <button class="btn btn-sm btn-rsi" data-interval="12h" onclick="selectRsiInterval(this)">12h</button>
+              <button class="btn btn-sm btn-rsi" data-interval="24h" onclick="selectRsiInterval(this)">24h</button>
+          </div>
+          <div class="pressure-displays-small">
+              <div id="btc-pressure-small" class="small-pressure-display neutral">Loading...</div>
+              <div id="sui-pressure-small" class="small-pressure-display neutral">Loading...</div>
+              <div id="pepe-pressure-small" class="small-pressure-display neutral">Loading...</div>
+          </div>
+           <div class="refresh-buttons">
+               <span class="text-sm font-medium self-center">Refresh:</span>
+               <button class="btn btn-sm btn-refresh active" data-interval="30000" onclick="setRefreshInterval(this)">30s</button>
+               <button class="btn btn-sm btn-refresh" data-interval="60000" onclick="setRefreshInterval(this)">60s</button>
+           </div>
+      </div>
+
+
+      <div class="overflow-x-auto">
+        <table class="min-w-full">
+          <thead>
+            <tr>
+              <th class="sortable text-left" data-key="coin">Coin</th>
+              <th class="sortable clickable text-right" data-key="rsi" id="rsiHeader">RSI (15m)</th>
+              <th class="sortable text-right" data-key="last">Current</th>
+              <th class="sortable text-right" data-key="low">24h Low</th>
+              <th class="sortable text-right" data-key="high">24h High</th>
+              <th class="sortable text-right" data-key="pH">Profit L→H</th>
+              <th class="sortable text-right" data-key="pCH">Profit C→H</th>
+              <th class="sortable text-right" data-key="volume">24h Vol</th>
+              <th class="sortable clickable text-left" data-key="signalSuggestion">Signal / Suggestion</th>
+              <th class="sortable text-left" data-key="type">Type</th>
+            </tr>
+          </thead>
+          <tbody id="body">
+            </tbody>
+        </table>
+      </div>
+    </div>
+     <div class="mt-6 text-center text-sm text-gray-600">
+        Disclaimer: The Pressure indicators are based on Binance Order Book Depth data and are not definitive trading signals. Order book data changes rapidly. This tool is for informational purposes only and not financial advice. Trading involves risk.
+    </div>
+  </div>
+
+<script>
+  // Global variables
+  let sortKey = 'pCH', sortDir = -1, tableData = [];
+  const rsiIntervals = ['1m', '3m', '5m', '15m', '30m', '1h', '6h', '12h', '24h'];
+  let currentRsiInterval = '15m';
+  let dataRefreshTimeoutId; // Use timeout ID for precise scheduling
+  let currentRefreshInterval = 30000; // Default to 30 seconds
+
+  // Pressure display variables
+  const pressureCoins = ['BTCUSDT', 'SUIUSDT', 'PEPEUSDT'];
+  let pressureData = {}; // Store pressure data for these coins
+
+
+  // Mapping from Binance Symbol to CoinGecko ID
+  const coinGeckoIdMap = {
+      'BTCUSDT': 'bitcoin',
+      'ETHUSDT': 'ethereum',
+      'XRPUSDT': 'ripple',
+      'SUIUSDT': 'sui',
+      'WIFUSDT': 'dogwifcoin',
+      'PEPEUSDT': 'pepe',
+      'SHIBUSDT': 'shiba-inu',
+      'SOLUSDT': 'solana',
+      'DOGEUSDT': 'dogecoin',
+      'ADAUSDT': 'cardano',
+      'TONUSDT': 'toncoin',
+      'DOTUSDT': 'polkadot',
+      'LINKUSDT': 'chainlink',
+      'BCHUSDT': 'bitcoin-cash',
+      'XLMUSDT': 'stellar',
+      'ENAUSDT': 'ena', // Added ENA
+      'ONDOUSDT': 'ondo', // Added ONDO
+      // Note: Finding CoinGecko IDs for all coins in the original list might be difficult or they might not be listed.
+      // We will only fetch CoinGecko data for the coins listed here.
+      // For coins not in this map, ATH/ATL/Market Cap will show as N/A.
+  };
+
+  const coins = [
+    {symbol:'BTCUSDT',name:'BTC', label:'Layer 1', highlight:'btc-red'},
+    {symbol:'PEPEUSDT',name:'PEPE', label:'Meme 😂', highlight:'pepe-green'},
+    {symbol:'XRPUSDT',name:'XRP', label:'Payments 💳', highlight:'sui-xrp'},
+    {symbol:'SUIUSDT',name:'SUI', label:'Layer 1', highlight:'sui-yellow'},
+    {symbol:'WIFUSDT',name:'WIF', label:'Meme 🎉'},
+    {symbol:'BABYUSDT',name:'BABY', label:'DeFi 🟠'}, // May not have CoinGecko data
+    {symbol:'ORCAUSDT',name:'ORCA', label:'DeFi 🟡'}, // May not have CoinGecko data
+    {symbol:'GUNUSDT',name:'GUN', label:'Utility 🔧'}, // May not have CoinGecko data
+    {symbol:'PNUTUSDT',name:'PNUT', label:'Meme 😂'}, // May not have CoinGecko data
+    {symbol:'MOVEUSDT',name:'MOVE', label:'Layer 2 🔵'}, // May not have CoinGecko data
+    {symbol:'SHIBUSDT',name:'SHIB', label:'Meme 😂'},
+    {symbol:'SOLUSDT',name:'SOL', label:'Layer 1 ⚖️'},
+    {symbol:'TRUMPUSDT',name:'TRUMP', label:'Meme 😂'}, // May not have CoinGecko data
+    {symbol:'BCHUSDT',name:'BCH', label:'Fork 🍴'},
+    {symbol:'ENAUSDT',name:'ENA', label:'DeFi 🏦'},
+    {symbol:'DOGEUSDT',name:'DOGE', label:'Meme 😂'},
+    {symbol:'ADAUSDT',name:'ADA', label:'Layer 1 ⚖️'},
+    {symbol:'TONUSDT',name:'TON', label:'Layer 1 ⚖️'},
+    {symbol:'AUCTIONUSDT',name:'AUCTION', label:'DeFi 🏦'}, // May not have CoinGecko data
+    {symbol:'ONDOUSDT',name:'ONDO', label:'DeFi 🔵'},
+    {symbol:'DOTUSDT',name:'DOT', label:'Layer 1 ⚖️'},
+    {symbol:'LINKUSDT',name:'LINK', label:'Oracle 📊'},
+    {symbol:'XLMUSDT',name:'XLM', label:'Payments 💳'},
+    {symbol:'ETHUSDT',name:'ETH', label:'Layer 1 ⚖️'},
+    {symbol:'BERAUSDT',name:'BERA', label:'Layer 1 ⚖️'} // May not have CoinGecko data
+  ];
+
+
+  // --- Time Functions ---
+  function tick() {
+    const now = new Date();
+    document.getElementById('clock').textContent =
+      'BD Time: ' + now.toLocaleTimeString('en-US', { timeZone:'Asia/Dhaka', hour12:true });
+  }
+  setInterval(tick, 1000);
+  tick();
+
+  function updateTimestamp() {
+    const now = new Date();
+    document.getElementById('timestamp').textContent =
+      'Updated: ' +
+      now.toLocaleTimeString('en-US',{ timeZone:'America/New_York', hour12:true }) +
+      ' NYC | ' +
+      now.toLocaleTimeString('en-US',{ timeZone:'Asia/Dhaka', hour12:true }) +
+      ' BDT';
+  }
+
+  // --- Calculator Functions ---
+  function step(id, dir) {
+    const inp = document.getElementById(id);
+    let valueStr = inp.value.trim();
+    if (valueStr === '' || isNaN(parseFloat(valueStr))) valueStr = "0";
+
+    const decimalIndex = valueStr.indexOf('.');
+    const decimalPlaces = decimalIndex === -1 ? 0 : valueStr.length - 1 - decimalIndex;
+    let numberWithoutDecimal = valueStr.replace('.', '');
+    const isNegative = numberWithoutDecimal.startsWith('-');
+    if (isNegative) numberWithoutDecimal = numberWithoutDecimal.substring(1);
+    if (numberWithoutDecimal === '') numberWithoutDecimal = '0';
+
+    let bigIntValue = BigInt(numberWithoutDecimal);
+    const stepBigInt = BigInt(1);
+    bigIntValue = bigIntValue + BigInt(dir) * stepBigInt;
+    let steppedValueStr = bigIntValue.toString();
+    let finalSteppedValueStr;
+
+    if (decimalPlaces > 0) {
+        while (steppedValueStr.length <= decimalPlaces) steppedValueStr = '0' + steppedValueStr;
+        const integerPart = steppedValueStr.substring(0, steppedValueStr.length - decimalPlaces) || '0';
+        const decimalPart = steppedValueStr.substring(steppedValueStr.length - decimalPlaces);
+        finalSteppedValueStr = integerPart + '.' + decimalPart;
+    } else {
+        finalSteppedValueStr = steppedValueStr;
+    }
+
+    if (isNegative && bigIntValue !== BigInt(0)) finalSteppedValueStr = '-' + finalSteppedValueStr;
+    else if (isNegative && bigIntValue === BigInt(0)) finalSteppedValueStr = finalSteppedValueStr.replace('-', '');
+
+    inp.value = finalSteppedValueStr;
+    updateCalc();
+  }
+
+  function updateCalc() {
+    // The fee input now represents the total round-trip fee percentage.
+    // We divide by 2 to get the per-transaction fee percentage.
+    const totalFeePercent = parseFloat(document.getElementById('fee').value) || 0;
+    const perTransactionFee = (totalFeePercent / 2) / 100; // Divide by 2 for each leg, then by 100 for percentage
+
+    const inv = parseFloat(document.getElementById('inv').value) || 0;
+    const buy = parseFloat(document.getElementById('buy').value) || 0;
+    const sell = parseFloat(document.getElementById('sell').value) || 0;
+
+    // Calculate the amount of coins received after the buy fee
+    const coinsAmt = buy > 0 ? (inv / buy) * (1 - perTransactionFee) : 0;
+
+    // Calculate the total value received after selling the coins and applying the sell fee
+    const totalReceived = coinsAmt * sell * (1 - perTransactionFee);
+
+    // Calculate the profit
+    const prof = totalReceived - inv;
+
+    const pf = document.getElementById('profit');
+    pf.textContent = prof.toFixed(2) + ' USDT';
+    pf.classList.toggle('profit-positive', prof >= 0);
+    pf.classList.toggle('profit-negative', prof < 0);
+  }
+  updateCalc();
+
+  // --- Data Fetching and Processing ---
+  const precision = {BTCUSDT:2,ETHUSDT:2,TRUMPUSDT:2,DOTUSDT:2,SOLUSDT:2,AUCTIONUSDT:2,LINKUSDT:2,BCHUSDT:2,PNUTUSDT:5,SUIUSDT:4,XRPUSDT:4,GUNUSDT:3,BABYUSDT:3,ONDOUSDT:4,DOGEUSDT:5,XLMUSDT:4,ADAUSDT:4,TONUSDT:2,ORCAUSDT:2,BERAUSDT:2,ENAUSDT:4,PEPEUSDT:8,SHIBUSDT:8,WIFUSDT:4,MOVEUSDT:4};
+
+
+  // Function to fetch RSI data from Binance API
+  async function getRSI(sym, interval = '15m'){
+    try {
+        const limit = 15;
+        const apiUrl = `https://api.binance.com/api/v3/klines?symbol=${sym}&interval=${interval}&limit=${limit}`;
+        const response = await fetch(apiUrl);
+        if (!response.ok) {
+            if (response.status === 429 || response.status === 418) {
+                 console.warn(`Rate limit likely hit for ${sym} (${interval}). Status: ${response.status}`);
+                 if (!document.getElementById('error').textContent.includes('rate limit')) {
+                    document.getElementById('error').textContent = 'API rate limit hit. Data refresh may be delayed.';
+                 }
+            } else { console.warn(`API error fetching klines for ${sym} (${interval}): ${response.status}`); }
+            return NaN;
+        }
+        const kl = await response.json();
+        if (!kl || !Array.isArray(kl) || kl.length < 14) { console.warn(`Not enough data for ${sym} on ${interval} interval.`); return NaN; }
+
+        let gains = 0, losses = 0;
+        const closes = kl.map(c => +c[4]);
+        for(let i = 1; i < closes.length; i++){
+            const diff = closes[i] - closes[i-1];
+            if (diff > 0) gains += diff; else losses -= diff;
+        }
+        const period = closes.length - 1;
+        if (period === 0) return NaN;
+        const avgGain = gains / period; const avgLoss = losses / period;
+        const rs = avgLoss === 0 ? (avgGain > 0 ? Infinity : 0) : avgGain / avgLoss;
+        const rsi = 100 - (100 / (1 + rs));
+        return rsi;
+    } catch (error) {
+        console.error(`Error fetching RSI for ${sym} (${interval}):`, error);
+        if (!document.getElementById('error').textContent.includes('rate limit')) {
+            document.getElementById('error').textContent = `Error fetching RSI for ${sym}. Check console.`;
+        }
+        return NaN;
+    }
+  }
+
+  // Function to fetch Order Book Depth data from Binance API
+  async function getDepthData(symbol, limit = 20) { // Fetch top 20 levels
+      try {
+          const apiUrl = `https://api.binance.com/api/v3/depth?symbol=${symbol}&limit=${limit}`;
+          const response = await fetch(apiUrl);
+          if (!response.ok) {
+              console.warn(`API error fetching depth for ${symbol}: ${response.status}`);
+              return null;
+          }
+          const data = await response.json();
+          return data;
+      } catch (error) {
+          console.error(`Error fetching depth for ${symbol}:`, error);
+          return null;
+      }
+  }
+
+  // Function to calculate pressure from depth data
+  function calculatePressure(depthData) {
+      if (!depthData || !depthData.bids || !depthData.asks) return { type: 'Neutral', percentage: 50 };
+
+      let totalBids = 0;
+      depthData.bids.forEach(bid => { totalBids += parseFloat(bid[1]); }); // bid[1] is quantity
+
+      let totalAsks = 0;
+      depthData.asks.forEach(ask => { totalAsks += parseFloat(ask[1]); }); // ask[1] is quantity
+
+      const totalVolume = totalBids + totalAsks;
+
+      if (totalVolume === 0) return { type: 'Neutral', percentage: 50 };
+
+      const bidPercentage = (totalBids / totalVolume) * 100;
+      const askPercentage = (totalAsks / totalVolume) * 100;
+
+      // Determine pressure type and dominant percentage
+      if (bidPercentage > askPercentage * 1.1) { // Consider it buy pressure if bids are significantly higher (e.g., 10% more)
+          return { type: 'Buy', percentage: bidPercentage.toFixed(0) };
+      } else if (askPercentage > bidPercentage * 1.1) { // Consider it sell pressure if asks are significantly higher
+          return { type: 'Sell', percentage: askPercentage.toFixed(0) };
+      } else {
+          return { type: 'Neutral', percentage: 50 }; // Roughly equal pressure
+      }
+  }
+
+  // Function to update the individual pressure displays
+  async function updatePressureDisplays() {
+      const pressureDivs = {
+          'BTCUSDT': document.getElementById('btc-pressure-small'),
+          'SUIUSDT': document.getElementById('sui-pressure-small'),
+          'PEPEUSDT': document.getElementById('pepe-pressure-small')
+      };
+
+      for (const symbol of pressureCoins) {
+          const depthData = await getDepthData(symbol);
+          const pressure = calculatePressure(depthData);
+          const pressureDiv = pressureDivs[symbol];
+          const coinName = symbol.replace('USDT', ''); // Get coin name (BTC, SUI, PEPE)
+
+          if (pressureDiv) {
+              if (pressure) {
+                  // Concise text format: Coin PressureType Percentage%
+                  pressureDiv.textContent = `${coinName} ${pressure.type} ${pressure.percentage}%`;
+                  // Ensure correct class is applied for coloring
+                  pressureDiv.classList.remove('buy', 'sell', 'neutral');
+                  pressureDiv.classList.add(pressure.type.toLowerCase());
+              } else {
+                   pressureDiv.textContent = `${coinName} Pressure N/A`;
+                   pressureDiv.classList.remove('buy', 'sell');
+                   pressureDiv.classList.add('neutral'); // Default to neutral color for N/A
+              }
+          }
+      }
+  }
+
+
+  // Function to load global metrics and coin data
+  async function loadData(){
+    console.log(`Loading data for interval: ${currentRsiInterval}`);
+    if (!document.getElementById('error').textContent.includes('rate limit')) {
+         document.getElementById('error').textContent = '';
+    }
+    try {
+        // Fetch global market data and Fear & Greed Index
+        const [globalRes, fngRes] = await Promise.all([
+          fetch('https://api.coingecko.com/api/v3/global').catch(e => { console.error("Gecko API Error:", e); return null; }),
+          fetch('https://api.alternative.me/fng/?limit=1').catch(e => { console.error("FNG API Error:", e); return null; })
+        ]);
+
+        // Process and display global metrics
+        if (globalRes && globalRes.ok && fngRes && fngRes.ok) {
+            const g = await globalRes.json(); const f = await fngRes.json();
+            const mcap = g.data.total_market_cap.usd / 1e9;
+            const chg = g.data.market_cap_change_percentage_24h_usd;
+            const fgv = f.data[0].value; const fgc = f.data[0].value_classification;
+            const chgColorClass = chg >= 0 ? 'pct-green' : 'pct-red';
+            document.getElementById('metrics').innerHTML =
+              `Total Market Cap: $${mcap.toFixed(2)}B (<span class="${chgColorClass}">${chg.toFixed(2)}%</span>) | ` +
+              `F&G: <span style="color:${fgc.toLowerCase().includes('fear')?'#f06548':'#0ab39c'}">${fgv}</span> (${fgc})`;
+        } else { document.getElementById('metrics').textContent = 'Could not load global metrics.'; }
+        updateTimestamp();
+
+        // Get CoinGecko IDs for the coins we want to fetch data for
+        const coinGeckoIds = coins.map(c => coinGeckoIdMap[c.symbol]).filter(id => id);
+        const coinGeckoIdsString = coinGeckoIds.join(',');
+
+        // Fetch data from CoinGecko (for ATH, ATL, Market Cap, and potentially other data)
+        const coinGeckoUrl = `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${coinGeckoIdsString}&order=market_cap_desc&per_page=100&page=1&sparkline=false`;
+        const coinGeckoPromise = coinGeckoIds.length > 0 ? fetch(coinGeckoUrl).then(res => res.json()).catch(e => { console.error("CoinGecko API Error:", e); return []; }) : Promise.resolve([]);
+
+        // Fetch 24hr ticker data from Binance for all coins
+        const binanceSymbols = coins.map(c => c.symbol);
+        const binanceTickerPromises = binanceSymbols.map(symbol =>
+            fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${symbol}`)
+            .then(res => {
+                if (!res.ok) throw new Error(`API error fetching Binance ticker for ${symbol}: ${res.status}`);
+                return res.json();
+            })
+            .catch(e => { console.warn(`Binance ticker error for ${symbol}:`, e); return null; }) // Return null on error
+        );
+
+        // Fetch RSI data from Binance for all coins
+         const binanceRsiPromises = binanceSymbols.map(symbol => getRSI(symbol, currentRsiInterval));
+
+         // Fetch Depth data for pressure coins
+         const pressureDepthPromises = pressureCoins.map(symbol =>
+             getDepthData(symbol)
+             .then(data => ({ symbol, data })) // Return object with symbol and data
+             .catch(e => { console.warn(`Pressure depth error for ${symbol}:`, e); return { symbol, data: null }; })
+         );
+
+
+        // Wait for all API calls to complete
+        const [coinGeckoData, binanceTickerData, binanceRsiData, pressureDepthDataResults] = await Promise.all([
+            coinGeckoPromise,
+            Promise.allSettled(binanceTickerPromises), // Use allSettled to handle individual errors
+            Promise.allSettled(binanceRsiPromises), // Use allSettled to handle individual errors
+            Promise.allSettled(pressureDepthPromises) // Use allSettled for pressure data
+        ]);
+
+        // Process Pressure Data
+        pressureData = {}; // Clear previous pressure data
+        pressureDepthDataResults.forEach(result => {
+            if (result.status === 'fulfilled' && result.value && result.value.data) {
+                pressureData[result.value.symbol] = calculatePressure(result.value.data);
+            } else {
+                 console.warn(`Failed to get pressure depth data for ${result.value.symbol}.`);
+                 pressureData[result.value.symbol] = null; // Store null if data fetching failed
+            }
+        });
+        // Update the individual pressure displays
+        updatePressureDisplays();
+
+
+        // Create a map for quick lookup of CoinGecko data by ID
+        const coinGeckoDataMap = {};
+        if (Array.isArray(coinGeckoData)) {
+            coinGeckoData.forEach(coin => {
+                // Find the corresponding Binance symbol using the CoinGecko ID
+                const binanceSymbol = Object.keys(coinGeckoIdMap).find(key => coinGeckoIdMap[key] === coin.id);
+                if (binanceSymbol) {
+                    coinGeckoDataMap[binanceSymbol] = coin;
+                }
+            });
+        }
+
+
+        // Merge data and process
+        tableData = [];
+        let apiErrorCount = 0;
+        coins.forEach((coin, index) => {
+            const binanceTickerResult = binanceTickerData[index];
+            const binanceRsiResult = binanceRsiData[index];
+            const cgData = coinGeckoDataMap[coin.symbol]; // Get CoinGecko data by Binance symbol
+
+            let low = NaN, high = NaN, last = NaN, prev = NaN, volume = NaN, pct = NaN, rsiValue = NaN;
+            let ath = NaN, atl = NaN, marketCap = NaN;
+
+            // Use Binance data if available
+            if (binanceTickerResult && binanceTickerResult.status === 'fulfilled' && binanceTickerResult.value) {
+                 const d = binanceTickerResult.value;
+                 low = +d.lowPrice;
+                 high = +d.highPrice;
+                 last = +d.lastPrice;
+                 prev = +d.prevClosePrice;
+                 volume = +d.quoteVolume;
+                 pct = prev != 0 ? ((last - prev) / prev) * 100 : 0;
+            } else {
+                 apiErrorCount++;
+                 console.warn(`Failed to get Binance ticker data for ${coin.symbol}.`);
+            }
+
+            // Use Binance RSI data if available
+             if (binanceRsiResult && binanceRsiResult.status === 'fulfilled') {
+                 rsiValue = binanceRsiResult.value;
+             } else {
+                 // apiErrorCount++; // Don't increment apiErrorCount just for missing RSI
+                 console.warn(`Failed to get Binance RSI data for ${coin.symbol}.`);
+             }
+
+
+            // Use CoinGecko data if available
+            if (cgData) {
+                ath = cgData.ath;
+                atl = cgData.atl;
+                marketCap = cgData.market_cap;
+                // Optionally, use CoinGecko's 24h data if Binance data failed
+                if (isNaN(low) && cgData.low_24h) low = cgData.low_24h;
+                if (isNaN(high) && cgData.high_24h) high = cgData.high_24h;
+                if (isNaN(last) && cgData.current_price) last = cgData.current_price;
+                if (isNaN(volume) && cgData.total_volume) volume = cgData.total_volume;
+                if (isNaN(pct) && cgData.price_change_percentage_24h) pct = cgData.price_change_percentage_24h;
+
+            } else {
+                 // apiErrorCount++; // Don't increment apiErrorCount just for missing CG data
+                 console.warn(`Failed to get CoinGecko data for ${coin.symbol}.`);
+            }
+
+
+            // Add the combined data to tableData
+            tableData.push({
+                ...coin,
+                low: low,
+                high: high,
+                last: last,
+                prev: prev,
+                rsi: rsiValue,
+                pct: pct,
+                volume: volume,
+                ath: ath,
+                atl: atl,
+                marketCap: marketCap
+            });
+        });
+
+         if (apiErrorCount > 0 && !document.getElementById('error').textContent.includes('data errors')) {
+             // Update error message, but be less aggressive about rate limit if it's just data missing for some coins
+             document.getElementById('error').textContent = `Data errors for ${apiErrorCount} coin(s). Some data may be missing.`;
+         } else if (apiErrorCount === 0) {
+             document.getElementById('error').textContent = ''; // Clear error if no errors
+         }
+
+
+        renderTable();
+
+    } catch (error) {
+        console.error("Error in loadData:", error);
+        if (!document.getElementById('error').textContent.includes('Failed to load data')) {
+            document.getElementById('error').textContent = 'Failed to load data. Check console for details.';
+        }
+    } finally {
+        // Schedule the next refresh after the current load is complete
+        scheduleNextRefresh();
+    }
+  }
+
+  // --- Update Pressure Indicators with Live Data ---
+  // This function is now integrated into loadData to fetch and store pressure data
+  // The display logic is handled by displayNextPressure and startPressureCycling
+
+
+  // --- Suggestion and Formatting Functions ---
+  function generateSuggestion(rsi, pctChange) {
+      if (isNaN(rsi)) return 'N/A';
+      if (rsi < 25) return pctChange < -3 ? 'Strong Dip (Buy?)' : 'Very Oversold (Buy Watch)';
+      if (rsi < 35) return pctChange < -1 ? 'Oversold Dip (Buy Watch)' : 'Oversold (Range/Buy?)';
+      if (rsi > 75) return pctChange > 3 ? 'Strong Pump (Sell?)' : 'Very Overbought (Sell Watch)';
+      if (rsi > 65) return pctChange > 1 ? 'Overbought Pump (Sell Watch)' : 'Overbought (Range/Sell?)';
+      if (pctChange > 2.5) return 'Strong Up Trend (Hold)';
+      if (pctChange > 1) return 'Moving Up (Watch)';
+      if (pctChange < -2.5) return 'Strong Down Trend (Hold)';
+      if (pctChange < -1) return 'Moving Down (Watch)';
+      return 'Neutral (Range)';
+  }
+
+  function generateMaSignal(rsi, pctChange) {
+      if (isNaN(rsi)) return 'N/A';
+      if (rsi > 60 && pctChange > 0.5) return 'Bullish';
+      if (rsi > 50 && pctChange > 1.5) return 'Bullish';
+      if (rsi < 40 && pctChange < -0.5) return 'Bearish';
+      if (rsi < 50 && pctChange < -1.5) return 'Bearish';
+      return 'Neutral';
+  }
+
+  function formatVolume(volume) {
+      if (isNaN(volume) || volume === null) return 'N/A';
+      if (volume >= 1e9) return (volume / 1e9).toFixed(2) + 'B';
+      if (volume >= 1e6) return (volume / 1e6).toFixed(2) + 'M';
+      if (volume >= 1e3) return (volume / 1e3).toFixed(1) + 'K';
+      return volume.toFixed(0);
+  }
+
+  function formatMarketCap(mcap) {
+      if (isNaN(mcap) || mcap === null) return 'N/A';
+      if (mcap >= 1e12) return (mcap / 1e12).toFixed(2) + 'T';
+      if (mcap >= 1e9) return (mcap / 1e9).toFixed(2) + 'B';
+      if (mcap >= 1e6) return (mcap / 1e6).toFixed(2) + 'M';
+      if (mcap >= 1e3) return (mcap / 1e3).toFixed(1) + 'K';
+      return mcap.toFixed(0);
+  }
+
+
+  // --- Table Rendering Function ---
+  function renderTable(){
+    let data = [...tableData];
+    const currentInvestment = parseFloat(document.getElementById('inv').value) || 100;
+
+    // Update headers
+    const phHeader = document.querySelector('th[data-key="pH"]');
+    const pchHeader = document.querySelector('th[data-key="pCH"]');
+    if (phHeader) phHeader.textContent = `$${currentInvestment.toFixed(0)} L→H`;
+    if (pchHeader) pchHeader.textContent = `$${currentInvestment.toFixed(0)} C→H`;
+    const rsiHeader = document.getElementById('rsiHeader');
+    if (rsiHeader) rsiHeader.textContent = `RSI (${currentRsiInterval})`;
+
+    // Sort data
+    if(sortKey){
+      data.sort((a,b)=>{
+        let va, vb;
+        // --- Sorting logic based on sortKey ---
+        if (sortKey === 'coin') { va = a.pct; vb = b.pct; }
+        else if (sortKey === 'type') { va = a.label; vb = b.label; }
+        else if (sortKey === 'signalSuggestion') {
+            const signalA = generateMaSignal(a.rsi, a.pct); const signalB = generateMaSignal(b.rsi, b.pct);
+            const suggestionA = generateSuggestion(a.rsi, a.pct); const suggestionB = generateSuggestion(b.rsi, a.pct);
+            const signalOrder = { 'Bullish': 3, 'Neutral': 2, 'Bearish': 1, 'N/A': 0 };
+            const orderA = signalOrder[signalA] || 0; const orderB = signalOrder[signalB] || 0;
+            if (orderA !== orderB) { va = orderA; vb = orderB; }
+            else { va = suggestionA; vb = suggestionB; return va.localeCompare(vb) * sortDir; }
+        }
+        else if (['low','high','last','pH','pCH', 'volume', 'marketCap', 'ath', 'atl'].includes(sortKey)){
+           const pH_a = a.low > 0 ? ((a.high - a.low) / a.low) * currentInvestment : 0;
+           const pCH_a = a.last > 0 ? ((a.high - a.last) / a.last) * currentInvestment : 0;
+           const pH_b = b.low > 0 ? ((b.high - b.low) / b.low) * currentInvestment : 0;
+           const pCH_b = b.last > 0 ? ((b.high - b.last) / b.last) * currentInvestment : 0;
+           if (sortKey === 'pH') { va = pH_a; vb = pH_b; }
+           else if (sortKey === 'pCH') { va = pCH_a; vb = pCH_b; }
+           else if (sortKey === 'volume') { va = a.volume; vb = b.volume; }
+           else if (sortKey === 'marketCap') { va = a.marketCap; vb = b.marketCap; }
+           else if (sortKey === 'ath') { va = a.ath; vb = b.ath; }
+           else if (sortKey === 'atl') { va = a.atl; vb = b.atl; }
+           else { va = a[sortKey]; vb = b[sortKey]; } // Fallback for low, high, last
+           va = parseFloat(va) || 0; vb = parseFloat(vb) || 0;
+        } else if (sortKey === 'rsi') {
+            va = a.rsi; vb = b.rsi;
+            if (isNaN(va) && isNaN(vb)) return 0; if (isNaN(va)) return 1 * sortDir; if (isNaN(vb)) return -1 * sortDir;
+            if (rsiSortState === 'custom-asc') {
+                if (va <= 50 && vb <= 50) return (va - vb) * sortDir; if (va > 50 && vb > 50) return (va - vb) * sortDir;
+                if (va <= 50 && vb > 50) return -1 * sortDir; return 1 * sortDir;
+            } else {
+                 if (va > 50 && vb > 50) return (vb - va) * sortDir; if (va <= 50 && vb <= 50) return (vb - va) * sortDir;
+                 if (va > 50 && vb <= 50) return -1 * sortDir; return 1 * sortDir;
+            }
+        } else { va = a[sortKey]; vb = b[sortKey]; }
+        // --- Comparison logic ---
+        if (typeof va === 'string' && typeof vb === 'string') {
+            if (sortKey !== 'signalSuggestion') return va.localeCompare(vb) * sortDir;
+            else { if (va > vb) return 1 * sortDir; if (va < vb) return -1 * sortDir; return 0; }
+        } else { if (va > vb) return 1 * sortDir; if (va < vb) return -1 * sortDir; return 0; }
+      });
+    }
+
+    // Populate Table Body
+    const tb = document.getElementById('body');
+    tb.innerHTML = '';
+    if (data.length === 0) {
+        // Update colspan to match the new number of columns (10)
+        tb.innerHTML = `<tr><td colspan="10" class="text-center p-4 text-gray-500">No data to display. Check error messages above.</td></tr>`;
+        return;
+    }
+
+    data.forEach(r => {
+      const pct = r.pct; const tr = document.createElement('tr');
+      if(r.highlight) { tr.classList.add('highlight-' + r.highlight); } // Apply highlight class
+
+      const profitLowToHigh = r.low > 0 ? ((r.high - r.low) / r.low) * currentInvestment : 0;
+      const profitCurrentToHigh = r.last > 0 ? ((r.high - r.last) / r.last) * currentInvestment : 0;
+      const rsiValue = r.rsi; const rsiText = isNaN(rsiValue) ? 'N/A' : rsiValue.toFixed(1);
+      const rsiClass = isNaN(rsiValue) ? '' : (rsiValue < 35 ? 'green' : (rsiValue > 65 ? 'red' : ''));
+      const suggestionText = generateSuggestion(rsiValue, pct);
+      let suggestionColorClass = '';
+      if (suggestionText.includes('Buy')) suggestionColorClass = 'buy-color'; else if (suggestionText.includes('Sell')) suggestionColorClass = 'sell-color';
+      const maSignalText = generateMaSignal(rsiValue, pct);
+      let maSignalClass = '';
+      if (maSignalText === 'Bullish') maSignalClass = 'bullish'; else if (maSignalText === 'Bearish') maSignalClass = 'bearish';
+
+      // Format ATH/ATL with appropriate precision and handle NaN
+      const athText = isNaN(r.ath) ? 'N/A' : r.ath.toFixed(precision[r.symbol] || 8); // Use coin precision or default to 8
+      const atlText = isNaN(r.atl) ? 'N/A' : r.atl.toFixed(precision[r.symbol] || 8); // Use coin precision or default to 8
+      const marketCapText = isNaN(r.marketCap) ? 'N/A' : formatMarketCap(r.marketCap);
+
+
+      tr.innerHTML = `
+        <td class="text-left"><a href="https://www.binance.com/en/trade/${r.symbol}?type=spot" target="_blank" class="text-blue-600 hover:underline font-medium">${r.name}</a> <span class="${pct<0?'pct-red':'pct-green'} text-xs">(${isNaN(pct)?'N/A':pct.toFixed(1)}%)</span></td>
+        <td class="rsi clickable text-right ${rsiClass}" data-rsi-value="${rsiValue}">${rsiText}</td>
+        <td class="last clickable text-right">${isNaN(r.last)?'N/A':r.last.toFixed(precision[r.symbol])}</td>
+        <td class="low clickable text-right">${isNaN(r.low)?'N/A':r.low.toFixed(precision[r.symbol])}</td>
+        <td class="high clickable text-right">${isNaN(r.high)?'N/A':r.high.toFixed(precision[r.symbol])}</td>
+        <td class="text-right">$${isNaN(profitLowToHigh)?'N/A':profitLowToHigh.toFixed(2)}</td>
+        <td class="text-right">$${isNaN(profitCurrentToHigh)?'N/A':profitCurrentToHigh.toFixed(2)}</td>
+        <td class="text-right">${formatVolume(r.volume)}</td>
+        <td class="signal-suggestion clickable text-left">
+            <span class="ma-signal ${maSignalClass}">${maSignalText}</span>
+            <span class="suggestion-text ${suggestionColorClass}">${suggestionText}</span>
+        </td>
+        <td class="text-left text-xs">${r.label}</td>
+      `;
+      tb.appendChild(tr);
+    });
+
+    // Re-add event listeners after the table body is repopulated
+    addTableEventListeners();
+  }
+
+  // Function to add event listeners to table headers and cells
+  function addTableEventListeners() {
+    // Add sorting listeners to headers
+    document.querySelectorAll('th.sortable').forEach(th => {
+      // Remove existing click listeners to prevent duplicates
+      const newTh = th.cloneNode(true);
+      th.parentNode.replaceChild(newTh, th);
+      th = newTh; // Update th reference
+
+      // Add click listener
+      th.onclick = () => {
+        const key = th.dataset.key;
+
+        // Sorting logic (no visual arrows added here)
+        if (key === 'rsi') {
+            rsiSortState = (rsiSortState === 'custom-asc') ? 'custom-desc' : 'custom-asc';
+            sortKey = 'rsi';
+            sortDir = (rsiSortState === 'custom-asc' ? 1 : -1); // 1 for asc, -1 for desc
+        } else {
+            sortDir = (sortKey === key ? -sortDir : 1);
+            sortKey = key;
+            rsiSortState = 'custom-asc'; // Reset RSI sort state when sorting other columns
+        }
+
+        renderTable(); // Re-render the table with the new sort order
+      };
+    });
+
+    // Add click listeners to price cells
+    document.querySelectorAll('.low.clickable').forEach(c => c.onclick = () => { document.getElementById('buy').value = c.textContent; updateCalc(); });
+    document.querySelectorAll('.high.clickable').forEach(c => c.onclick = () => { document.getElementById('sell').value = c.textContent; updateCalc(); });
+    document.querySelectorAll('.last.clickable').forEach(c => c.onclick = () => { document.getElementById('buy').value = c.textContent; updateCalc(); });
+
+    // Add click listeners to RSI cells
+    document.querySelectorAll('.rsi.clickable').forEach(c => {
+        c.onclick = () => {
+            const rsiValue = parseFloat(c.dataset.rsiValue); if (isNaN(rsiValue)) return;
+            const row = c.closest('tr'); const lastPriceCell = row.querySelector('.last.clickable');
+            if (lastPriceCell) {
+                const lastPrice = lastPriceCell.textContent;
+                // Populate buy or sell based on RSI value
+                if (rsiValue < 35) { // Oversold, suggest buy
+                    document.getElementById('buy').value = lastPrice;
+                    document.getElementById('sell').value = ''; // Clear sell price
+                } else if (rsiValue > 65) { // Overbought, suggest sell
+                    document.getElementById('sell').value = lastPrice;
+                     document.getElementById('buy').value = ''; // Clear buy price
+                }
+                updateCalc();
+            }
+        };
+    });
+
+    // Add click listeners to Signal/Suggestion cells for row highlight
+    document.querySelectorAll('.signal-suggestion.clickable').forEach(c => {
+        c.onclick = () => {
+            const row = c.closest('tr');
+            document.querySelectorAll('.highlight-suggestion').forEach(hr => hr.classList.remove('highlight-suggestion'));
+            row.classList.add('highlight-suggestion');
+        };
+    });
+  }
+
+  // --- RSI Interval Selection ---
+  function selectRsiInterval(buttonElement) {
+      const newInterval = buttonElement.dataset.interval; if (newInterval === currentRsiInterval) return;
+      currentRsiInterval = newInterval;
+      document.querySelectorAll('.btn-rsi').forEach(btn => btn.classList.remove('active'));
+      buttonElement.classList.add('active');
+      const rsiHeader = document.getElementById('rsiHeader'); if (rsiHeader) rsiHeader.textContent = `RSI (${currentRsiInterval})`;
+      const tableBody = document.getElementById('body'); if (tableBody) tableBody.innerHTML = `<tr><td colspan="10" class="text-center p-4 text-gray-500">Loading ${currentRsiInterval} RSI data...</td></tr>`; // Updated colspan
+      setTimeout(loadData, 100); // Debounce API call slightly
+  }
+
+  // --- Refresh Interval Scheduling ---
+  function scheduleNextRefresh() {
+      // Clear any existing scheduled refresh
+      if (dataRefreshTimeoutId) {
+          clearTimeout(dataRefreshTimeoutId);
+      }
+
+      const now = new Date();
+      const seconds = now.getSeconds();
+      const milliseconds = now.getMilliseconds();
+
+      let delay;
+      if (currentRefreshInterval === 30000) { // 30-second interval
+          if (seconds < 30) {
+              // Schedule for the next :30 mark
+              delay = (30 - seconds) * 1000 - milliseconds;
+          } else {
+              // Schedule for the next :00 mark of the next minute
+              delay = (60 - seconds) * 1000 - milliseconds + 30000; // Go to next minute's :00 + 30s
+          }
+      } else { // 60-second interval (or any other non-30s)
+           // Schedule for the next :00 mark
+           delay = (60 - seconds) * 1000 - milliseconds;
+           if (delay < 0) delay += 60000; // Ensure delay is positive for the next minute
+      }
+
+      // Ensure minimum delay to avoid issues with rapid execution
+      if (delay < 100) delay = 100; // Minimum 100ms delay
+
+      dataRefreshTimeoutId = setTimeout(loadData, delay);
+      // console.log(`Next refresh scheduled in ${delay} ms.`); // Optional: for debugging
+  }
+
+
+  // Function to set the refresh interval based on button click
+  function setRefreshInterval(buttonElement) {
+      currentRefreshInterval = parseInt(buttonElement.dataset.interval); // Update the global interval setting
+
+      // Update active button styling
+      document.querySelectorAll('.btn-refresh').forEach(btn => btn.classList.remove('active'));
+      buttonElement.classList.add('active');
+
+      console.log(`Data refresh interval set to ${currentRefreshInterval / 1000} seconds.`);
+
+      // Immediately schedule the next refresh based on the new interval
+      scheduleNextRefresh();
+  }
+
+
+  // --- Initial Load and Refresh ---
+  // Set initial refresh interval to 30 seconds and activate the 30s button
+  // Then schedule the first load based on this interval
+  setRefreshInterval(document.querySelector('.btn-refresh[data-interval="30000"]'));
+
+  // Add click listener to the combined pressure display
+  document.getElementById('combined-pressure-display').addEventListener('click', () => {
+      // Clear the current automatic cycle
+      if (pressureCycleIntervalId) {
+          clearInterval(pressureCycleIntervalId);
+      }
+      // Display the next pressure immediately
+      displayNextPressure();
+      // Restart the automatic cycle after a short delay
+      // This allows the user to see the clicked result before the next automatic switch
+      setTimeout(startPressureCycling, 1000); // 1 second delay before restarting the cycle
+  });
+
+</script>
+</body>
+</html>
