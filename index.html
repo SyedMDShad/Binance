@@ -1,0 +1,1405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Crypto Tracker + Profit Calculator</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* Base styles */
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f0f2f5; /* Light gray background */
+      color: #495057; /* Dark text color */
+    }
+    /* Custom styles for specific elements */
+    .profit-positive { color: #0ab39c; /* Velzon success green */ }
+    .profit-negative { color: #f06548; /* Velzon danger red */ }
+    .pct-green { color: #0ab39c; } /* Green for positive percentage change */
+    .pct-red { color: #f06548; } /* Red for negative percentage change */
+    .rsi.green { color: #0ab39c; } /* Green for low RSI */
+    .rsi.red { color: #f06548; } /* Red for high RSI */
+    /* Combined signal/suggestion colors */
+    .signal-suggestion .ma-signal.bullish { color: #0ab39c; }
+    .signal-suggestion .ma-signal.bearish { color: #f06548; }
+    .signal-suggestion .suggestion-text.buy-color { color: #0ab39c; }
+    .suggestion-text.sell-color { color: #f06548; }
+    /* Styles for Pressure indicators */
+    .pressure.buy { color: #0ab39c; } /* Green for Buy Pressure */
+    .pressure.sell { color: #f06548; } /* Red for Sell Pressure */
+    .pressure.neutral { color: #626c76; } /* Gray for Neutral Pressure */
+
+    /* Styling for the individual smaller pressure displays */
+    .small-pressure-display {
+        padding: 0.1rem 0.3rem; /* Very small padding */
+        border-radius: 0.25rem; /* Match button border-radius */
+        background-color: #e9ecef; /* Match button background */
+        color: #495057; /* Match button text color */
+        font-weight: 500; /* Match button font weight */
+        display: inline-block; /* Allow it to sit inline with buttons */
+        text-align: center; /* Center text */
+        font-size: 0.65rem; /* Even smaller font size */
+        white-space: nowrap; /* Prevent text wrapping */
+    }
+    /* Apply pressure colors directly to the small-pressure-display spans */
+    .small-pressure-display.buy { color: #0ab39c; }
+    .small-pressure-display.sell { color: #f06548; }
+    .small-pressure-display.neutral { color: #626c76; }
+
+
+    /* Style the select dropdown arrow */
+    #inv, #manualCoinSelect { /* Apply to both select elements */
+        background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%2F%3E%3Cpath%20fill%3D%22%23495057%22%20d%3D%22M287%2C114.7L159.2%2C242.5c-8.8%2C8.8-23.2%2C8.8-32%2C0l-128-128c-8.8-8.8-8.8-23.2%2C0-32s23.2-8.8%2C32%2C0l112%2C112l112-112c8.8-8.8%2C23.2-8.8%2C32%2C0S295.8%2C105.9%2C287%2C114.7z%22%2F%3E%3C%2FSVG%3E');
+        background-repeat: no-repeat;
+        background-position: right 0.75rem top 50%;
+        background-size: 0.65em auto;
+        padding-right: 2.5rem; /* Increased padding */
+        -webkit-appearance: none; /* Remove default appearance */
+        -moz-appearance: none;
+        appearance: none;
+    }
+
+     /* Highlight for clickable suggestion row */
+    .highlight-suggestion { background-color: #e0e7ff !important; } /* Lighter blue highlight */
+
+    /* Custom highlight colors for specific coins */
+    .highlight-btc-red { background-color: #fee2e2 !important; } /* Light Red */
+    .highlight-sui-yellow { background-color: #fef9c3 !important; } /* Light Yellow */
+    .highlight-pepe-green { background-color: #dcfce7 !important; } /* Light Green */
+    .highlight-xrp-blue { background-color: #e0f2fe !important; } /* Light Blue for XRP */
+    /* Keep other generic highlights if needed */
+    .highlight-sui-xrp { background-color: #e9eef4; } /* Consistent light highlight color */
+
+
+    /* Table styles */
+    table {
+        border-collapse: collapse;
+        width: 100%;
+    }
+    th, td {
+        padding: 0.75rem 1rem; /* Adjusted padding */
+        border-bottom: 1px solid #e9eef4; /* Lighter border for rows */
+        text-align: left;
+        font-size: 0.875rem; /* Font size for table data */
+        vertical-align: middle; /* Align content vertically */
+    }
+    th {
+        background-color: #f8f9fa; /* Light background for headers */
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.75rem; /* Even smaller font size for headers */
+        color: #626c76; /* Darker gray for header text */
+        white-space: nowrap; /* Prevent header text wrapping */
+    }
+    tbody tr:hover {
+        background-color: #e9eef4; /* Hover effect on rows */
+    }
+    /* Apply highlight color even on hover */
+    tbody tr.highlight-btc-red:hover,
+    tbody tr.highlight-sui-yellow:hover,
+    tbody tr.highlight-pepe-green:hover,
+    tbody tr.highlight-xrp-blue:hover {
+       /* Keep original highlight color on hover */
+    }
+
+    .text-right { text-align: right; }
+    .text-left { text-align: left; }
+    .clickable { cursor: pointer; }
+
+    /* Style for the main data container (card) */
+    .data-container {
+        background-color: #ffffff; /* Card background color */
+        border-radius: 0.5rem;
+        box-shadow: 0 0.75rem 1.5rem rgba(18,38,63,.03); /* Velzon-like shadow */
+        padding: 1.5rem;
+        margin-top: 1.5rem; /* Add margin */
+    }
+
+    /* Style for form inputs and selects */
+    .input {
+        border: 1px solid #ced4da; /* Light border */
+        border-radius: 0.25rem;
+        padding: 0.5rem 0.9rem; /* Adjusted padding */
+        color: #495057;
+        background-color: #ffffff;
+        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+        font-size: 0.875rem; /* Consistent font size */
+    }
+    .input:focus {
+        border-color: #86b7fe; /* Blue focus border */
+        outline: 0;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25); /* Blue focus shadow */
+    }
+    /* Remove number input spinners */
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button { -webkit-appearance:none; margin:0; }
+    input[type=number] { -moz-appearance:textfield; }
+
+    /* Style for buttons */
+    .btn {
+        display: inline-flex; /* Use flex for centering content */
+        align-items: center;
+        justify-content: center;
+        font-weight: 500; /* Medium font weight */
+        line-height: 1.5;
+        color: #495057;
+        text-align: center;
+        text-decoration: none;
+        vertical-align: middle;
+        cursor: pointer;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        user-select: none;
+        background-color: #e9ecef; /* Light background */
+        border: 1px solid transparent;
+        padding: 0.5rem 0.9rem; /* Adjusted padding */
+        font-size: 0.875rem; /* Smaller font size */
+        border-radius: 0.25rem;
+        transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    }
+    .btn:hover {
+        color: #495057;
+        background-color: #d3d9df;
+        border-color: #c6cd D2;
+    }
+    .btn-sm { /* Smaller button variant */
+        padding: 0.3rem 0.6rem;
+        font-size: 0.75rem;
+    }
+    .btn-rsi, .btn-page { /* RSI & Page Button specific styles */
+        background-color: #e9ecef;
+        color: #495057;
+        border: 1px solid #ced4da;
+    }
+    .btn-rsi.active, .btn-page.active { /* Active RSI/Page button style */
+        background-color: #0ab39c; /* Use success green */
+        color: #ffffff;
+        border-color: #0ab39c;
+    }
+
+    /* Style for the combined control button container */
+    .button-controls-container {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between; /* Push items to ends */
+        align-items: center;
+        gap: 1rem; /* Space between button groups */
+        margin-bottom: 1rem; /* Add some bottom margin */
+    }
+    .rsi-buttons, .page-buttons {
+        display: flex;
+        flex-wrap: wrap; /* Allow buttons to wrap */
+        gap: 0.5rem; /* Space between buttons within a group */
+        align-items: center;
+    }
+     /* Container for the three small pressure displays */
+    .pressure-displays-small {
+        display: flex;
+        gap: 0.5rem; /* Space between the small pressure divs */
+        align-items: center;
+        flex-wrap: wrap; /* Allow wrapping on small screens */
+    }
+
+
+     /* Specific styles for buy/sell inputs */
+    .buy {
+        background-color: #eaf6f5; /* Light greenish */
+        border-color: #d3edea;
+        color: #0ab39c;
+    }
+     .sell {
+        background-color: #fef0ee; /* Light reddish */
+        border-color: #fcd9d2;
+        color: #f06548;
+    }
+
+    /* Specific style for profit display */
+    .profit {
+        font-weight: 700; /* Bolder font */
+        padding: 0.75rem 1.25rem !important; /* Increased padding */
+        font-size: 1.125rem !important; /* Larger font size (text-lg) */
+        border-width: 2px; /* Add border */
+        border-style: solid;
+    }
+    /* Enhance positive/negative profit styles */
+     .profit-positive {
+        color: #087a6a; /* Darker Success Green */
+        background-color: #d1fdee; /* Lighter Success Green background */
+        border-color: #a3e9dd; /* Success Green border */
+     }
+     .profit-negative {
+         color: #d6472c; /* Darker Danger Red */
+         background-color: #fde8e4; /* Lighter Danger Red background */
+         border-color: #fcc5ba; /* Danger Red border */
+     }
+
+    /* Style for the smaller suggestion text within the merged cell */
+    .suggestion-text {
+        font-size: 0.75rem; /* text-xs */
+        color: #6b7280; /* gray-500 */
+        display: block; /* Ensure it takes its own line */
+        margin-top: 0.1rem; /* Small top margin */
+    }
+    /* Apply specific suggestion colors to the smaller text */
+    .suggestion-text.buy-color { color: #0ab39c !important; }
+    .suggestion-text.sell-color { color: #f06548 !important; }
+
+    /* Style for smaller font in table cells (for ATH/ATL) */
+    .text-xxs {
+        font-size: 0.65rem; /* Even smaller font size */
+    }
+
+    /* Manual Profit Calculator Section Styles */
+    .manual-calc-container {
+        background-color: #ffffff;
+        border-radius: 0.5rem;
+        box-shadow: 0 0.75rem 1.5rem rgba(18,38,63,.03);
+        padding: 1rem; /* Slightly smaller padding */
+        margin-top: 1.5rem;
+        border: 1px solid #e9eef4; /* Add a subtle border */
+    }
+
+    .manual-calc-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.75rem; /* Smaller gap */
+    }
+
+    .manual-calc-row > div {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem; /* Even smaller gap for inputs */
+    }
+
+    .manual-calc-row label {
+        font-size: 0.75rem; /* Smaller label font */
+        color: #626c76;
+        white-space: nowrap; /* Prevent wrapping */
+    }
+
+    .manual-calc-row .input {
+        padding: 0.3rem 0.6rem; /* Smaller input padding */
+        font-size: 0.75rem; /* Smaller input font */
+        width: 80px; /* Fixed width for inputs */
+        text-align: right;
+    }
+
+     .manual-calc-row select.input {
+        width: 100px; /* Slightly wider for coin select */
+     }
+
+    .manual-profit-display {
+        font-weight: 700;
+        padding: 0.5rem 0.9rem !important; /* Smaller padding */
+        font-size: 0.875rem !important; /* Smaller font size */
+        border-width: 1px; /* Thinner border */
+        border-style: solid;
+        text-align: center;
+        flex-grow: 1; /* Allow it to grow */
+        min-width: 120px; /* Minimum width */
+    }
+
+    /* Compact Main Calculator Styles */
+    .compact-calc-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.75rem; /* Match manual calc gap */
+    }
+
+    .compact-calc-row > div {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem; /* Match manual calc input gap */
+    }
+
+     .compact-calc-row label {
+        font-size: 0.75rem; /* Match manual calc label font */
+        color: #626c76;
+        white-space: nowrap;
+     }
+
+     .compact-calc-row .input {
+        padding: 0.3rem 0.6rem; /* Match manual calc input padding */
+        font-size: 0.75rem; /* Match manual calc input font */
+        width: 80px; /* Match manual calc input width */
+        text-align: right;
+     }
+
+     .compact-calc-row select.input {
+         width: 100px; /* Match manual calc select width */
+     }
+
+     .compact-profit-display {
+        font-weight: 700;
+        padding: 0.5rem 0.9rem !important; /* Match manual calc padding */
+        font-size: 0.875rem !important; /* Match manual calc font size */
+        border-width: 1px; /* Match manual calc border */
+        border-style: solid;
+        text-align: center;
+        flex-grow: 1;
+        min-width: 120px;
+     }
+
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .calc-row > div { /* Stack calculator elements vertically */
+            width: 100%;
+            margin-bottom: 0.5rem;
+        }
+        .calc-row > div:last-child { margin-bottom: 0; }
+        /* Allow button groups to wrap and stack */
+        .button-controls-container { flex-direction: column; align-items: flex-start; gap: 0.75rem; }
+        .rsi-buttons, .page-buttons { justify-content: flex-start; } /* Align buttons left */
+        th, td { padding: 0.5rem; font-size: 0.8rem; }
+        th { font-size: 0.65rem; } /* Further reduce header font size */
+        .profit { font-size: 1rem !important; padding: 0.6rem 1rem !important; }
+        .pressure-displays-small { min-width: auto; width: 100%; justify-content: flex-start; } /* Align left */
+        .small-pressure-display { flex-grow: 0; } /* Prevent growing */
+
+        /* Manual Calc adjustments */
+        .manual-calc-row {
+             flex-direction: column; /* Stack manual calc items */
+             align-items: flex-start;
+             gap: 0.5rem;
+        }
+         .manual-calc-row > div {
+             width: 100%; /* Make input groups full width */
+             justify-content: space-between; /* Spread label and input */
+         }
+         .manual-calc-row .input {
+             width: auto; /* Auto width */
+             flex-grow: 1; /* Allow input to grow */
+         }
+          .manual-calc-row select.input {
+             width: auto;
+             flex-grow: 1;
+         }
+         .manual-profit-display {
+             width: 100%; /* Full width */
+         }
+
+         /* Compact Main Calc adjustments */
+         .compact-calc-row {
+             flex-direction: column; /* Stack manual calc items */
+             align-items: flex-start;
+             gap: 0.5rem;
+         }
+          .compact-calc-row > div {
+             width: 100%; /* Make input groups full width */
+             justify-content: space-between; /* Spread label and input */
+         }
+         .compact-calc-row .input {
+             width: auto; /* Auto width */
+             flex-grow: 1; /* Allow input to grow */
+         }
+          .compact-calc-row select.input {
+             width: auto;
+             flex-grow: 1;
+         }
+         .compact-profit-display {
+             width: 100%; /* Full width */
+         }
+    }
+  </style>
+</head>
+<body class="p-4 md:p-8">
+  <div class="max-w-7xl mx-auto">
+    <div id="clock" class="font-bold text-blue-600 text-lg md:text-xl mb-1">BD Time: --:--:--</div>
+    <div id="timestamp" class="text-xs md:text-sm text-gray-600 mb-2">Loading...</div>
+    <div id="metrics" class="text-xs md:text-sm text-gray-600 mb-4"></div>
+    <div id="error" class="text-sm text-red-600 mb-4"></div>
+
+
+    <div class="data-container">
+      <div class="text-sm font-semibold mb-3 text-gray-700">Quick Profit Calculator</div>
+      <div class="compact-calc-row mb-6"> <div class="flex items-center gap-1">
+           <label for="fee" class="text-gray-600 text-xs md:text-sm mr-1">Fee%:</label>
+           <button class="btn btn-sm" onclick="step('fee',-1)">–</button>
+           <input id="fee" class="input text-right w-16" type="number" value="0.15" step="0.001" oninput="updateCalc(); updateManualCalc();"/> <button class="btn btn-sm" onclick="step('fee',1)">+</button>
+        </div>
+        <div class="flex items-center gap-1">
+           <label for="inv" class="text-gray-600 text-xs md:text-sm mr-1">Invest:</label>
+           <select id="inv" class="input text-right w-24 appearance-none" onchange="updateCalc(); renderTable();">
+              <option value="25">25</option>
+              <option value="50">50</option>
+              <option value="100">100</option>
+              <option value="200">200</option>
+              <option value="300">300</option>
+              <option value="400">400</option>
+              <option value="500">500</option>
+              <option value="600">600</option>
+              <option value="700">700</option>
+              <option value="800">800</option>
+              <option value="900">900</option>
+              <option value="1000" selected>1000</option>
+              <option value="1111">1111</option>
+              <option value="1222">1222</option>
+              <option value="1333">1333</option>
+              <option value="1444">1444</option>
+              <option value="1500">1500</option>
+              <option value="2000">2000</option>
+              <option value="3000">3000</option>
+              <option value="4000">4000</option>
+              <option value="5000">5000</option>
+              <option value="10000">10000</option>
+           </select>
+        </div>
+        <div class="flex items-center gap-1 flex-grow min-w-[150px]">
+           <label for="buy" class="text-gray-600 text-xs md:text-sm mr-1">Buy:</label>
+           <button class="btn btn-sm" onclick="step('buy',-1)">–</button>
+           <input id="buy" class="input buy text-right flex-grow" type="number" step="any" placeholder="Buy Price" oninput="updateCalc()"/>
+           <button class="btn btn-sm" onclick="step('buy',1)">+</button>
+        </div>
+        <div class="flex items-center gap-1 flex-grow min-w-[150px]">
+            <label for="sell" class="text-gray-600 text-xs md:text-sm mr-1">Sell:</label>
+           <button class="btn btn-sm" onclick="step('sell',-1)">–</button>
+           <input id="sell" class="input sell text-right flex-grow" type="number" step="any" placeholder="Sell Price" oninput="updateCalc()"/>
+           <button class="btn btn-sm" onclick="step('sell',1)">+</button>
+         </div>
+         <div id="profit" class="input compact-profit-display text-center flex-grow min-w-[150px] md:min-w-[180px]">0.00 USDT</div> </div>
+       <div class="manual-calc-container">
+          <div class="text-sm font-semibold mb-3 text-gray-700">Manual Trade Profit Calculator Live</div> <div class="manual-calc-row">
+              <div>
+                  <label for="manualCoinSelect">Coin:</label>
+                   <select id="manualCoinSelect" class="input appearance-none" onchange="updateManualCalc()">
+                      </select>
+              </div>
+              <div>
+                  <label for="manualAmount">Coin Amount:</label>
+                  <input id="manualAmount" class="input text-right" type="number" step="any" value="" placeholder="0" oninput="updateManualCalc()"/> </div>
+               <div>
+                  <label for="manualInvest">USDT Invest:</label>
+                  <input id="manualInvest" class="input text-right" type="number" step="any" value="" placeholder="0" oninput="updateManualCalc()"/> </div>
+              <div>
+                  <label for="manualBuyPrice">Buy Price:</label>
+                  <input id="manualBuyPrice" class="input text-right" type="number" step="any" value="" placeholder="0" oninput="updateManualCalc()"/> </div>
+              <div>
+                   <label>Current:</label>
+                   <span id="manualCurrentPrice" class="input text-right bg-gray-100 text-gray-700">N/A</span> </div>
+              <div id="manualProfit" class="manual-profit-display">0.00 USDT</div> </div>
+      </div>
+      <div class="button-controls-container">
+          <div class="rsi-buttons">
+              <span class="text-sm font-medium self-center">RSI:</span>
+              <button class="btn btn-sm btn-rsi" data-interval="1m" onclick="selectRsiInterval(this)">1m</button>
+              <button class="btn btn-sm btn-rsi" data-interval="3m" onclick="selectRsiInterval(this)">3m</button>
+              <button class="btn btn-sm btn-rsi" data-interval="5m" onclick="selectRsiInterval(this)">5m</button>
+              <button class="btn btn-sm btn-rsi active" data-interval="15m" onclick="selectRsiInterval(this)">15m</button>
+              <button class="btn btn-sm btn-rsi" data-interval="30m" onclick="selectRsiInterval(this)">30m</button>
+              <button class="btn btn-sm btn-rsi" data-interval="1h" onclick="selectRsiInterval(this)">1h</button>
+              <button class="btn btn-sm btn-rsi" data-interval="6h" onclick="selectRsiInterval(this)">6h</button>
+              <button class="btn btn-sm btn-rsi" data-interval="12h" onclick="selectRsiInterval(this)">12h</button>
+              <button class="btn btn-sm btn-rsi" data-interval="24h" onclick="selectRsiInterval(this)">24h</button>
+          </div>
+          <div class="page-buttons">
+              <span class="text-sm font-medium self-center">View:</span>
+              <button class="btn btn-sm btn-page active" data-page="top4" onclick="selectPage(this)">Top 4</button>
+              <button class="btn btn-sm btn-page" data-page="all" onclick="selectPage(this)">All Coins</button>
+          </div>
+          <div class="pressure-displays-small">
+              <div id="btc-pressure-small" class="small-pressure-display neutral">Loading...</div>
+              <div id="sui-pressure-small" class="small-pressure-display neutral">Loading...</div>
+              <div id="pepe-pressure-small" class="small-pressure-display neutral">Loading...</div>
+          </div>
+           <div class="refresh-info flex items-center gap-2"> <span id="refresh-interval-display" class="text-sm font-medium self-center text-gray-600">Auto Refresh: 5s</span>
+               <span id="rate-limit-warning" class="text-xs text-amber-600 hidden">High frequency may cause rate limits.</span>
+               <button id="refresh-on-btn" class="btn btn-sm" onclick="startAutoRefresh()">Refresh ON</button> <button id="refresh-off-btn" class="btn btn-sm" onclick="stopAutoRefresh()">Refresh OFF</button> <button id="manual-refresh-btn" class="btn btn-sm" onclick="manualRefresh()">Manual Refresh</button> </div>
+      </div>
+
+
+      <div class="overflow-x-auto">
+        <table class="min-w-full">
+          <thead>
+            <tr>
+              <th class="sortable text-left" data-key="coin">Coin</th>
+              <th class="sortable clickable text-right" data-key="rsi" id="rsiHeader">RSI (15m)</th>
+              <th class="sortable text-right" data-key="last">Current</th>
+              <th class="sortable text-right" data-key="low">24h Low</th>
+              <th class="sortable text-right" data-key="high">24h High</th>
+              <th class="sortable text-right" data-key="pH" id="profitLowHighHeader">$1000 L→H</th>
+              <th class="sortable text-right" data-key="pCH" id="profitCurrentHighHeader">$1000 C→H</th>
+              <th class="sortable text-right" data-key="volume">24h Vol</th>
+              <th class="sortable clickable text-left" data-key="signalSuggestion">Signal / Suggestion</th>
+              <th class="sortable text-left" data-key="type">Type</th>
+            </tr>
+          </thead>
+          <tbody id="body">
+            </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="mt-6 text-center text-sm text-gray-600">
+        Disclaimer: The Pressure indicators are based on Binance Order Book Depth data and are not definitive trading signals. Order book data changes rapidly. This tool is for informational purposes only and not financial advice. Trading involves risk.
+    </div>
+  </div>
+
+<script>
+  // --- Global Variables ---
+  let sortKey = 'volume'; // Default sort key
+  let sortDir = -1; // Default sort direction (descending for volume)
+  let rsiSortState = 'custom-asc'; // For RSI custom sort logic
+  let allTableData = []; // Holds data for ALL coins fetched
+  const rsiIntervals = ['1m', '3m', '5m', '15m', '30m', '1h', '6h', '12h', '24h'];
+  let currentRsiInterval = '15m';
+  let currentPage = 'top4'; // 'top4' or 'all'
+  let dataRefreshTimeoutId;
+  let globalMetricsIntervalId; // New interval ID for global metrics
+  let isAutoRefreshEnabled = true; // Flag to control auto-refresh
+
+  // Define refresh intervals for each page and global metrics
+  const REFRESH_INTERVAL_TOP4_MS = 5000; // 5 seconds
+  const REFRESH_INTERVAL_ALL_MS = 900000; // 15 minutes
+  const REFRESH_INTERVAL_GLOBAL_MS = 900000; // 15 minutes
+
+  const TOP_COINS = ['BTCUSDT', 'SUIUSDT', 'XRPUSDT', 'PEPEUSDT']; // Coins for the 'top4' page
+
+  // Pressure display variables
+  const pressureCoins = ['BTCUSDT', 'SUIUSDT', 'PEPEUSDT'];
+  let pressureData = {}; // Store pressure data for these coins
+
+
+  // --- Coin Definitions and Mappings ---
+  const coinGeckoIdMap = {
+      'BTCUSDT': 'bitcoin', 'ETHUSDT': 'ethereum', 'XRPUSDT': 'ripple', 'SUIUSDT': 'sui',
+      'WIFUSDT': 'dogwifcoin', 'PEPEUSDT': 'pepe', 'SHIBUSDT': 'shiba-inu', 'SOLUSDT': 'solana',
+      'DOGEUSDT': 'dogecoin', 'ADAUSDT': 'cardano', 'TONUSDT': 'toncoin', 'DOTUSDT': 'polkadot',
+      'LINKUSDT': 'chainlink', 'BCHUSDT': 'bitcoin-cash', 'XLMUSDT': 'stellar', 'ENAUSDT': 'ena',
+      'ONDOUSDT': 'ondo',
+      // Add more mappings as needed
+  };
+
+  const coins = [
+    {symbol:'BTCUSDT',name:'BTC', label:'Layer 1', highlight:'btc-red'},
+    {symbol:'SUIUSDT',name:'SUI', label:'Layer 1', highlight:'sui-yellow'},
+    {symbol:'XRPUSDT',name:'XRP', label:'Payments 💳', highlight:'xrp-blue'}, // Added highlight for XRP
+    {symbol:'PEPEUSDT',name:'PEPE', label:'Meme 😂', highlight:'pepe-green'},
+    {symbol:'WIFUSDT',name:'WIF', label:'Meme 🎉'},
+    {symbol:'BABYUSDT',name:'BABY', label:'DeFi 🟠'},
+    {symbol:'ORCAUSDT',name:'ORCA', label:'DeFi 🟡'},
+    {symbol:'GUNUSDT',name:'GUN', label:'Utility 🔧'},
+    {symbol:'PNUTUSDT',name:'PNUT', label:'Meme 😂'},
+    {symbol:'MOVEUSDT',name:'MOVE', label:'Layer 2 🔵'},
+    {symbol:'SHIBUSDT',name:'SHIB', label:'Meme 😂'},
+    {symbol:'SOLUSDT',name:'SOL', label:'Layer 1 ⚖️'},
+    {symbol:'TRUMPUSDT',name:'TRUMP', label:'Meme 😂'},
+    {symbol:'BCHUSDT',name:'BCH', label:'Fork 🍴'},
+    {symbol:'ENAUSDT',name:'ENA', label:'DeFi 🏦'},
+    {symbol:'DOGEUSDT',name:'DOGE', label:'Meme 😂'},
+    {symbol:'ADAUSDT',name:'ADA', label:'Layer 1 ⚖️'},
+    {symbol:'TONUSDT',name:'TON', label:'Layer 1 ⚖️'},
+    {symbol:'AUCTIONUSDT',name:'AUCTION', label:'DeFi 🏦'},
+    {symbol:'ONDOUSDT',name:'ONDO', label:'DeFi 🔵'},
+    {symbol:'DOTUSDT',name:'DOT', label:'Layer 1 ⚖️'},
+    {symbol:'LINKUSDT',name:'LINK', label:'Oracle 📊'},
+    {symbol:'XLMUSDT',name:'XLM', label:'Payments 💳'},
+    {symbol:'ETHUSDT',name:'ETH', label:'Layer 1 ⚖️'},
+    {symbol:'BERAUSDT',name:'BERA', label:'Layer 1 ⚖️'}
+  ];
+
+  // Precision mapping for formatting prices
+  const precision = {BTCUSDT:2,ETHUSDT:2,TRUMPUSDT:2,DOTUSDT:2,SOLUSDT:2,AUCTIONUSDT:2,LINKUSDT:2,BCHUSDT:2,PNUTUSDT:5,SUIUSDT:4,XRPUSDT:4,GUNUSDT:3,BABYUSDT:3,ONDOUSDT:4,DOGEUSDT:5,XLMUSDT:4,ADAUSDT:4,TONUSDT:2,ORCAUSDT:2,BERAUSDT:2,ENAUSDT:4,PEPEUSDT:8,SHIBUSDT:8,WIFUSDT:4,MOVEUSDT:4};
+
+
+  // --- Time Functions ---
+  function tick() {
+    const now = new Date();
+    document.getElementById('clock').textContent =
+      'BD Time: ' + now.toLocaleTimeString('en-US', { timeZone:'Asia/Dhaka', hour12:true });
+  }
+  setInterval(tick, 1000);
+  tick();
+
+  function updateTimestamp() {
+    const now = new Date();
+    document.getElementById('timestamp').textContent =
+      'Updated: ' +
+      now.toLocaleTimeString('en-US',{ timeZone:'America/New_York', hour12:true }) +
+      ' NYC | ' +
+      now.toLocaleTimeString('en-US',{ timeZone:'Asia/Dhaka', hour12:true }) +
+      ' BDT';
+  }
+
+  // --- Calculator Functions ---
+  function step(id, dir) {
+    const inp = document.getElementById(id);
+    let valueStr = inp.value.trim();
+    if (valueStr === '' || isNaN(parseFloat(valueStr))) valueStr = "0";
+
+    // Use standard number stepping for simplicity and robustness
+    let currentValue = parseFloat(inp.value) || 0;
+    const stepValue = (id === 'fee') ? 0.001 : (inp.step === 'any' ? 0.000001 : parseFloat(inp.step) || 1); // Adjust step based on input type
+    let newValue = currentValue + (dir * stepValue);
+
+    // Handle precision for fees or other specific inputs
+    if (id === 'fee') {
+        newValue = parseFloat(newValue.toFixed(3)); // Fee precision
+    } else if (inp.step === 'any') {
+         // Attempt to maintain reasonable precision for 'any' step
+         const currentPrecision = (valueStr.split('.')[1] || '').length;
+         newValue = parseFloat(newValue.toFixed(Math.max(currentPrecision, 6))); // Use current or default precision
+    }
+
+    // Prevent negative values for price/investment if necessary (optional)
+    // if (id !== 'fee' && newValue < 0) newValue = 0;
+
+    inp.value = newValue;
+    updateCalc();
+    updateManualCalc(); // Also update manual calc when fee changes
+  }
+
+  function updateCalc() {
+    const totalFeePercent = parseFloat(document.getElementById('fee').value) || 0;
+    const perTransactionFee = (totalFeePercent / 2) / 100;
+    const inv = parseFloat(document.getElementById('inv').value) || 0;
+    const buy = parseFloat(document.getElementById('buy').value) || 0;
+    const sell = parseFloat(document.getElementById('sell').value) || 0;
+    const coinsAmt = buy > 0 ? (inv / buy) * (1 - perTransactionFee) : 0;
+    const totalReceived = coinsAmt * sell * (1 - perTransactionFee);
+    const prof = totalReceived - inv;
+    const pf = document.getElementById('profit');
+    pf.textContent = prof.toFixed(2) + ' USDT';
+    pf.classList.toggle('profit-positive', prof >= 0);
+    pf.classList.toggle('profit-negative', prof < 0);
+
+    // Also update table headers (will be called again in renderTable)
+    updateProfitHeaders(inv);
+  }
+  updateCalc(); // Initial calculation
+
+
+  // --- Manual Profit Calculator Functions ---
+  function updateManualCalc() {
+      const selectedSymbol = document.getElementById('manualCoinSelect').value; // Get selected coin
+      const amount = parseFloat(document.getElementById('manualAmount').value) || 0;
+      const invest = parseFloat(document.getElementById('manualInvest').value) || 0;
+      const buyPrice = parseFloat(document.getElementById('manualBuyPrice').value) || 0;
+      const totalFeePercent = parseFloat(document.getElementById('fee').value) || 0;
+      const perTransactionFee = (totalFeePercent / 2) / 100; // Fee applied twice (buy and sell)
+
+      const manualCurrentPriceSpan = document.getElementById('manualCurrentPrice');
+      const manualProfitDisplay = document.getElementById('manualProfit');
+
+      // Find the current price of the selected coin from the fetched data
+      const coinData = allTableData.find(coin => coin.symbol === selectedSymbol);
+      let currentPrice = NaN;
+      if (coinData && !isNaN(coinData.last)) {
+          currentPrice = coinData.last;
+          // Format current price using the coin's precision
+          const currentPrecision = precision[selectedSymbol] || 8;
+          manualCurrentPriceSpan.textContent = currentPrice.toFixed(currentPrecision);
+      } else {
+          manualCurrentPriceSpan.textContent = 'N/A';
+          manualProfitDisplay.textContent = 'N/A';
+          manualProfitDisplay.className = 'manual-profit-display'; // Reset classes
+          return; // Cannot calculate profit without current price
+      }
+
+      let manualProfit = 0;
+      let calculatedAmount = 0;
+      let initialInvestment = 0;
+
+      // Determine if using Coin Amount or USDT Invest
+      if (amount > 0) {
+          calculatedAmount = amount;
+          initialInvestment = calculatedAmount * buyPrice;
+      } else if (invest > 0 && buyPrice > 0) {
+          // Calculate coin amount from USDT Invest and Buy Price, considering buy fee
+          calculatedAmount = (invest / buyPrice) * (1 - perTransactionFee);
+          initialInvestment = invest; // Initial investment is the USDT amount
+      } else {
+           manualProfitDisplay.textContent = '0.00 USDT';
+           manualProfitDisplay.className = 'manual-profit-display'; // Reset classes
+           return;
+      }
+
+
+      if (calculatedAmount > 0 && buyPrice > 0 && !isNaN(currentPrice)) {
+          // Calculate potential revenue including sell fee
+          const potentialRevenue = (calculatedAmount * currentPrice) * (1 - perTransactionFee);
+           // Calculate profit based on initial investment
+          manualProfit = potentialRevenue - initialInvestment;
+      }
+
+
+      manualProfitDisplay.textContent = manualProfit.toFixed(2) + ' USDT';
+      manualProfitDisplay.classList.toggle('profit-positive', manualProfit >= 0);
+      manualProfitDisplay.classList.toggle('profit-negative', manualProfit < 0);
+  }
+
+  // Function to populate the manual coin select dropdown
+  function populateManualCoinSelect() {
+      const select = document.getElementById('manualCoinSelect');
+      select.innerHTML = ''; // Clear existing options
+      coins.forEach(coin => {
+          const option = document.createElement('option');
+          option.value = coin.symbol;
+          option.textContent = coin.name;
+          select.appendChild(option);
+      });
+      // Select SUI by default
+      select.value = 'SUIUSDT';
+      updateManualCalc(); // Initial calculation for the selected coin
+  }
+
+
+  // --- Data Fetching and Processing ---
+
+  // Function to fetch RSI data from Binance API
+  async function getRSI(sym, interval = '15m'){
+    try {
+        const limit = 15; // Need 14 periods + 1 initial value
+        const apiUrl = `https://api.binance.com/api/v3/klines?symbol=${sym}&interval=${interval}&limit=${limit}`;
+        const response = await fetch(apiUrl);
+        if (!response.ok) {
+            handleApiError(response, `RSI klines for ${sym} (${interval})`);
+            return NaN;
+        }
+        const kl = await response.json();
+        if (!kl || !Array.isArray(kl) || kl.length < 14) { console.warn(`Not enough data for ${sym} on ${interval} interval.`); return NaN; }
+
+        // Calculate RSI (Simplified - using only the fetched period, not historical smoothing)
+        let gains = 0, losses = 0;
+        const closes = kl.map(c => +c[4]);
+        for(let i = 1; i < closes.length; i++){
+            const diff = closes[i] - closes[i-1];
+            if (diff > 0) gains += diff; else losses -= diff;
+        }
+        const period = closes.length - 1;
+        if (period === 0) return NaN;
+        const avgGain = gains / period; const avgLoss = losses / period;
+        if (avgLoss === 0) return avgGain > 0 ? 100 : 50; // Handle division by zero (fully bullish or neutral)
+        const rs = avgGain / avgLoss;
+        const rsi = 100 - (100 / (1 + rs));
+        return rsi;
+    } catch (error) {
+        console.error(`Error fetching RSI for ${sym} (${interval}):`, error);
+        updateErrorDisplay(`Error fetching RSI for ${sym}. Check console.`);
+        return NaN;
+    }
+  }
+
+  // Function to fetch Order Book Depth data from Binance API
+  async function getDepthData(symbol, limit = 20) {
+      try {
+          const apiUrl = `https://api.binance.com/api/v3/depth?symbol=${symbol}&limit=${limit}`;
+          const response = await fetch(apiUrl);
+          if (!response.ok) {
+              handleApiError(response, `Depth for ${symbol}`);
+              return null;
+          }
+          const data = await response.json();
+          return data;
+      } catch (error) {
+          console.error(`Error fetching depth for ${symbol}:`, error);
+          updateErrorDisplay(`Error fetching depth for ${symbol}. Check console.`);
+          return null;
+      }
+  }
+
+  // Function to calculate pressure from depth data
+  function calculatePressure(depthData) {
+      if (!depthData || !depthData.bids || !depthData.asks) return { type: 'Neutral', percentage: 50 };
+      let totalBids = depthData.bids.reduce((sum, bid) => sum + parseFloat(bid[1]), 0);
+      let totalAsks = depthData.asks.reduce((sum, ask) => sum + parseFloat(ask[1]), 0);
+      const totalVolume = totalBids + totalAsks;
+      if (totalVolume === 0) return { type: 'Neutral', percentage: 50 };
+      const bidPercentage = (totalBids / totalVolume) * 100;
+      const askPercentage = 100 - bidPercentage;
+      const threshold = 1.1; // 10% difference threshold
+      if (bidPercentage > askPercentage * threshold) return { type: 'Buy', percentage: bidPercentage.toFixed(0) };
+      if (askPercentage > bidPercentage * threshold) return { type: 'Sell', percentage: askPercentage.toFixed(0) };
+      return { type: 'Neutral', percentage: 50 };
+  }
+
+  // Function to update the individual pressure displays
+  async function updatePressureDisplays() {
+      const pressureDivs = {
+          'BTCUSDT': document.getElementById('btc-pressure-small'),
+          'SUIUSDT': document.getElementById('sui-pressure-small'),
+          'PEPEUSDT': document.getElementById('pepe-pressure-small')
+      };
+      for (const symbol of pressureCoins) {
+          const depthData = await getDepthData(symbol); // Fetch fresh data each time
+          const pressure = calculatePressure(depthData);
+          const pressureDiv = pressureDivs[symbol];
+          const coinName = symbol.replace('USDT', '');
+          if (pressureDiv) {
+              if (pressure) {
+                  pressureDiv.textContent = `${coinName} ${pressure.type} ${pressure.percentage}%`;
+                  pressureDiv.className = `small-pressure-display ${pressure.type.toLowerCase()}`; // Reset classes
+              } else {
+                   pressureDiv.textContent = `${coinName} N/A`;
+                   pressureDiv.className = 'small-pressure-display neutral'; // Reset classes
+              }
+          }
+      }
+  }
+
+  // Helper function to handle API errors and update UI
+  function handleApiError(response, context) {
+      console.warn(`API error fetching ${context}: ${response.status}`);
+      if (response.status === 429 || response.status === 418) {
+          updateErrorDisplay('API rate limit likely hit. Data refresh may be delayed.');
+          document.getElementById('rate-limit-warning').classList.remove('hidden'); // Show warning
+      } else {
+          updateErrorDisplay(`API error for ${context} (${response.status}).`);
+      }
+  }
+
+  // Helper function to update the error display area
+  function updateErrorDisplay(message) {
+      const errorDiv = document.getElementById('error');
+      // Avoid duplicate messages
+      if (!errorDiv.textContent.includes(message)) {
+          errorDiv.textContent += (errorDiv.textContent ? ' | ' : '') + message;
+      }
+  }
+
+  // Function to load GLOBAL metrics (Market Cap, F&G)
+  async function loadGlobalMetrics() {
+      console.log("Loading global metrics...");
+      try {
+          const [globalRes, fngRes] = await Promise.all([
+              fetch('https://api.coingecko.com/api/v3/global').catch(e => { console.error("Gecko API Error:", e); return null; }),
+              fetch('https://api.alternative.me/fng/?limit=1').catch(e => { console.error("FNG API Error:", e); return null; })
+          ]);
+          if (globalRes && globalRes.ok && fngRes && fngRes.ok) {
+              const g = await globalRes.json(); const f = await fngRes.json();
+              const mcap = g.data.total_market_cap.usd / 1e9; const chg = g.data.market_cap_change_percentage_24h_usd;
+              const fgv = f.data[0].value; const fgc = f.data[0].value_classification;
+              const chgColorClass = chg >= 0 ? 'pct-green' : 'pct-red';
+              document.getElementById('metrics').innerHTML =
+                `Mkt Cap: $${mcap.toFixed(2)}B (<span class="${chgColorClass}">${chg.toFixed(2)}%</span>) | F&G: <span style="color:${fgc.toLowerCase().includes('fear')?'#f06548':'#0ab39c'}">${fgv}</span> (${fgc})`;
+          } else { document.getElementById('metrics').textContent = 'Global metrics unavailable.'; }
+      } catch (error) {
+          console.error("Critical Error in loadGlobalMetrics:", error);
+          updateErrorDisplay('Failed to load global metrics. Check console.');
+      }
+  }
+
+
+  // Function to load coin-specific data (Ticker, RSI, Depth, CoinGecko)
+  async function loadData(){
+    console.log(`Loading coin data - RSI: ${currentRsiInterval}, Page: ${currentPage}`);
+    updateErrorDisplay(''); // Clear previous errors on new load attempt
+    document.getElementById('rate-limit-warning').classList.add('hidden'); // Hide warning initially
+
+    try {
+        updateTimestamp(); // Update timestamp on each data load
+
+        // --- Fetch Coin-Specific Data ---
+        const binanceSymbols = coins.map(c => c.symbol);
+
+        // Fetch 24hr ticker data (High Frequency - essential for price updates)
+        const binanceTickerPromises = binanceSymbols.map(symbol =>
+            fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${symbol}`)
+            .then(res => res.ok ? res.json() : Promise.reject(res)) // Reject promise on non-OK status
+            .catch(e => { handleApiError(e, `Ticker for ${symbol}`); return null; }) // Handle error and return null
+        );
+
+        // Fetch RSI data (Lower Frequency - less critical for second-by-second updates)
+        // Consider fetching this less often if rate limits are hit
+        const binanceRsiPromises = binanceSymbols.map(symbol => getRSI(symbol, currentRsiInterval));
+
+        // Fetch Depth data for pressure coins (Lower Frequency)
+        // updatePressureDisplays handles its own fetching and error reporting
+        const pressureUpdatePromise = updatePressureDisplays();
+
+        // Fetch CoinGecko data (Lowest Frequency - ATH/ATL/Market Cap change slowly)
+        // This is now handled by loadGlobalMetrics, but we still need ATH/ATL/MarketCap per coin for the table.
+        // We can fetch this less frequently or cache it. For now, let's keep fetching it with coin data.
+        const coinGeckoIds = coins.map(c => coinGeckoIdMap[c.symbol]).filter(id => id);
+        const coinGeckoIdsString = coinGeckoIds.join(',');
+        const coinGeckoUrl = `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${coinGeckoIdsString}&order=market_cap_desc&per_page=100&page=1&sparkline=false`;
+        const coinGeckoPromise = coinGeckoIds.length > 0 ? fetch(coinGeckoUrl).then(res => res.json()).catch(e => { console.error("CoinGecko API Error:", e); return []; }) : Promise.resolve([]);
+
+
+        // Wait for all API calls
+        const [binanceTickerResults, binanceRsiResults, coinGeckoData, _pressureResult] = await Promise.all([
+            Promise.allSettled(binanceTickerPromises),
+            Promise.allSettled(binanceRsiPromises),
+            coinGeckoPromise, // Already handles its catch
+            pressureUpdatePromise // Wait for pressure display to finish
+        ]);
+
+        // Create a map for quick lookup of CoinGecko data
+        const coinGeckoDataMap = {};
+        if (Array.isArray(coinGeckoData)) {
+            coinGeckoData.forEach(coin => {
+                const binanceSymbol = Object.keys(coinGeckoIdMap).find(key => coinGeckoIdMap[key] === coin.id);
+                if (binanceSymbol) coinGeckoDataMap[binanceSymbol] = coin;
+            });
+        }
+
+        // Merge data
+        const newTableData = [];
+        let apiErrorCount = 0;
+        coins.forEach((coin, index) => {
+            const binanceTickerResult = binanceTickerResults[index];
+            const binanceRsiResult = binanceRsiResults[index];
+            const cgData = coinGeckoDataMap[coin.symbol];
+
+            let low = NaN, high = NaN, last = NaN, prev = NaN, volume = NaN, pct = NaN, rsiValue = NaN;
+            let ath = NaN, atl = NaN, marketCap = NaN;
+
+            // Process Binance Ticker Data
+            if (binanceTickerResult.status === 'fulfilled' && binanceTickerResult.value) {
+                 const d = binanceTickerResult.value;
+                 low = +d.lowPrice; high = +d.highPrice; last = +d.lastPrice;
+                 prev = +d.prevClosePrice; volume = +d.quoteVolume;
+                 pct = prev != 0 ? ((last - prev) / prev) * 100 : 0;
+            } else {
+                 apiErrorCount++;
+                 console.warn(`Failed to get Binance ticker data for ${coin.symbol}.`);
+            }
+
+            // Process Binance RSI Data
+             if (binanceRsiResult.status === 'fulfilled') {
+                 rsiValue = binanceRsiResult.value;
+             } else {
+                 // Don't count as a full API error if only RSI fails, but log it
+                 console.warn(`Failed to get Binance RSI data for ${coin.symbol}.`);
+             }
+
+            // Process CoinGecko Data (Use existing data if available, otherwise fetch)
+            // For simplicity, we're re-fetching CG data here for per-coin ATH/ATL/MarketCap.
+            if (cgData) {
+                ath = cgData.ath; atl = cgData.atl; marketCap = cgData.market_cap;
+                // Use CG as fallback if Binance failed
+                if (isNaN(low) && cgData.low_24h) low = cgData.low_24h;
+                if (isNaN(high) && cgData.high_24h) high = cgData.high_24h;
+                if (isNaN(last) && cgData.current_price) last = cgData.current_price;
+                if (isNaN(volume) && cgData.total_volume) volume = cgData.total_volume;
+                if (isNaN(pct) && cgData.price_change_percentage_24h) pct = cgData.price_change_percentage_24h;
+            } else {
+                 console.warn(`No CoinGecko data for ${coin.symbol}. ATH/ATL/MCap will be N/A.`);
+            }
+
+            newTableData.push({
+                ...coin, low, high, last, prev, rsi: rsiValue, pct, volume, ath, atl, marketCap
+            });
+        });
+
+        allTableData = newTableData; // Update the global data store
+
+        if (apiErrorCount > 0) {
+             updateErrorDisplay(`Data errors for ${apiErrorCount} coin(s). Some data may be missing.`);
+        }
+
+        renderTable(); // Render the table with the new data
+        updateManualCalc(); // Update manual calculator with new current prices
+
+    } catch (error) {
+        console.error("Critical Error in loadData:", error);
+        updateErrorDisplay('Failed to load data. Check console.');
+    } finally {
+        // Schedule the next refresh ONLY if auto-refresh is enabled
+        if (isAutoRefreshEnabled) {
+           scheduleNextRefresh();
+        }
+    }
+  }
+
+  // --- Suggestion and Formatting Functions ---
+  function generateSuggestion(rsi, pctChange) {
+      if (isNaN(rsi)) return 'N/A';
+      // Simplified logic for brevity
+      if (rsi < 30) return 'Oversold (Buy Watch)';
+      if (rsi < 40) return 'Approaching Oversold';
+      if (rsi > 70) return 'Overbought (Sell Watch)';
+      if (rsi > 60) return 'Approaching Overbought';
+      if (pctChange > 2) return 'Strong Up Trend';
+      if (pctChange < -2) return 'Strong Down Trend';
+      return 'Neutral / Range';
+  }
+
+  function generateMaSignal(rsi, pctChange) {
+      if (isNaN(rsi)) return 'N/A';
+      if (rsi > 55 && pctChange > 0.3) return 'Bullish';
+      if (rsi < 45 && pctChange < -0.3) return 'Bearish';
+      return 'Neutral';
+  }
+
+  function formatVolume(volume) {
+      if (isNaN(volume) || volume === null) return 'N/A';
+      if (volume >= 1e9) return (volume / 1e9).toFixed(2) + 'B';
+      if (volume >= 1e6) return (volume / 1e6).toFixed(2) + 'M';
+      if (volume >= 1e3) return (volume / 1e3).toFixed(1) + 'K';
+      return volume.toFixed(0);
+  }
+
+  function formatMarketCap(mcap) { // Added function
+      if (isNaN(mcap) || mcap === null) return 'N/A';
+      if (mcap >= 1e12) return (mcap / 1e12).toFixed(2) + 'T';
+      if (mcap >= 1e9) return (mcap / 1e9).toFixed(2) + 'B';
+      if (mcap >= 1e6) return (mcap / 1e6).toFixed(2) + 'M';
+      return mcap.toFixed(0);
+  }
+
+  // --- Table Rendering Function ---
+  function updateProfitHeaders(investmentAmount) {
+      const invStr = investmentAmount >= 1000 ? `${(investmentAmount / 1000).toFixed(0)}k` : investmentAmount.toFixed(0);
+      const phHeader = document.getElementById('profitLowHighHeader');
+      const pchHeader = document.getElementById('profitCurrentHighHeader');
+      if (phHeader) pchHeader.textContent = `$${invStr} C→H`;
+  }
+
+  function renderTable(){
+    const currentInvestment = parseFloat(document.getElementById('inv').value) || 1000;
+    updateProfitHeaders(currentInvestment); // Update headers based on current investment
+
+    const rsiHeader = document.getElementById('rsiHeader');
+    if (rsiHeader) rsiHeader.textContent = `RSI (${currentRsiInterval})`;
+
+    // Filter data based on the current page
+    let dataToRender = [];
+    if (currentPage === 'top4') {
+        dataToRender = allTableData.filter(coin => TOP_COINS.includes(coin.symbol));
+    } else {
+        dataToRender = [...allTableData]; // Use all data for the 'all' page
+    }
+
+    // Sort the filtered data
+    if(sortKey){
+      dataToRender.sort((a,b)=>{
+        let va, vb;
+        // --- Sorting logic based on sortKey ---
+        if (sortKey === 'coin') { va = a.name; vb = b.name; } // Sort by name
+        else if (sortKey === 'type') { va = a.label; vb = b.label; }
+        else if (sortKey === 'signalSuggestion') {
+            const signalA = generateMaSignal(a.rsi, a.pct); const signalB = generateMaSignal(b.rsi, b.pct);
+            const suggestionA = generateSuggestion(a.rsi, a.pct); const suggestionB = generateSuggestion(b.rsi, a.pct);
+            const signalOrder = { 'Bullish': 3, 'Neutral': 2, 'Bearish': 1, 'N/A': 0 };
+            const orderA = signalOrder[signalA] || 0; const orderB = signalOrder[signalB] || 0;
+            if (orderA !== orderB) { va = orderA; vb = orderB; }
+            else { va = suggestionA; vb = suggestionB; return va.localeCompare(vb) * sortDir; } // Secondary sort by suggestion text
+        }
+        else if (['low','high','last','pH','pCH', 'volume', 'marketCap', 'ath', 'atl', 'rsi'].includes(sortKey)){
+           const pH_a = a.low > 0 ? ((a.high - a.low) / a.low) * currentInvestment : 0;
+           const pCH_a = a.last > 0 ? ((a.high - a.last) / a.last) * currentInvestment : 0;
+           const pH_b = b.low > 0 ? ((b.high - b.low) / b.low) * currentInvestment : 0;
+           const pCH_b = b.last > 0 ? ((b.high - b.last) / b.last) * currentInvestment : 0;
+
+           if (sortKey === 'pH') { va = pH_a; vb = pH_b; }
+           else if (sortKey === 'pCH') { va = pCH_a; vb = pCH_b; }
+           else if (sortKey === 'volume') { va = a.volume; vb = b.volume; }
+           else if (sortKey === 'marketCap') { va = a.marketCap; vb = b.marketCap; }
+           else if (sortKey === 'ath') { va = a.ath; vb = b.ath; }
+           else if (sortKey === 'atl') { va = a.atl; vb = b.atl; }
+           else if (sortKey === 'rsi') { va = a.rsi; vb = b.rsi; }
+           else { va = a[sortKey]; vb = b[sortKey]; } // Fallback for low, high, last
+
+           // Handle NaN or null values - push them to the bottom when sorting descending, top when ascending
+           const nanA = isNaN(va) || va === null;
+           const nanB = isNaN(vb) || vb === null;
+           if (nanA && nanB) return 0;
+           if (nanA) return sortDir === 1 ? 1 : -1; // NaN is considered "smaller" when ascending
+           if (nanB) return sortDir === 1 ? -1 : 1; // NaN is considered "smaller" when ascending
+
+           va = parseFloat(va); vb = parseFloat(vb);
+        } else { // Default case if sortKey is unknown (shouldn't happen)
+            va = a[sortKey]; vb = b[sortKey];
+        }
+
+        // --- Comparison logic ---
+        if (typeof va === 'string' && typeof vb === 'string') {
+            return va.localeCompare(vb) * sortDir;
+        } else {
+            if (va > vb) return 1 * sortDir;
+            if (va < vb) return -1 * sortDir;
+            return 0;
+        }
+      });
+    }
+
+    // Populate Table Body
+    const tb = document.getElementById('body');
+    tb.innerHTML = ''; // Clear previous content
+    if (dataToRender.length === 0) {
+        const message = allTableData.length === 0 ? "Loading data or API error..." : "No coins match the current filter.";
+        // Update colspan to match the number of columns (10)
+        tb.innerHTML = `<tr><td colspan="10" class="text-center p-4 text-gray-500">${message}</td></tr>`;
+        return;
+    }
+
+    dataToRender.forEach(r => {
+      const pct = r.pct; const tr = document.createElement('tr');
+      if(r.highlight) { tr.classList.add('highlight-' + r.highlight); } // Apply highlight class
+
+      const profitLowToHigh = r.low > 0 ? ((r.high - r.low) / r.low) * currentInvestment : 0;
+      const profitCurrentToHigh = r.last > 0 ? ((r.high - r.last) / r.last) * currentInvestment : 0;
+      const rsiValue = r.rsi; const rsiText = isNaN(rsiValue) ? 'N/A' : rsiValue.toFixed(1);
+      const rsiClass = isNaN(rsiValue) ? '' : (rsiValue < 35 ? 'green' : (rsiValue > 65 ? 'red' : ''));
+      const suggestionText = generateSuggestion(rsiValue, pct);
+      let suggestionColorClass = '';
+      if (suggestionText.includes('Buy')) suggestionColorClass = 'buy-color'; else if (suggestionText.includes('Sell')) suggestionColorClass = 'sell-color';
+      const maSignalText = generateMaSignal(rsiValue, pct);
+      let maSignalClass = '';
+      if (maSignalText === 'Bullish') maSignalClass = 'bullish'; else if (maSignalText === 'Bearish') maSignalClass = 'bearish';
+
+      // Format prices using the precision map
+      const currentPrecision = precision[r.symbol] || 8; // Default to 8 if not specified
+      const formatPrice = (price) => isNaN(price) ? 'N/A' : price.toFixed(currentPrecision);
+
+      tr.innerHTML = `
+        <td class="text-left"><a href="https://www.binance.com/en/trade/${r.symbol}?type=spot" target="_blank" class="text-blue-600 hover:underline font-medium">${r.name}</a> <span class="${pct<0?'pct-red':'pct-green'} text-xs">(${isNaN(pct)?'N/A':pct.toFixed(1)}%)</span></td>
+        <td class="rsi clickable text-right ${rsiClass}" data-rsi-value="${rsiValue}">${rsiText}</td>
+        <td class="last clickable text-right">${formatPrice(r.last)}</td>
+        <td class="low clickable text-right">${formatPrice(r.low)}</td>
+        <td class="high clickable text-right">${formatPrice(r.high)}</td>
+        <td class="text-right">$${isNaN(profitLowToHigh)?'N/A':profitLowToHigh.toFixed(2)}</td>
+        <td class="text-right">$${isNaN(profitCurrentToHigh)?'N/A':profitCurrentToHigh.toFixed(2)}</td>
+        <td class="text-right">${formatVolume(r.volume)}</td>
+        <td class="signal-suggestion clickable text-left">
+            <span class="ma-signal ${maSignalClass}">${maSignalText}</span>
+            <span class="suggestion-text ${suggestionColorClass}">${suggestionText}</span>
+        </td>
+        <td class="text-left text-xs">${r.label}</td>
+      `;
+      tb.appendChild(tr);
+    });
+
+    // Re-add event listeners after the table body is repopulated
+    addTableEventListeners();
+  }
+
+  // Function to add event listeners to table headers and cells
+  function addTableEventListeners() {
+    // Add sorting listeners to headers
+    document.querySelectorAll('th.sortable').forEach(th => {
+      // Clone and replace to remove old listeners safely
+      const newTh = th.cloneNode(true);
+      th.parentNode.replaceChild(newTh, th);
+
+      newTh.onclick = () => {
+        const key = newTh.dataset.key;
+        if (sortKey === key) {
+          sortDir = -sortDir; // Reverse direction
+        } else {
+          sortKey = key;
+          sortDir = (key === 'volume' || key === 'pCH' || key === 'pH' || key === 'marketCap') ? -1 : 1; // Default descending for volume/profit/mcap, ascending otherwise
+        }
+        // Reset RSI custom sort state if sorting by another column
+        if (key !== 'rsi') rsiSortState = 'custom-asc';
+
+        renderTable(); // Re-render the table with the new sort order
+      };
+    });
+
+    // Add click listeners to price cells
+    document.querySelectorAll('#body .low.clickable').forEach(c => c.onclick = () => { document.getElementById('buy').value = c.textContent; updateCalc(); });
+    document.querySelectorAll('#body .high.clickable').forEach(c => c.onclick = () => { document.getElementById('sell').value = c.textContent; updateCalc(); });
+    document.querySelectorAll('#body .last.clickable').forEach(c => c.onclick = () => { document.getElementById('buy').value = c.textContent; updateCalc(); });
+
+    // Add click listeners to RSI cells
+    document.querySelectorAll('#body .rsi.clickable').forEach(c => {
+        c.onclick = () => {
+            const rsiValue = parseFloat(c.dataset.rsiValue); if (isNaN(rsiValue)) return;
+            const row = c.closest('tr'); const lastPriceCell = row.querySelector('.last.clickable');
+            if (lastPriceCell) {
+                const lastPrice = lastPriceCell.textContent;
+                if (rsiValue < 35) { document.getElementById('buy').value = lastPrice; document.getElementById('sell').value = ''; }
+                else if (rsiValue > 65) { document.getElementById('sell').value = lastPrice; document.getElementById('buy').value = ''; }
+                updateCalc();
+            }
+        };
+    });
+
+    // Add click listeners to Signal/Suggestion cells for row highlight
+    document.querySelectorAll('#body .signal-suggestion.clickable').forEach(c => {
+        c.onclick = () => {
+            const row = c.closest('tr');
+            document.querySelectorAll('.highlight-suggestion').forEach(hr => hr.classList.remove('highlight-suggestion'));
+            row.classList.add('highlight-suggestion');
+            // Optional: Populate buy/sell based on suggestion click
+            // const lastPriceCell = row.querySelector('.last.clickable');
+            // if (lastPriceCell) {
+            //     const suggestionText = row.querySelector('.suggestion-text').textContent;
+            //     if (suggestionText.includes('Buy')) { document.getElementById('buy').value = lastPriceCell.textContent; document.getElementById('sell').value = ''; }
+            //     else if (suggestionText.includes('Sell')) { document.getElementById('sell').value = lastPriceCell.textContent; document.getElementById('buy').value = ''; }
+            //     updateCalc();
+            // }
+        };
+    });
+  }
+
+  // --- UI Control Functions ---
+
+  // RSI Interval Selection
+  function selectRsiInterval(buttonElement) {
+      const newInterval = buttonElement.dataset.interval; if (newInterval === currentRsiInterval) return;
+      currentRsiInterval = newInterval;
+      document.querySelectorAll('.btn-rsi').forEach(btn => btn.classList.remove('active'));
+      buttonElement.classList.add('active');
+      const rsiHeader = document.getElementById('rsiHeader'); if (rsiHeader) rsiHeader.textContent = `RSI (${currentRsiInterval})`;
+      const tableBody = document.getElementById('body'); if (tableBody) tableBody.innerHTML = `<tr><td colspan="10" class="text-center p-4 text-gray-500">Loading ${currentRsiInterval} RSI data...</td></tr>`;
+      // Clear existing refresh timeout and load data immediately
+      if (dataRefreshTimeoutId) clearTimeout(dataRefreshTimeoutId);
+      loadData(); // Load data immediately after changing interval
+  }
+
+  // Page View Selection
+  function selectPage(buttonElement) {
+      const newPage = buttonElement.dataset.page; if (newPage === currentPage) return;
+      currentPage = newPage;
+      document.querySelectorAll('.btn-page').forEach(btn => btn.classList.remove('active'));
+      buttonElement.classList.add('active');
+
+      // Update refresh interval display
+      const refreshDisplay = document.getElementById('refresh-interval-display');
+      if (newPage === 'top4') {
+          refreshDisplay.textContent = 'Auto Refresh: 5s';
+          document.getElementById('rate-limit-warning').classList.remove('hidden'); // Show warning for high frequency
+      } else {
+          refreshDisplay.textContent = 'Auto Refresh: 15m';
+          document.getElementById('rate-limit-warning').classList.add('hidden'); // Hide warning for lower frequency
+      }
+
+      renderTable(); // Re-render the table immediately with the new page filter
+
+      // Clear existing refresh timeout and schedule a new one with the correct interval
+      if (dataRefreshTimeoutId) clearTimeout(dataRefreshTimeoutId);
+      // Schedule the next refresh ONLY if auto-refresh is enabled
+      if (isAutoRefreshEnabled) {
+         scheduleNextRefresh();
+      }
+  }
+
+  // Function for manual refresh
+  function manualRefresh() {
+      console.log("Manual Refresh triggered.");
+      updateErrorDisplay(''); // Clear errors on manual refresh
+      document.getElementById('rate-limit-warning').classList.add('hidden'); // Hide warning
+
+      // Clear any pending scheduled refreshes for coin data and global metrics
+      if (dataRefreshTimeoutId) clearTimeout(dataRefreshTimeoutId);
+      if (globalMetricsIntervalId) clearInterval(globalMetricsIntervalId);
+
+      // Perform immediate refresh
+      loadGlobalMetrics();
+      loadData(); // loadData will call scheduleNextRefresh if auto-refresh is enabled
+
+      // Restart the global metrics automatic refresh interval if enabled
+      if (isAutoRefreshEnabled) {
+          startGlobalMetricsRefresh();
+      }
+      // Note: loadData already handles scheduling the *next* coin data refresh if enabled.
+  }
+
+  // Function to stop auto-refresh
+  function stopAutoRefresh() {
+      console.log("Auto Refresh OFF");
+      isAutoRefreshEnabled = false;
+      if (dataRefreshTimeoutId) clearTimeout(dataRefreshTimeoutId);
+      if (globalMetricsIntervalId) clearInterval(globalMetricsIntervalId);
+      document.getElementById('refresh-on-btn').classList.remove('active');
+      document.getElementById('refresh-off-btn').classList.add('active');
+      document.getElementById('refresh-interval-display').textContent = 'Auto Refresh: OFF';
+      document.getElementById('rate-limit-warning').classList.add('hidden'); // Hide warning when off
+  }
+
+   // Function to start auto-refresh
+  function startAutoRefresh() {
+      console.log("Auto Refresh ON");
+      isAutoRefreshEnabled = true;
+      document.getElementById('refresh-on-btn').classList.add('active');
+      document.getElementById('refresh-off-btn').classList.remove('active');
+
+      // Update refresh interval display based on current page
+      const refreshDisplay = document.getElementById('refresh-interval-display');
+      if (currentPage === 'top4') {
+          refreshDisplay.textContent = 'Auto Refresh: 5s';
+           document.getElementById('rate-limit-warning').classList.remove('hidden'); // Show warning for high frequency
+      } else {
+          refreshDisplay.textContent = 'Auto Refresh: 15m';
+          document.getElementById('rate-limit-warning').classList.add('hidden'); // Hide warning for lower frequency
+      }
+
+      // Schedule the next refreshes
+      startGlobalMetricsRefresh();
+      scheduleNextRefresh();
+  }
+
+
+  // --- Refresh Scheduling ---
+  function scheduleNextRefresh() {
+      // Clear any existing scheduled refresh for coin data
+      if (dataRefreshTimeoutId) {
+          clearTimeout(dataRefreshTimeoutId);
+      }
+
+      // Only schedule if auto-refresh is enabled
+      if (isAutoRefreshEnabled) {
+          // Determine the interval based on the current page
+          const interval = currentPage === 'top4' ? REFRESH_INTERVAL_TOP4_MS : REFRESH_INTERVAL_ALL_MS;
+
+          // Schedule the next loadData call
+          dataRefreshTimeoutId = setTimeout(loadData, interval);
+          console.log(`Next coin data refresh scheduled in ${interval} ms for page: ${currentPage}`); // Optional: for debugging
+      }
+  }
+
+  // Function to start the global metrics refresh interval
+  function startGlobalMetricsRefresh() {
+      // Clear any existing global metrics interval
+      if (globalMetricsIntervalId) {
+          clearInterval(globalMetricsIntervalId);
+      }
+
+      // Only schedule if auto-refresh is enabled
+      if (isAutoRefreshEnabled) {
+          // Schedule loadGlobalMetrics to run at the specified interval
+          globalMetricsIntervalId = setInterval(loadGlobalMetrics, REFRESH_INTERVAL_GLOBAL_MS);
+          console.log(`Global metrics refresh scheduled every ${REFRESH_INTERVAL_GLOBAL_MS} ms.`);
+      }
+  }
+
+
+  // --- Initial Load ---
+  document.addEventListener('DOMContentLoaded', () => {
+      console.log("DOM fully loaded and parsed");
+      updateCalc(); // Ensure calculator is updated initially
+      populateManualCoinSelect(); // Populate the manual coin dropdown
+
+      // Perform initial loads
+      loadGlobalMetrics(); // Initial load of global metrics
+      loadData(); // Initial load of coin data
+
+      addTableEventListeners(); // Add initial listeners (will be re-added in renderTable)
+
+      // Set initial state of refresh buttons and schedule intervals if enabled (default)
+      if (isAutoRefreshEnabled) {
+          startGlobalMetricsRefresh(); // Start global metrics refresh
+          scheduleNextRefresh(); // Start coin data refresh
+          document.getElementById('refresh-on-btn').classList.add('active'); // Set ON button active initially
+      } else {
+           document.getElementById('refresh-off-btn').classList.add('active'); // Set OFF button active initially if starting disabled
+           document.getElementById('refresh-interval-display').textContent = 'Auto Refresh: OFF';
+           document.getElementById('rate-limit-warning').classList.add('hidden'); // Hide warning when off
+      }
+
+
+      // Set initial refresh interval display text
+       const refreshDisplay = document.getElementById('refresh-interval-display');
+       if (isAutoRefreshEnabled) {
+           refreshDisplay.textContent = `Auto Refresh: ${currentPage === 'top4' ? '5s' : '15m'}`;
+            if (currentPage === 'top4') {
+                document.getElementById('rate-limit-warning').classList.remove('hidden');
+            } else {
+                document.getElementById('rate-limit-warning').classList.add('hidden');
+            }
+       } else {
+           refreshDisplay.textContent = 'Auto Refresh: OFF';
+           document.getElementById('rate-limit-warning').classList.add('hidden');
+       }
+
+  });
+
+</script>
+</body>
+</html>
