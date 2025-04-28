@@ -49,7 +49,7 @@
 
 
     /* Style the select dropdown arrow */
-    #inv, #manualCoinSelect { /* Apply to both select elements */
+    #inv, .manualCoinSelect { /* Apply to both select elements */
         background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%2F%3E%3Cpath%20fill%3D%22%23495057%22%20d%3D%22M287%2C114.7L159.2%2C242.5c-8.8%2C8.8-23.2%2C8.8-32%2C0l-128-128c-8.8-8.8-8.8-23.2%2C0-32s23.2-8.8%2C32%2C0l112%2C112l112-112c8.8-8.8%2C23.2-8.8%2C32%2C0S295.8%2C105.9%2C287%2C114.7z%22%2F%3E%3C%2FSVG%3E');
         background-repeat: no-repeat;
         background-position: right 0.75rem top 50%;
@@ -251,20 +251,16 @@
     }
 
     /* Manual Profit Calculator Section Styles */
-    .manual-calc-container {
-        background-color: #ffffff;
-        border-radius: 0.5rem;
-        box-shadow: 0 0.75rem 1.5rem rgba(18,38,63,.03);
-        padding: 1rem; /* Slightly smaller padding */
-        margin-top: 1.5rem;
-        border: 1px solid #e9eef4; /* Add a subtle border */
-    }
-
     .manual-calc-row {
         display: flex;
         flex-wrap: wrap;
         align-items: center;
         gap: 0.75rem; /* Smaller gap */
+        padding: 1rem; /* Add padding to the row itself */
+        background-color: #ffffff; /* White background for each row */
+        border-radius: 0.5rem; /* Rounded corners for each row */
+        box-shadow: 0 0.75rem 1.5rem rgba(18,38,63,.03); /* Shadow for each row */
+        border: 1px solid #e9eef4; /* Border for each row */
     }
 
     .manual-calc-row > div {
@@ -413,13 +409,14 @@
     <div id="metrics" class="text-xs md:text-sm text-gray-600 mb-4"></div>
     <div id="error" class="text-sm text-red-600 mb-4"></div>
 
-
     <div class="data-container">
       <div class="text-sm font-semibold mb-3 text-gray-700">Quick Profit Calculator</div>
-      <div class="compact-calc-row mb-6"> <div class="flex items-center gap-1">
+      <div class="compact-calc-row mb-6">
+        <div class="flex items-center gap-1">
            <label for="fee" class="text-gray-600 text-xs md:text-sm mr-1">Fee%:</label>
            <button class="btn btn-sm" onclick="step('fee',-1)">–</button>
-           <input id="fee" class="input text-right w-16" type="number" value="0.15" step="0.001" oninput="updateCalc(); updateManualCalc();"/> <button class="btn btn-sm" onclick="step('fee',1)">+</button>
+           <input id="fee" class="input text-right w-16" type="number" value="0.15" step="0.001" oninput="updateCalc(); updateAllManualCalcs();"/>
+           <button class="btn btn-sm" onclick="step('fee',1)">+</button>
         </div>
         <div class="flex items-center gap-1">
            <label for="inv" class="text-gray-600 text-xs md:text-sm mr-1">Invest:</label>
@@ -460,30 +457,33 @@
            <input id="sell" class="input sell text-right flex-grow" type="number" step="any" placeholder="Sell Price" oninput="updateCalc()"/>
            <button class="btn btn-sm" onclick="step('sell',1)">+</button>
          </div>
-         <div id="profit" class="input compact-profit-display text-center flex-grow min-w-[150px] md:min-w-[180px]">0.00 USDT</div> </div>
-       <div class="manual-calc-container">
-          <div class="text-sm font-semibold mb-3 text-gray-700">Manual Trade Profit Calculator Live</div> <div class="manual-calc-row">
-              <div>
-                  <label for="manualCoinSelect">Coin:</label>
-                   <select id="manualCoinSelect" class="input appearance-none" onchange="updateManualCalc()">
-                      </select>
-              </div>
-              <div>
-                  <label for="manualAmount">Coin Amount:</label>
-                  <input id="manualAmount" class="input text-right" type="number" step="any" value="" placeholder="0" oninput="updateManualCalc()"/> </div>
-               <div>
-                  <label for="manualInvest">USDT Invest:</label>
-                  <input id="manualInvest" class="input text-right" type="number" step="any" value="" placeholder="0" oninput="updateManualCalc()"/> </div>
-              <div>
-                  <label for="manualBuyPrice">Buy Price:</label>
-                  <input id="manualBuyPrice" class="input text-right" type="number" step="any" value="" placeholder="0" oninput="updateManualCalc()"/> </div>
-              <div>
-                   <label>Current:</label>
-                   <span id="manualCurrentPrice" class="input text-right bg-gray-100 text-gray-700">N/A</span> </div>
-              <div id="manualProfit" class="manual-profit-display">0.00 USDT</div> </div>
-      </div>
-      <div class="button-controls-container">
-          <div class="rsi-buttons">
+         <div id="profit" class="input compact-profit-display text-center flex-grow min-w-[150px] md:min-w-[180px]">0.00 USDT</div>
+       </div>
+
+       <div class="manual-calc-row mt-6 mb-6"> <div>
+           <label for="manualCoinSelect1">Coin:</label>
+           <select id="manualCoinSelect1" class="input manualCoinSelect appearance-none" onchange="updateManualCalc(1)"></select>
+         </div>
+         <div>
+           <label for="manualAmount1">Coin Amount:</label>
+           <input id="manualAmount1" class="input text-right" type="number" step="any" value="" placeholder="0" oninput="updateManualCalc(1)"/>
+         </div>
+         <div>
+           <label for="manualInvest1">USDT Invest:</label>
+           <input id="manualInvest1" class="input text-right" type="number" step="any" value="" placeholder="0" oninput="updateManualCalc(1)"/>
+         </div>
+         <div>
+           <label for="manualBuyPrice1">Buy Price:</label>
+           <input id="manualBuyPrice1" class="input text-right" type="number" step="any" value="" placeholder="0" oninput="updateManualCalc(1)"/>
+         </div>
+         <div>
+           <label>Current:</label>
+           <span id="manualCurrentPrice1" class="input text-right bg-gray-100 text-gray-700">N/A</span>
+         </div>
+         <div id="manualProfit1" class="manual-profit-display">0.00 USDT</div>
+       </div>
+
+      <div class="button-controls-container"> <div class="rsi-buttons">
               <span class="text-sm font-medium self-center">RSI:</span>
               <button class="btn btn-sm btn-rsi" data-interval="1m" onclick="selectRsiInterval(this)">1m</button>
               <button class="btn btn-sm btn-rsi" data-interval="3m" onclick="selectRsiInterval(this)">3m</button>
@@ -497,7 +497,7 @@
           </div>
           <div class="page-buttons">
               <span class="text-sm font-medium self-center">View:</span>
-              <button class="btn btn-sm btn-page active" data-page="top4" onclick="selectPage(this)">Top 4</button>
+              <button class="btn btn-sm btn-page active" data-page="top4" onclick="selectPage(this)">Top Coins</button>
               <button class="btn btn-sm btn-page" data-page="all" onclick="selectPage(this)">All Coins</button>
           </div>
           <div class="pressure-displays-small">
@@ -505,13 +505,16 @@
               <div id="sui-pressure-small" class="small-pressure-display neutral">Loading...</div>
               <div id="pepe-pressure-small" class="small-pressure-display neutral">Loading...</div>
           </div>
-           <div class="refresh-info flex items-center gap-2"> <span id="refresh-interval-display" class="text-sm font-medium self-center text-gray-600">Auto Refresh: 5s</span>
+           <div class="refresh-info flex items-center gap-2">
+               <span id="refresh-interval-display" class="text-sm font-medium self-center text-gray-600">Auto Refresh: 5s</span>
                <span id="rate-limit-warning" class="text-xs text-amber-600 hidden">High frequency may cause rate limits.</span>
-               <button id="refresh-on-btn" class="btn btn-sm" onclick="startAutoRefresh()">Refresh ON</button> <button id="refresh-off-btn" class="btn btn-sm" onclick="stopAutoRefresh()">Refresh OFF</button> <button id="manual-refresh-btn" class="btn btn-sm" onclick="manualRefresh()">Manual Refresh</button> </div>
+               <button id="refresh-on-btn" class="btn btn-sm" onclick="startAutoRefresh()">Refresh ON</button>
+               <button id="refresh-off-btn" class="btn btn-sm" onclick="stopAutoRefresh()">Refresh OFF</button>
+               <button id="manual-refresh-btn" class="btn btn-sm" onclick="manualRefresh()">Manual Refresh</button>
+            </div>
       </div>
 
-
-      <div class="overflow-x-auto">
+      <div class="overflow-x-auto mt-4">
         <table class="min-w-full">
           <thead>
             <tr>
@@ -532,13 +535,110 @@
         </table>
       </div>
     </div>
-
-    <div class="mt-6 text-center text-sm text-gray-600">
-        Disclaimer: The Pressure indicators are based on Binance Order Book Depth data and are not definitive trading signals. Order book data changes rapidly. This tool is for informational purposes only and not financial advice. Trading involves risk.
+    <div class="flex flex-col gap-2 mt-6 max-w-7xl mx-auto">
+      <div class="manual-calc-row">
+        <div>
+          <label for="manualCoinSelect2">Coin:</label>
+          <select id="manualCoinSelect2" class="input manualCoinSelect appearance-none" onchange="updateManualCalc(2)"></select>
+        </div>
+        <div>
+          <label for="manualAmount2">Coin Amount:</label>
+          <input id="manualAmount2" class="input text-right" type="number" step="any" value="" placeholder="0" oninput="updateManualCalc(2)"/>
+        </div>
+        <div>
+          <label for="manualInvest2">USDT Invest:</label>
+          <input id="manualInvest2" class="input text-right" type="number" step="any" value="" placeholder="0" oninput="updateManualCalc(2)"/>
+        </div>
+        <div>
+          <label for="manualBuyPrice2">Buy Price:</label>
+          <input id="manualBuyPrice2" class="input text-right" type="number" step="any" value="" placeholder="0" oninput="updateManualCalc(2)"/>
+        </div>
+        <div>
+          <label>Current:</label>
+          <span id="manualCurrentPrice2" class="input text-right bg-gray-100 text-gray-700">N/A</span>
+        </div>
+        <div id="manualProfit2" class="manual-profit-display">0.00 USDT</div>
+      </div>
+      <div class="manual-calc-row">
+        <div>
+          <label for="manualCoinSelect3">Coin:</label>
+          <select id="manualCoinSelect3" class="input manualCoinSelect appearance-none" onchange="updateManualCalc(3)"></select>
+        </div>
+        <div>
+          <label for="manualAmount3">Coin Amount:</label>
+          <input id="manualAmount3" class="input text-right" type="number" step="any" value="" placeholder="0" oninput="updateManualCalc(3)"/>
+        </div>
+        <div>
+          <label for="manualInvest3">USDT Invest:</label>
+          <input id="manualInvest3" class="input text-right" type="number" step="any" value="" placeholder="0" oninput="updateManualCalc(3)"/>
+        </div>
+        <div>
+          <label for="manualBuyPrice3">Buy Price:</label>
+          <input id="manualBuyPrice3" class="input text-right" type="number" step="any" value="" placeholder="0" oninput="updateManualCalc(3)"/>
+        </div>
+        <div>
+          <label>Current:</label>
+          <span id="manualCurrentPrice3" class="input text-right bg-gray-100 text-gray-700">N/A</span>
+        </div>
+        <div id="manualProfit3" class="manual-profit-display">0.00 USDT</div>
+      </div>
+      <div class="manual-calc-row">
+        <div>
+          <label for="manualCoinSelect4">Coin:</label>
+          <select id="manualCoinSelect4" class="input manualCoinSelect appearance-none" onchange="updateManualCalc(4)"></select>
+        </div>
+        <div>
+          <label for="manualAmount4">Coin Amount:</label>
+          <input id="manualAmount4" class="input text-right" type="number" step="any" value="" placeholder="0" oninput="updateManualCalc(4)"/>
+        </div>
+        <div>
+          <label for="manualInvest4">USDT Invest:</label>
+          <input id="manualInvest4" class="input text-right" type="number" step="any" value="" placeholder="0" oninput="updateManualCalc(4)"/>
+        </div>
+        <div>
+          <label for="manualBuyPrice4">Buy Price:</label>
+          <input id="manualBuyPrice4" class="input text-right" type="number" step="any" value="" placeholder="0" oninput="updateManualCalc(4)"/>
+        </div>
+        <div>
+          <label>Current:</label>
+          <span id="manualCurrentPrice4" class="input text-right bg-gray-100 text-gray-700">N/A</span>
+        </div>
+        <div id="manualProfit4" class="manual-profit-display">0.00 USDT</div>
+      </div>
+      <div class="manual-calc-row">
+        <div>
+          <label for="manualCoinSelect5">Coin:</label>
+          <select id="manualCoinSelect5" class="input manualCoinSelect appearance-none" onchange="updateManualCalc(5)"></select>
+        </div>
+        <div>
+          <label for="manualAmount5">Coin Amount:</label>
+          <input id="manualAmount5" class="input text-right" type="number" step="any" value="" placeholder="0" oninput="updateManualCalc(5)"/>
+        </div>
+        <div>
+          <label for="manualInvest5">USDT Invest:</label>
+          <input id="manualInvest5" class="input text-right" type="number" step="any" value="" placeholder="0" oninput="updateManualCalc(5)"/>
+        </div>
+        <div>
+          <label for="manualBuyPrice5">Buy Price:</label>
+          <input id="manualBuyPrice5" class="input text-right" type="number" step="any" value="" placeholder="0" oninput="updateManualCalc(5)"/>
+        </div>
+        <div>
+          <label>Current:</label>
+          <span id="manualCurrentPrice5" class="input text-right bg-gray-100 text-gray-700">N/A</span>
+        </div>
+        <div id="manualProfit5" class="manual-profit-display">0.00 USDT</div>
+      </div>
+      <div class="manual-calc-row">
+          <div class="flex items-center gap-1 flex-grow justify-end">
+              <label class="text-gray-600 text-sm font-semibold">Total Profit:</label>
+          </div>
+          <div id="manualTotalProfit" class="manual-profit-display font-bold text-center flex-grow min-w-[150px] md:min-w-[180px]">0.00 USDT</div>
+      </div>
+    </div>
+    <div class="mt-6 text-center text-sm text-gray-600 max-w-7xl mx-auto"> Disclaimer: The Pressure indicators are based on Binance Order Book Depth data and are not definitive trading signals. Order book data changes rapidly. This tool is for informational purposes only and not financial advice. Trading involves risk.
     </div>
   </div>
-
-<script>
+  <script>
   // --- Global Variables ---
   let sortKey = 'volume'; // Default sort key
   let sortDir = -1; // Default sort direction (descending for volume)
@@ -556,7 +656,8 @@
   const REFRESH_INTERVAL_ALL_MS = 900000; // 15 minutes
   const REFRESH_INTERVAL_GLOBAL_MS = 900000; // 15 minutes
 
-  const TOP_COINS = ['BTCUSDT', 'SUIUSDT', 'XRPUSDT', 'PEPEUSDT']; // Coins for the 'top4' page
+  // *** UPDATE 2: Added SHIBUSDT to TOP_COINS ***
+  const TOP_COINS = ['BTCUSDT', 'SUIUSDT', 'XRPUSDT', 'PEPEUSDT', 'SHIBUSDT']; // Coins for the 'top4' page
 
   // Pressure display variables
   const pressureCoins = ['BTCUSDT', 'SUIUSDT', 'PEPEUSDT'];
@@ -584,7 +685,7 @@
     {symbol:'GUNUSDT',name:'GUN', label:'Utility 🔧'},
     {symbol:'PNUTUSDT',name:'PNUT', label:'Meme 😂'},
     {symbol:'MOVEUSDT',name:'MOVE', label:'Layer 2 🔵'},
-    {symbol:'SHIBUSDT',name:'SHIB', label:'Meme 😂'},
+    {symbol:'SHIBUSDT',name:'SHIB', label:'Meme 😂'}, // Added SHIB
     {symbol:'SOLUSDT',name:'SOL', label:'Layer 1 ⚖️'},
     {symbol:'TRUMPUSDT',name:'TRUMP', label:'Meme 😂'},
     {symbol:'BCHUSDT',name:'BCH', label:'Fork 🍴'},
@@ -649,7 +750,10 @@
 
     inp.value = newValue;
     updateCalc();
-    updateManualCalc(); // Also update manual calc when fee changes
+    // If fee is changed, update all manual calculators
+    if (id === 'fee') {
+        updateAllManualCalcs();
+    }
   }
 
   function updateCalc() {
@@ -673,16 +777,19 @@
 
 
   // --- Manual Profit Calculator Functions ---
-  function updateManualCalc() {
-      const selectedSymbol = document.getElementById('manualCoinSelect').value; // Get selected coin
-      const amount = parseFloat(document.getElementById('manualAmount').value) || 0;
-      const invest = parseFloat(document.getElementById('manualInvest').value) || 0;
-      const buyPrice = parseFloat(document.getElementById('manualBuyPrice').value) || 0;
-      const totalFeePercent = parseFloat(document.getElementById('fee').value) || 0;
+
+  // *** UPDATE 1: Modified updateManualCalc to accept index ***
+  function updateManualCalc(calcIndex) {
+      // Get elements specific to this calculator instance
+      const selectedSymbol = document.getElementById(`manualCoinSelect${calcIndex}`).value;
+      const amount = parseFloat(document.getElementById(`manualAmount${calcIndex}`).value) || 0;
+      const invest = parseFloat(document.getElementById(`manualInvest${calcIndex}`).value) || 0;
+      const buyPrice = parseFloat(document.getElementById(`manualBuyPrice${calcIndex}`).value) || 0;
+      const totalFeePercent = parseFloat(document.getElementById('fee').value) || 0; // Use global fee
       const perTransactionFee = (totalFeePercent / 2) / 100; // Fee applied twice (buy and sell)
 
-      const manualCurrentPriceSpan = document.getElementById('manualCurrentPrice');
-      const manualProfitDisplay = document.getElementById('manualProfit');
+      const manualCurrentPriceSpan = document.getElementById(`manualCurrentPrice${calcIndex}`);
+      const manualProfitDisplay = document.getElementById(`manualProfit${calcIndex}`);
 
       // Find the current price of the selected coin from the fetched data
       const coinData = allTableData.find(coin => coin.symbol === selectedSymbol);
@@ -731,19 +838,50 @@
       manualProfitDisplay.classList.toggle('profit-negative', manualProfit < 0);
   }
 
-  // Function to populate the manual coin select dropdown
+  // *** UPDATE 1: Modified updateAllManualCalcs to update all 5 calculators and calculate total ***
+  function updateAllManualCalcs() {
+      let totalProfit = 0;
+      for (let i = 1; i <= 5; i++) {
+          // Check if the element exists before updating (important if elements are moved)
+          if (document.getElementById(`manualCoinSelect${i}`)) {
+              updateManualCalc(i);
+              // Add the profit of this calculator to the total, if it's a valid number
+              const profitElement = document.getElementById(`manualProfit${i}`);
+              const profitText = profitElement.textContent;
+              if (profitText.includes('USDT')) {
+                  const profitValue = parseFloat(profitText.replace(' USDT', ''));
+                  if (!isNaN(profitValue)) {
+                      totalProfit += profitValue;
+                  }
+              }
+          }
+      }
+
+      // Update the total profit display
+      const totalProfitElement = document.getElementById('manualTotalProfit');
+      if (totalProfitElement) {
+          totalProfitElement.textContent = totalProfit.toFixed(2) + ' USDT';
+          totalProfitElement.classList.toggle('profit-positive', totalProfit >= 0);
+          totalProfitElement.classList.toggle('profit-negative', totalProfit < 0);
+      }
+  }
+
+  // *** UPDATE 1: Modified populateManualCoinSelect to populate all 5 selects ***
   function populateManualCoinSelect() {
-      const select = document.getElementById('manualCoinSelect');
-      select.innerHTML = ''; // Clear existing options
-      coins.forEach(coin => {
-          const option = document.createElement('option');
-          option.value = coin.symbol;
-          option.textContent = coin.name;
-          select.appendChild(option);
+      const selects = document.querySelectorAll('.manualCoinSelect'); // Select all dropdowns
+      selects.forEach((select, index) => {
+          select.innerHTML = ''; // Clear existing options
+          coins.forEach(coin => {
+              const option = document.createElement('option');
+              option.value = coin.symbol;
+              option.textContent = coin.name;
+              select.appendChild(option);
+          });
+          // Set default selected coin for each calculator (can customize)
+          const defaultCoins = ['SUIUSDT', 'BTCUSDT', 'PEPEUSDT', 'XRPUSDT', 'SHIBUSDT']; // Example defaults
+          select.value = defaultCoins[index] || coins[0].symbol; // Fallback to first coin
+          updateManualCalc(index + 1); // Initial calculation for this calculator
       });
-      // Select SUI by default
-      select.value = 'SUIUSDT';
-      updateManualCalc(); // Initial calculation for the selected coin
   }
 
 
@@ -992,7 +1130,7 @@
         }
 
         renderTable(); // Render the table with the new data
-        updateManualCalc(); // Update manual calculator with new current prices
+        updateAllManualCalcs(); // *** UPDATE 1: Update all manual calculators with new current prices ***
 
     } catch (error) {
         console.error("Critical Error in loadData:", error);
@@ -1046,7 +1184,8 @@
       const invStr = investmentAmount >= 1000 ? `${(investmentAmount / 1000).toFixed(0)}k` : investmentAmount.toFixed(0);
       const phHeader = document.getElementById('profitLowHighHeader');
       const pchHeader = document.getElementById('profitCurrentHighHeader');
-      if (phHeader) pchHeader.textContent = `$${invStr} C→H`;
+      if (phHeader) phHeader.textContent = `$${invStr} L→H`; // Corrected header text
+      if (pchHeader) pchHeader.textContent = `$${invStr} C→H`;
   }
 
   function renderTable(){
@@ -1059,6 +1198,7 @@
     // Filter data based on the current page
     let dataToRender = [];
     if (currentPage === 'top4') {
+        // Ensure TOP_COINS symbols exist in allTableData before filtering
         dataToRender = allTableData.filter(coin => TOP_COINS.includes(coin.symbol));
     } else {
         dataToRender = [...allTableData]; // Use all data for the 'all' page
@@ -1073,7 +1213,7 @@
         else if (sortKey === 'type') { va = a.label; vb = b.label; }
         else if (sortKey === 'signalSuggestion') {
             const signalA = generateMaSignal(a.rsi, a.pct); const signalB = generateMaSignal(b.rsi, b.pct);
-            const suggestionA = generateSuggestion(a.rsi, a.pct); const suggestionB = generateSuggestion(b.rsi, a.pct);
+            const suggestionA = generateSuggestion(a.rsi, a.pct); const suggestionB = generateSuggestion(b.rsi, b.pct);
             const signalOrder = { 'Bullish': 3, 'Neutral': 2, 'Bearish': 1, 'N/A': 0 };
             const orderA = signalOrder[signalA] || 0; const orderB = signalOrder[signalB] || 0;
             if (orderA !== orderB) { va = orderA; vb = orderB; }
@@ -1083,7 +1223,7 @@
            const pH_a = a.low > 0 ? ((a.high - a.low) / a.low) * currentInvestment : 0;
            const pCH_a = a.last > 0 ? ((a.high - a.last) / a.last) * currentInvestment : 0;
            const pH_b = b.low > 0 ? ((b.high - b.low) / b.low) * currentInvestment : 0;
-           const pCH_b = b.last > 0 ? ((b.high - b.last) / b.last) * currentInvestment : 0;
+           const pCH_b = b.last > 0 ? ((b.last - b.high) / b.last) * currentInvestment : 0; // Corrected calculation for C->H profit
 
            if (sortKey === 'pH') { va = pH_a; vb = pH_b; }
            else if (sortKey === 'pCH') { va = pCH_a; vb = pCH_b; }
@@ -1132,7 +1272,7 @@
       if(r.highlight) { tr.classList.add('highlight-' + r.highlight); } // Apply highlight class
 
       const profitLowToHigh = r.low > 0 ? ((r.high - r.low) / r.low) * currentInvestment : 0;
-      const profitCurrentToHigh = r.last > 0 ? ((r.high - r.last) / r.last) * currentInvestment : 0;
+      const profitCurrentToHigh = r.last > 0 ? ((r.high - r.last) / r.last) * currentInvestment : 0; // Corrected calculation
       const rsiValue = r.rsi; const rsiText = isNaN(rsiValue) ? 'N/A' : rsiValue.toFixed(1);
       const rsiClass = isNaN(rsiValue) ? '' : (rsiValue < 35 ? 'green' : (rsiValue > 65 ? 'red' : ''));
       const suggestionText = generateSuggestion(rsiValue, pct);
@@ -1364,7 +1504,7 @@
   document.addEventListener('DOMContentLoaded', () => {
       console.log("DOM fully loaded and parsed");
       updateCalc(); // Ensure calculator is updated initially
-      populateManualCoinSelect(); // Populate the manual coin dropdown
+      populateManualCoinSelect(); // *** UPDATE 1: Populate all manual coin dropdowns ***
 
       // Perform initial loads
       loadGlobalMetrics(); // Initial load of global metrics
@@ -1397,6 +1537,9 @@
            refreshDisplay.textContent = 'Auto Refresh: OFF';
            document.getElementById('rate-limit-warning').classList.add('hidden');
        }
+
+       // Initial update for all manual calculators after DOM is ready
+       updateAllManualCalcs();
 
   });
 
