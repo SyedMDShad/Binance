@@ -6,6 +6,7 @@
   <title>Crypto Tracker + Profit Calculator</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <style>
     /* Base styles */
     body {
@@ -14,8 +15,8 @@
       color: #495057; /* Dark text color */
     }
     /* Custom styles for specific elements */
-    .profit-positive { color: #0ab39c; /* Velzon success green */ }
-    .profit-negative { color: #f06548; /* Velzon danger red */ }
+    .profit-positive { color: #0ab39c !important; /* Velzon success green - Use !important to override potential conflicts */ }
+    .profit-negative { color: #f06548 !important; /* Velzon danger red - Use !important */ }
     .pct-green { color: #0ab39c; } /* Green for positive percentage change */
     .pct-red { color: #f06548; } /* Red for negative percentage change */
     .rsi.green { color: #0ab39c; } /* Green for low RSI */
@@ -67,7 +68,7 @@
     .highlight-btc-red { background-color: #fee2e2 !important; } /* Light Red */
     .highlight-sui-yellow { background-color: #fef9c3 !important; } /* Light Yellow */
     .highlight-pepe-green { background-color: #dcfce7 !important; } /* Light Green */
-    .highlight-xrp-blue { background-color: #e0f2fe !important; } /* Light Blue for XRP */
+    /* Removed highlight-xrp-blue */
     /* Keep other generic highlights if needed */
     .highlight-sui-xrp { background-color: #e9eef4; } /* Consistent light highlight color */
 
@@ -98,8 +99,7 @@
     /* Apply highlight color even on hover */
     tbody tr.highlight-btc-red:hover,
     tbody tr.highlight-sui-yellow:hover,
-    tbody tr.highlight-pepe-green:hover,
-    tbody tr.highlight-xrp-blue:hover {
+    tbody tr.highlight-pepe-green:hover {
        /* Keep original highlight color on hover */
     }
 
@@ -164,7 +164,7 @@
         border-color: #c6cd D2;
     }
     .btn-sm { /* Smaller button variant */
-        padding: 0.3rem 0.6rem;
+        padding: 0.1rem 0.3rem; /* Very small padding */
         font-size: 0.75rem;
     }
     .btn-rsi, .btn-page { /* RSI & Page Button specific styles */
@@ -223,12 +223,12 @@
         border-style: solid;
     }
     /* Enhance positive/negative profit styles */
-     .profit-positive {
+     .profit-positive-bg { /* Renamed to avoid conflict with text color class */
         color: #087a6a; /* Darker Success Green */
         background-color: #d1fdee; /* Lighter Success Green background */
         border-color: #a3e9dd; /* Success Green border */
      }
-     .profit-negative {
+     .profit-negative-bg { /* Renamed to avoid conflict with text color class */
          color: #d6472c; /* Darker Danger Red */
          background-color: #fde8e4; /* Lighter Danger Red background */
          border-color: #fcc5ba; /* Danger Red border */
@@ -261,6 +261,12 @@
         border-radius: 0.5rem; /* Rounded corners for each row */
         box-shadow: 0 0.75rem 1.5rem rgba(18,38,63,.03); /* Shadow for each row */
         border: 1px solid #e9eef4; /* Border for each row */
+        margin-bottom: 0.5rem; /* Add bottom margin to separate rows */
+    }
+
+    /* Hide the container for calculators 3, 4, 5 by default */
+    #hiddenManualCalcs {
+        display: none;
     }
 
     .manual-calc-row > div {
@@ -339,6 +345,99 @@
         min-width: 120px;
      }
 
+    /* Style for inline profit display in the table */
+    .manual-profit-inline {
+        font-weight: 500; /* Slightly less bold than main profit */
+        font-size: 0.875rem; /* Increased font size to text-sm */
+    }
+    /* Ensure profit colors apply */
+    .manual-profit-inline.profit-positive { color: #0ab39c !important; }
+    .manual-profit-inline.profit-negative { color: #f06548 !important; }
+
+    /* Styles for the new Order Book Wall columns */
+    /* Removed Order Book Wall specific styles */
+
+    /* Styles for Add/Remove Coin Controls */
+    /* Adjusted to be inline with refresh info */
+    .coin-management-controls {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem; /* Space between elements */
+        /* Removed margin-bottom */
+        flex-wrap: wrap; /* Allow wrapping on small screens */
+        font-size: 0.75rem; /* Small font for the container */
+    }
+
+    .coin-management-controls .input {
+        font-size: 0.75rem; /* Small font for input */
+        padding: 0.1rem 0.3rem; /* Smaller padding */
+        width: 80px; /* Fixed width for the input */
+    }
+
+    .coin-management-controls .btn-sm {
+        font-size: 0.75rem; /* Small font for buttons */
+        padding: 0.1rem 0.3rem; /* Smaller padding */
+    }
+
+    .btn-add-coin {
+        background-color: #d1fdee; /* Light green */
+        color: #087a6a; /* Darker green text */
+        border-color: #a3e9dd; /* Green border */
+    }
+    .btn-add-coin:hover {
+        background-color: #a3e9dd; /* Darker green on hover */
+        border-color: #087a6a;
+    }
+
+    .btn-remove-coin {
+        background-color: #fde8e4; /* Light red */
+        color: #d6472c; /* Darker red text */
+        border-color: #fcc5ba; /* Red border */
+    }
+    .btn-remove-coin:hover {
+        background-color: #fcc5ba; /* Darker red on hover */
+        border-color: #d6472c;
+    }
+
+     .btn-reset-coins {
+         background-color: #e9ecef; /* Light gray */
+         color: #495057; /* Default text */
+         border-color: #ced4da; /* Default border */
+     }
+     .btn-reset-coins:hover {
+         background-color: #d3d9df;
+         border-color: #c6cd D2;
+     }
+
+     /* Combined container for refresh info and coin management */
+     .refresh-and-coin-controls {
+         display: flex;
+         flex-wrap: wrap;
+         justify-content: space-between;
+         align-items: center;
+         gap: 1rem; /* Space between the two groups */
+         margin-bottom: 1rem; /* Add some bottom margin */
+     }
+
+    /* Style for the toggle top coin button/icon */
+    .toggle-top-coin {
+        cursor: pointer;
+        margin-left: 0.5rem; /* Space from coin name */
+        font-size: 0.85rem; /* Slightly larger than text-xs */
+        color: #ced4da; /* Default gray color */
+        transition: color 0.15s ease-in-out;
+    }
+    .toggle-top-coin:hover {
+        color: #626c76; /* Darker gray on hover */
+    }
+    /* *** UPDATE: Changed star color to green *** */
+    .toggle-top-coin.is-top-coin {
+        color: #0ab39c; /* Green color for starred coins */
+    }
+    .toggle-top-coin.is-top-coin:hover {
+        color: #087a6a; /* Darker green on hover */
+    }
+
 
     /* Responsive adjustments */
     @media (max-width: 768px) {
@@ -399,6 +498,33 @@
          .compact-profit-display {
              width: 100%; /* Full width */
          }
+         /* Adjust inline profit display on mobile */
+         .manual-profit-inline {
+            display: block; /* Stack below coin name */
+            margin-left: 0; /* Remove left margin */
+            margin-top: 0.2rem; /* Add a small top margin */
+         }
+
+         /* Adjust order wall display on mobile */
+         /* Removed Order Book Wall specific responsive adjustments */
+
+         /* Combined container responsive */
+         .refresh-and-coin-controls {
+             flex-direction: column;
+             align-items: flex-start;
+             gap: 0.75rem;
+         }
+         .refresh-info, .coin-management-controls {
+             width: 100%; /* Make both groups full width */
+             justify-content: space-between; /* Spread items within the group */
+         }
+         .coin-management-controls input {
+             width: auto; /* Auto width */
+             flex-grow: 1; /* Allow input to grow */
+         }
+         .coin-management-controls button {
+             width: auto; /* Auto width */
+         }
     }
   </style>
 </head>
@@ -409,8 +535,8 @@
     <div id="metrics" class="text-xs md:text-sm text-gray-600 mb-4"></div>
     <div id="error" class="text-sm text-red-600 mb-4"></div>
 
+
     <div class="data-container">
-      <div class="text-sm font-semibold mb-3 text-gray-700">Quick Profit Calculator</div>
       <div class="compact-calc-row mb-6">
         <div class="flex items-center gap-1">
            <label for="fee" class="text-gray-600 text-xs md:text-sm mr-1">Fee%:</label>
@@ -460,30 +586,8 @@
          <div id="profit" class="input compact-profit-display text-center flex-grow min-w-[150px] md:min-w-[180px]">0.00 USDT</div>
        </div>
 
-       <div class="manual-calc-row mt-6 mb-6"> <div>
-           <label for="manualCoinSelect1">Coin:</label>
-           <select id="manualCoinSelect1" class="input manualCoinSelect appearance-none" onchange="updateManualCalc(1)"></select>
-         </div>
-         <div>
-           <label for="manualAmount1">Coin Amount:</label>
-           <input id="manualAmount1" class="input text-right" type="number" step="any" value="" placeholder="0" oninput="updateManualCalc(1)"/>
-         </div>
-         <div>
-           <label for="manualInvest1">USDT Invest:</label>
-           <input id="manualInvest1" class="input text-right" type="number" step="any" value="" placeholder="0" oninput="updateManualCalc(1)"/>
-         </div>
-         <div>
-           <label for="manualBuyPrice1">Buy Price:</label>
-           <input id="manualBuyPrice1" class="input text-right" type="number" step="any" value="" placeholder="0" oninput="updateManualCalc(1)"/>
-         </div>
-         <div>
-           <label>Current:</label>
-           <span id="manualCurrentPrice1" class="input text-right bg-gray-100 text-gray-700">N/A</span>
-         </div>
-         <div id="manualProfit1" class="manual-profit-display">0.00 USDT</div>
-       </div>
-
-      <div class="button-controls-container"> <div class="rsi-buttons">
+       <div class="button-controls-container">
+           <div class="rsi-buttons">
               <span class="text-sm font-medium self-center">RSI:</span>
               <button class="btn btn-sm btn-rsi" data-interval="1m" onclick="selectRsiInterval(this)">1m</button>
               <button class="btn btn-sm btn-rsi" data-interval="3m" onclick="selectRsiInterval(this)">3m</button>
@@ -505,12 +609,19 @@
               <div id="sui-pressure-small" class="small-pressure-display neutral">Loading...</div>
               <div id="pepe-pressure-small" class="small-pressure-display neutral">Loading...</div>
           </div>
-           <div class="refresh-info flex items-center gap-2">
-               <span id="refresh-interval-display" class="text-sm font-medium self-center text-gray-600">Auto Refresh: 5s</span>
-               <span id="rate-limit-warning" class="text-xs text-amber-600 hidden">High frequency may cause rate limits.</span>
-               <button id="refresh-on-btn" class="btn btn-sm" onclick="startAutoRefresh()">Refresh ON</button>
-               <button id="refresh-off-btn" class="btn btn-sm" onclick="stopAutoRefresh()">Refresh OFF</button>
-               <button id="manual-refresh-btn" class="btn btn-sm" onclick="manualRefresh()">Manual Refresh</button>
+           <div class="refresh-and-coin-controls">
+               <div class="refresh-info flex items-center gap-2">
+                   <span id="refresh-interval-display" class="text-sm font-medium self-center text-gray-600">Auto Refresh: 5s</span>
+                   <span id="rate-limit-warning" class="text-xs text-amber-600 hidden">High frequency may cause rate limits.</span>
+                   <button id="refresh-on-btn" class="btn btn-sm" onclick="startAutoRefresh()">Refresh ON</button>
+                   <button id="refresh-off-btn" class="btn btn-sm" onclick="stopAutoRefresh()">Refresh OFF</button>
+                   <button id="manual-refresh-btn" class="btn btn-sm" onclick="manualRefresh()">Manual Refresh</button>
+                </div>
+                <div class="coin-management-controls">
+                    <input id="coinSymbolInput" class="input text-xs md:text-sm" type="text" placeholder="Symbol"/>
+                    <button id="addCoinBtn" class="btn btn-sm btn-add-coin">Add</button>
+                    <button id="removeCoinBtn" class="btn btn-sm btn-remove-coin">Remove</button>
+                    </div>
             </div>
       </div>
 
@@ -518,7 +629,7 @@
         <table class="min-w-full">
           <thead>
             <tr>
-              <th class="sortable text-left" data-key="coin">Coin</th>
+              <th class="sortable text-left" data-key="coin">Coin (% Change) [Calc Profit]</th>
               <th class="sortable clickable text-right" data-key="rsi" id="rsiHeader">RSI (15m)</th>
               <th class="sortable text-right" data-key="last">Current</th>
               <th class="sortable text-right" data-key="low">24h Low</th>
@@ -527,7 +638,6 @@
               <th class="sortable text-right" data-key="pCH" id="profitCurrentHighHeader">$1000 C→H</th>
               <th class="sortable text-right" data-key="volume">24h Vol</th>
               <th class="sortable clickable text-left" data-key="signalSuggestion">Signal / Suggestion</th>
-              <th class="sortable text-left" data-key="type">Type</th>
             </tr>
           </thead>
           <tbody id="body">
@@ -536,22 +646,47 @@
       </div>
     </div>
     <div class="flex flex-col gap-2 mt-6 max-w-7xl mx-auto">
-      <div class="manual-calc-row">
+       <div class="manual-calc-row">
+          <div class="flex items-center gap-1 flex-grow justify-end">
+              <label class="text-gray-600 text-sm font-semibold">Total Manual Profit:</label>
+          </div>
+          <div id="manualTotalProfit" class="manual-profit-display font-bold text-center flex-grow min-w-[150px] md:min-w-[180px]">0.00 USDT</div>
+      </div>
+
+       <div class="manual-calc-row" data-calc-index="1">
+         <div>
+           <select id="manualCoinSelect1" class="input manualCoinSelect appearance-none" onchange="updateManualCalc(1); saveManualCalcData(1);"></select>
+         </div>
+         <div>
+           <label for="manualAmount1">Coin Qty:</label> <input id="manualAmount1" class="input text-right" type="number" step="any" value="" placeholder="0" oninput="updateManualCalc(1); saveManualCalcData(1);"/>
+         </div>
+         <div>
+           <label for="manualInvest1">USDT Cost:</label> <input id="manualInvest1" class="input text-right" type="number" step="any" value="" placeholder="0" oninput="updateManualCalc(1); saveManualCalcData(1)"/>
+         </div>
+         <div>
+           <label for="manualBuyPrice1">Buy Price:</label>
+           <input id="manualBuyPrice1" class="input text-right" type="number" step="any" value="" placeholder="0" oninput="updateManualCalc(1); saveManualCalcData(1)"/>
+         </div>
+         <div>
+           <label>Current:</label>
+           <span id="manualCurrentPrice1" class="input text-right bg-gray-100 text-gray-700">N/A</span>
+         </div>
+         <div id="manualProfit1" class="manual-profit-display">0.00 USDT</div>
+       </div>
+
+       <div class="manual-calc-row" data-calc-index="2">
         <div>
-          <label for="manualCoinSelect2">Coin:</label>
-          <select id="manualCoinSelect2" class="input manualCoinSelect appearance-none" onchange="updateManualCalc(2)"></select>
+          <select id="manualCoinSelect2" class="input manualCoinSelect appearance-none" onchange="updateManualCalc(2); saveManualCalcData(2);"></select>
         </div>
         <div>
-          <label for="manualAmount2">Coin Amount:</label>
-          <input id="manualAmount2" class="input text-right" type="number" step="any" value="" placeholder="0" oninput="updateManualCalc(2)"/>
+          <label for="manualAmount2">Coin Qty:</label> <input id="manualAmount2" class="input text-right" type="number" step="any" value="" placeholder="0" oninput="updateManualCalc(2); saveManualCalcData(2)"/>
         </div>
         <div>
-          <label for="manualInvest2">USDT Invest:</label>
-          <input id="manualInvest2" class="input text-right" type="number" step="any" value="" placeholder="0" oninput="updateManualCalc(2)"/>
+          <label for="manualInvest2">USDT Cost:</label> <input id="manualInvest2" class="input text-right" type="number" step="any" value="" placeholder="0" oninput="updateManualCalc(2); saveManualCalcData(2)"/>
         </div>
         <div>
           <label for="manualBuyPrice2">Buy Price:</label>
-          <input id="manualBuyPrice2" class="input text-right" type="number" step="any" value="" placeholder="0" oninput="updateManualCalc(2)"/>
+          <input id="manualBuyPrice2" class="input text-right" type="number" step="any" value="" placeholder="0" oninput="updateManualCalc(2); saveManualCalcData(2)"/>
         </div>
         <div>
           <label>Current:</label>
@@ -559,82 +694,73 @@
         </div>
         <div id="manualProfit2" class="manual-profit-display">0.00 USDT</div>
       </div>
-      <div class="manual-calc-row">
-        <div>
-          <label for="manualCoinSelect3">Coin:</label>
-          <select id="manualCoinSelect3" class="input manualCoinSelect appearance-none" onchange="updateManualCalc(3)"></select>
-        </div>
-        <div>
-          <label for="manualAmount3">Coin Amount:</label>
-          <input id="manualAmount3" class="input text-right" type="number" step="any" value="" placeholder="0" oninput="updateManualCalc(3)"/>
-        </div>
-        <div>
-          <label for="manualInvest3">USDT Invest:</label>
-          <input id="manualInvest3" class="input text-right" type="number" step="any" value="" placeholder="0" oninput="updateManualCalc(3)"/>
-        </div>
-        <div>
-          <label for="manualBuyPrice3">Buy Price:</label>
-          <input id="manualBuyPrice3" class="input text-right" type="number" step="any" value="" placeholder="0" oninput="updateManualCalc(3)"/>
-        </div>
-        <div>
-          <label>Current:</label>
-          <span id="manualCurrentPrice3" class="input text-right bg-gray-100 text-gray-700">N/A</span>
-        </div>
-        <div id="manualProfit3" class="manual-profit-display">0.00 USDT</div>
-      </div>
-      <div class="manual-calc-row">
-        <div>
-          <label for="manualCoinSelect4">Coin:</label>
-          <select id="manualCoinSelect4" class="input manualCoinSelect appearance-none" onchange="updateManualCalc(4)"></select>
-        </div>
-        <div>
-          <label for="manualAmount4">Coin Amount:</label>
-          <input id="manualAmount4" class="input text-right" type="number" step="any" value="" placeholder="0" oninput="updateManualCalc(4)"/>
-        </div>
-        <div>
-          <label for="manualInvest4">USDT Invest:</label>
-          <input id="manualInvest4" class="input text-right" type="number" step="any" value="" placeholder="0" oninput="updateManualCalc(4)"/>
-        </div>
-        <div>
-          <label for="manualBuyPrice4">Buy Price:</label>
-          <input id="manualBuyPrice4" class="input text-right" type="number" step="any" value="" placeholder="0" oninput="updateManualCalc(4)"/>
-        </div>
-        <div>
-          <label>Current:</label>
-          <span id="manualCurrentPrice4" class="input text-right bg-gray-100 text-gray-700">N/A</span>
-        </div>
-        <div id="manualProfit4" class="manual-profit-display">0.00 USDT</div>
-      </div>
-      <div class="manual-calc-row">
-        <div>
-          <label for="manualCoinSelect5">Coin:</label>
-          <select id="manualCoinSelect5" class="input manualCoinSelect appearance-none" onchange="updateManualCalc(5)"></select>
-        </div>
-        <div>
-          <label for="manualAmount5">Coin Amount:</label>
-          <input id="manualAmount5" class="input text-right" type="number" step="any" value="" placeholder="0" oninput="updateManualCalc(5)"/>
-        </div>
-        <div>
-          <label for="manualInvest5">USDT Invest:</label>
-          <input id="manualInvest5" class="input text-right" type="number" step="any" value="" placeholder="0" oninput="updateManualCalc(5)"/>
-        </div>
-        <div>
-          <label for="manualBuyPrice5">Buy Price:</label>
-          <input id="manualBuyPrice5" class="input text-right" type="number" step="any" value="" placeholder="0" oninput="updateManualCalc(5)"/>
-        </div>
-        <div>
-          <label>Current:</label>
-          <span id="manualCurrentPrice5" class="input text-right bg-gray-100 text-gray-700">N/A</span>
-        </div>
-        <div id="manualProfit5" class="manual-profit-display">0.00 USDT</div>
-      </div>
-      <div class="manual-calc-row">
-          <div class="flex items-center gap-1 flex-grow justify-end">
-              <label class="text-gray-600 text-sm font-semibold">Total Profit:</label>
+
+      <button id="showMoreCalcsBtn" class="btn mt-2 mb-4 mx-auto" onclick="toggleHiddenCalcs()">Show More Calculators</button>
+
+      <div id="hiddenManualCalcs">
+          <div class="manual-calc-row" data-calc-index="3">
+            <div>
+              <select id="manualCoinSelect3" class="input manualCoinSelect appearance-none" onchange="updateManualCalc(3); saveManualCalcData(3);"></select>
+            </div>
+            <div>
+              <label for="manualAmount3">Coin Qty:</label> <input id="manualAmount3" class="input text-right" type="number" step="any" value="" placeholder="0" oninput="updateManualCalc(3); saveManualCalcData(3)"/>
+            </div>
+            <div>
+              <label for="manualInvest3">USDT Cost:</label> <input id="manualInvest3" class="input text-right" type="number" step="any" value="" placeholder="0" oninput="updateManualCalc(3); saveManualCalcData(3)"/>
+            </div>
+            <div>
+              <label for="manualBuyPrice3">Buy Price:</label>
+              <input id="manualBuyPrice3" class="input text-right" type="number" step="any" value="" placeholder="0" oninput="updateManualCalc(3); saveManualCalcData(3)"/>
+            </div>
+            <div>
+              <label>Current:</label>
+              <span id="manualCurrentPrice3" class="input text-right bg-gray-100 text-gray-700">N/A</span>
+            </div>
+            <div id="manualProfit3" class="manual-profit-display">0.00 USDT</div>
           </div>
-          <div id="manualTotalProfit" class="manual-profit-display font-bold text-center flex-grow min-w-[150px] md:min-w-[180px]">0.00 USDT</div>
-      </div>
-    </div>
+
+          <div class="manual-calc-row" data-calc-index="4">
+            <div>
+              <select id="manualCoinSelect4" class="input manualCoinSelect appearance-none" onchange="updateManualCalc(4); saveManualCalcData(4);"></select>
+            </div>
+            <div>
+              <label for="manualAmount4">Coin Qty:</label> <input id="manualAmount4" class="input text-right" type="number" step="any" value="" placeholder="0" oninput="updateManualCalc(4); saveManualCalcData(4)"/>
+            </div>
+            <div>
+              <label for="manualInvest4">USDT Cost:</label> <input id="manualInvest4" class="input text-right" type="number" step="any" value="" placeholder="0" oninput="updateManualCalc(4); saveManualCalcData(4)"/>
+            </div>
+            <div>
+              <label for="manualBuyPrice4">Buy Price:</label>
+              <input id="manualBuyPrice4" class="input text-right" type="number" step="any" value="" placeholder="0" oninput="updateManualCalc(4); saveManualCalcData(4)"/>
+            </div>
+            <div>
+              <label>Current:</label>
+              <span id="manualCurrentPrice4" class="input text-right bg-gray-100 text-gray-700">N/A</span>
+            </div>
+            <div id="manualProfit4" class="manual-profit-display">0.00 USDT</div>
+          </div>
+
+          <div class="manual-calc-row" data-calc-index="5">
+            <div>
+              <select id="manualCoinSelect5" class="input manualCoinSelect appearance-none" onchange="updateManualCalc(5); saveManualCalcData(5);"></select>
+            </div>
+            <div>
+              <label for="manualAmount5">Coin Qty:</label> <input id="manualAmount5" class="input text-right" type="number" step="any" value="" placeholder="0" oninput="updateManualCalc(5); saveManualCalcData(5)"/>
+            </div>
+            <div>
+              <label for="manualInvest5">USDT Cost:</label> <input id="manualInvest5" class="input text-right" type="number" step="any" value="" placeholder="0" oninput="updateManualCalc(5); saveManualCalcData(5)"/>
+            </div>
+            <div>
+              <label for="manualBuyPrice5">Buy Price:</label>
+              <input id="manualBuyPrice5" class="input text-right" type="number" step="any" value="" placeholder="0" oninput="updateManualCalc(5); saveManualCalcData(5)"/>
+            </div>
+            <div>
+              <label>Current:</label>
+              <span id="manualCurrentPrice5" class="input text-right bg-gray-100 text-gray-700">N/A</span>
+            </div>
+            <div id="manualProfit5" class="manual-profit-display">0.00 USDT</div>
+          </div>
+      </div> </div>
     <div class="mt-6 text-center text-sm text-gray-600 max-w-7xl mx-auto"> Disclaimer: The Pressure indicators are based on Binance Order Book Depth data and are not definitive trading signals. Order book data changes rapidly. This tool is for informational purposes only and not financial advice. Trading involves risk.
     </div>
   </div>
@@ -656,38 +782,21 @@
   const REFRESH_INTERVAL_ALL_MS = 900000; // 15 minutes
   const REFRESH_INTERVAL_GLOBAL_MS = 900000; // 15 minutes
 
-  // *** UPDATE 2: Added SHIBUSDT to TOP_COINS ***
-  const TOP_COINS = ['BTCUSDT', 'SUIUSDT', 'XRPUSDT', 'PEPEUSDT', 'SHIBUSDT']; // Coins for the 'top4' page
-
-  // Pressure display variables
-  const pressureCoins = ['BTCUSDT', 'SUIUSDT', 'PEPEUSDT'];
-  let pressureData = {}; // Store pressure data for these coins
-
-
-  // --- Coin Definitions and Mappings ---
-  const coinGeckoIdMap = {
-      'BTCUSDT': 'bitcoin', 'ETHUSDT': 'ethereum', 'XRPUSDT': 'ripple', 'SUIUSDT': 'sui',
-      'WIFUSDT': 'dogwifcoin', 'PEPEUSDT': 'pepe', 'SHIBUSDT': 'shiba-inu', 'SOLUSDT': 'solana',
-      'DOGEUSDT': 'dogecoin', 'ADAUSDT': 'cardano', 'TONUSDT': 'toncoin', 'DOTUSDT': 'polkadot',
-      'LINKUSDT': 'chainlink', 'BCHUSDT': 'bitcoin-cash', 'XLMUSDT': 'stellar', 'ENAUSDT': 'ena',
-      'ONDOUSDT': 'ondo',
-      // Add more mappings as needed
-  };
-
-  const coins = [
+  // Define default coin lists
+  const defaultCoins = [
     {symbol:'BTCUSDT',name:'BTC', label:'Layer 1', highlight:'btc-red'},
     {symbol:'SUIUSDT',name:'SUI', label:'Layer 1', highlight:'sui-yellow'},
-    {symbol:'XRPUSDT',name:'XRP', label:'Payments 💳', highlight:'xrp-blue'}, // Added highlight for XRP
+    {symbol:'XRPUSDT',name:'XRP', label:'Payments 💳'},
     {symbol:'PEPEUSDT',name:'PEPE', label:'Meme 😂', highlight:'pepe-green'},
+    {symbol:'TRUMPUSDT',name:'TRUMP', label:'Meme 😂'},
     {symbol:'WIFUSDT',name:'WIF', label:'Meme 🎉'},
     {symbol:'BABYUSDT',name:'BABY', label:'DeFi 🟠'},
     {symbol:'ORCAUSDT',name:'ORCA', label:'DeFi 🟡'},
     {symbol:'GUNUSDT',name:'GUN', label:'Utility 🔧'},
     {symbol:'PNUTUSDT',name:'PNUT', label:'Meme 😂'},
     {symbol:'MOVEUSDT',name:'MOVE', label:'Layer 2 🔵'},
-    {symbol:'SHIBUSDT',name:'SHIB', label:'Meme 😂'}, // Added SHIB
+    {symbol:'SHIBUSDT',name:'SHIB', label:'Meme 😂'},
     {symbol:'SOLUSDT',name:'SOL', label:'Layer 1 ⚖️'},
-    {symbol:'TRUMPUSDT',name:'TRUMP', label:'Meme 😂'},
     {symbol:'BCHUSDT',name:'BCH', label:'Fork 🍴'},
     {symbol:'ENAUSDT',name:'ENA', label:'DeFi 🏦'},
     {symbol:'DOGEUSDT',name:'DOGE', label:'Meme 😂'},
@@ -702,8 +811,109 @@
     {symbol:'BERAUSDT',name:'BERA', label:'Layer 1 ⚖️'}
   ];
 
-  // Precision mapping for formatting prices
-  const precision = {BTCUSDT:2,ETHUSDT:2,TRUMPUSDT:2,DOTUSDT:2,SOLUSDT:2,AUCTIONUSDT:2,LINKUSDT:2,BCHUSDT:2,PNUTUSDT:5,SUIUSDT:4,XRPUSDT:4,GUNUSDT:3,BABYUSDT:3,ONDOUSDT:4,DOGEUSDT:5,XLMUSDT:4,ADAUSDT:4,TONUSDT:2,ORCAUSDT:2,BERAUSDT:2,ENAUSDT:4,PEPEUSDT:8,SHIBUSDT:8,WIFUSDT:4,MOVEUSDT:4};
+  // *** UPDATE: TOP_COINS is now a mutable array loaded from storage ***
+  let topCoins = ['BTCUSDT', 'SUIUSDT', 'XRPUSDT', 'PEPEUSDT', 'TRUMPUSDT']; // Default Top Coins
+
+  // Current active coin list (initially defaults, loaded from storage later)
+  let coins = [];
+
+  // Pressure display variables
+  const pressureCoins = ['BTCUSDT', 'SUIUSDT', 'PEPEUSDT'];
+  let pressureData = {}; // Store pressure data for these coins
+
+
+  // --- Coin Definitions and Mappings ---
+  // This map is now primarily for fetching CoinGecko data, not the main coin list
+  const coinGeckoIdMap = {
+      'BTCUSDT': 'bitcoin', 'ETHUSDT': 'ethereum', 'XRPUSDT': 'ripple', 'SUIUSDT': 'sui',
+      'WIFUSDT': 'dogwifcoin', 'PEPEUSDT': 'pepe', 'SHIBUSDT': 'shiba-inu', 'SOLUSDT': 'solana',
+      'DOGEUSDT': 'dogecoin', 'ADAUSDT': 'cardano', 'TONUSDT': 'toncoin', 'DOTUSDT': 'polkadot',
+      'LINKUSDT': 'chainlink', 'BCHUSDT': 'bitcoin-cash', 'XLMUSDT': 'stellar', 'ENAUSDT': 'ena',
+      'ONDOUSDT': 'ondo',
+      // Add more mappings as needed
+  };
+
+  // Precision mapping for formatting prices (can be extended for new coins)
+  const precision = {BTCUSDT:2,ETHUSDT:2,TRUMPUSDT:4,DOTUSDT:2,SOLUSDT:2,AUCTIONUSDT:2,LINKUSDT:2,BCHUSDT:2,PNUTUSDT:5,SUIUSDT:4,XRPUSDT:4,GUNUSDT:3,BABYUSDT:3,ONDOUSDT:4,DOGEUSDT:5,XLMUSDT:4,ADAUSDT:4,TONUSDT:2,ORCAUSDT:2,BERAUSDT:2,ENAUSDT:4,PEPEUSDT:8,SHIBUSDT:8,WIFUSDT:4,MOVEUSDT:4};
+
+
+  // --- Local Storage Functions ---
+  function saveCoins() {
+      try {
+          localStorage.setItem('cryptoTrackerCoins', JSON.stringify(coins));
+          localStorage.setItem('cryptoTrackerTopCoins', JSON.stringify(topCoins)); // Save top coins
+          // console.log('Coins and Top Coins saved to localStorage.');
+      } catch (e) {
+          console.error('Failed to save coins to localStorage:', e);
+          updateErrorDisplay('Failed to save coin list. Browser storage might be full or disabled.');
+      }
+  }
+
+  function loadCoins() {
+      try {
+          const savedCoins = localStorage.getItem('cryptoTrackerCoins');
+          const savedTopCoins = localStorage.getItem('cryptoTrackerTopCoins'); // Load top coins
+
+          if (savedCoins) {
+              const parsedCoins = JSON.parse(savedCoins);
+              if (Array.isArray(parsedCoins) && parsedCoins.every(c => c.symbol && c.name)) {
+                   coins = parsedCoins;
+                   console.log('Coins loaded from localStorage.');
+              } else {
+                  console.warn('Invalid coins data in localStorage. Using default coins.');
+                  coins = [...defaultCoins];
+              }
+          } else {
+              console.log('No coins found in localStorage. Using default coins.');
+              coins = [...defaultCoins];
+          }
+
+          if (savedTopCoins) {
+               const parsedTopCoins = JSON.parse(savedTopCoins);
+               if (Array.isArray(parsedTopCoins)) { // Simple check for top coins array
+                   topCoins = parsedTopCoins;
+                   console.log('Top Coins loaded from localStorage.');
+               } else {
+                   console.warn('Invalid top coins data in localStorage. Using default top coins.');
+                   topCoins = ['BTCUSDT', 'SUIUSDT', 'XRPUSDT', 'PEPEUSDT', 'TRUMPUSDT']; // Default top coins
+               }
+          } else {
+              console.log('No top coins found in localStorage. Using default top coins.');
+              topCoins = ['BTCUSDT', 'SUIUSDT', 'XRPUSDT', 'PEPEUSDT', 'TRUMPUSDT']; // Default top coins
+          }
+
+
+      } catch (e) {
+          console.error('Failed to load coins from localStorage:', e);
+          updateErrorDisplay('Failed to load coin list. Data might be corrupted.');
+          coins = [...defaultCoins]; // Fallback to default on error
+          topCoins = ['BTCUSDT', 'SUIUSDT', 'XRPUSDT', 'PEPEUSDT', 'TRUMPUSDT']; // Fallback to default top coins
+      }
+  }
+
+  function removeManualCalcDataForCoin(symbol) {
+      for (let i = 1; i <= 5; i++) {
+          const savedData = localStorage.getItem(`manualCalcData${i}`);
+          if (savedData) {
+              try {
+                  const data = JSON.parse(savedData);
+                  if (data.symbol === symbol) {
+                      localStorage.removeItem(`manualCalcData${i}`);
+                      console.log(`Removed manual calc data for ${symbol} (Calc ${i}).`);
+                      // Clear the corresponding manual calculator fields in the UI
+                      document.getElementById(`manualCoinSelect${i}`).value = coins[0]?.symbol || ''; // Reset to default/first coin
+                      document.getElementById(`manualAmount${i}`).value = '';
+                      document.getElementById(`manualInvest${i}`).value = '';
+                      document.getElementById(`manualBuyPrice${i}`).value = '';
+                      updateManualCalc(i); // Update the display for this calc
+                  }
+              } catch (e) {
+                  console.error(`Error parsing manual calc data for Calc ${i}:`, e);
+              }
+          }
+      }
+      calculateTotalManualProfit(); // Recalculate total after potentially removing data
+  }
 
 
   // --- Time Functions ---
@@ -767,8 +977,9 @@
     const prof = totalReceived - inv;
     const pf = document.getElementById('profit');
     pf.textContent = prof.toFixed(2) + ' USDT';
-    pf.classList.toggle('profit-positive', prof >= 0);
-    pf.classList.toggle('profit-negative', prof < 0);
+    // Use background color classes for the main calculator
+    pf.className = 'input compact-profit-display text-center flex-grow min-w-[150px] md:min-w-[180px]'; // Reset base classes
+    pf.classList.add(prof >= 0 ? 'profit-positive-bg' : 'profit-negative-bg');
 
     // Also update table headers (will be called again in renderTable)
     updateProfitHeaders(inv);
@@ -778,13 +989,103 @@
 
   // --- Manual Profit Calculator Functions ---
 
-  // *** UPDATE 1: Modified updateManualCalc to accept index ***
+  // Function to save manual calculator data to localStorage
+  function saveManualCalcData(calcIndex) {
+      const selectedSymbol = document.getElementById(`manualCoinSelect${calcIndex}`).value;
+      const amount = document.getElementById(`manualAmount${calcIndex}`).value;
+      const invest = document.getElementById(`manualInvest${calcIndex}`).value;
+      const buyPrice = document.getElementById(`manualBuyPrice${calcIndex}`).value;
+
+      const dataToSave = {
+          symbol: selectedSymbol,
+          amount: amount,
+          invest: invest,
+          buyPrice: buyPrice
+      };
+
+      try {
+          // Only save if at least one field has a value (or the coin is selected)
+          if (selectedSymbol || amount || invest || buyPrice) {
+             localStorage.setItem(`manualCalcData${calcIndex}`, JSON.stringify(dataToSave));
+             // console.log(`Manual Calc ${calcIndex} data saved.`);
+          } else {
+             // If all fields are empty, remove the data from storage
+             localStorage.removeItem(`manualCalcData${calcIndex}`);
+             // console.log(`Manual Calc ${calcIndex} data cleared from storage.`);
+          }
+
+      } catch (e) {
+          console.error(`Failed to save data for Manual Calc ${calcIndex}:`, e);
+          updateErrorDisplay('Failed to save calculator data. Browser storage might be full or disabled.');
+      }
+  }
+
+  // Function to load manual calculator data from localStorage
+  function loadManualCalcData(calcIndex) {
+      try {
+          const savedData = localStorage.getItem(`manualCalcData${calcIndex}`);
+          if (savedData) {
+              const data = JSON.parse(savedData);
+              const selectElement = document.getElementById(`manualCoinSelect${calcIndex}`);
+              const amountInput = document.getElementById(`manualAmount${calcIndex}`);
+              const investInput = document.getElementById(`manualInvest${calcIndex}`);
+              const buyPriceInput = document.getElementById(`manualBuyPrice${calcIndex}`);
+
+              // Check if the saved symbol exists in the current coin list
+              const coinExists = coins.some(coin => coin.symbol === data.symbol);
+
+              if (selectElement && coinExists) {
+                  selectElement.value = data.symbol;
+              } else if (selectElement) {
+                   // If saved coin doesn't exist, keep the default or first option
+                   console.warn(`Saved coin ${data.symbol} for Calc ${calcIndex} not found in current list. Using default.`);
+                   selectElement.value = coins[0]?.symbol || ''; // Fallback
+              }
+
+              if (amountInput) amountInput.value = data.amount;
+              if (investInput) investInput.value = data.invest;
+              if (buyPriceInput) buyPriceInput.value = data.buyPrice;
+
+              // console.log(`Manual Calc ${calcIndex} data loaded.`);
+          } else {
+              // If no saved data, ensure fields are empty/default
+              const selectElement = document.getElementById(`manualCoinSelect${calcIndex}`);
+              const amountInput = document.getElementById(`manualAmount${calcIndex}`);
+              const investInput = document.getElementById(`manualInvest${calcIndex}`);
+              const buyPriceInput = document.getElementById(`manualBuyPrice${calcIndex}`);
+              if (selectElement) selectElement.value = coins[0]?.symbol || '';
+              if (amountInput) amountInput.value = '';
+              if (investInput) investInput.value = '';
+              if (buyPriceInput) buyPriceInput.value = '';
+          }
+      } catch (e) {
+          console.error(`Failed to load data for Manual Calc ${calcIndex}:`, e);
+          updateErrorDisplay('Failed to load calculator data. Data might be corrupted.');
+          // On error, clear the data for this calculator
+          localStorage.removeItem(`manualCalcData${calcIndex}`);
+           const selectElement = document.getElementById(`manualCoinSelect${calcIndex}`);
+              const amountInput = document.getElementById(`manualAmount${calcIndex}`);
+              const investInput = document.getElementById(`manualInvest${calcIndex}`);
+              const buyPriceInput = document.getElementById(`manualBuyPrice${calcIndex}`);
+              if (selectElement) selectElement.value = coins[0]?.symbol || '';
+              if (amountInput) amountInput.value = '';
+              if (investInput) investInput.value = '';
+              if (buyPriceInput) buyPriceInput.value = '';
+      }
+  }
+
+
+  // *** UPDATE: Modified updateManualCalc to accept index and update inline table profit ***
   function updateManualCalc(calcIndex) {
       // Get elements specific to this calculator instance
       const selectedSymbol = document.getElementById(`manualCoinSelect${calcIndex}`).value;
-      const amount = parseFloat(document.getElementById(`manualAmount${calcIndex}`).value) || 0;
-      const invest = parseFloat(document.getElementById(`manualInvest${calcIndex}`).value) || 0;
-      const buyPrice = parseFloat(document.getElementById(`manualBuyPrice${calcIndex}`).value) || 0;
+      const amountInput = document.getElementById(`manualAmount${calcIndex}`);
+      const investInput = document.getElementById(`manualInvest${calcIndex}`);
+      const buyPriceInput = document.getElementById(`manualBuyPrice${calcIndex}`);
+
+      const amount = parseFloat(amountInput.value) || 0;
+      const invest = parseFloat(investInput.value) || 0;
+      const buyPrice = parseFloat(buyPriceInput.value) || 0;
       const totalFeePercent = parseFloat(document.getElementById('fee').value) || 0; // Use global fee
       const perTransactionFee = (totalFeePercent / 2) / 100; // Fee applied twice (buy and sell)
 
@@ -803,6 +1104,8 @@
           manualCurrentPriceSpan.textContent = 'N/A';
           manualProfitDisplay.textContent = 'N/A';
           manualProfitDisplay.className = 'manual-profit-display'; // Reset classes
+          updateTableInlineProfits(); // Update table even if this calc is N/A
+          calculateTotalManualProfit(); // Recalculate total profit
           return; // Cannot calculate profit without current price
       }
 
@@ -811,16 +1114,22 @@
       let initialInvestment = 0;
 
       // Determine if using Coin Amount or USDT Invest
-      if (amount > 0) {
+      if (amount > 0 && buyPrice > 0) {
           calculatedAmount = amount;
-          initialInvestment = calculatedAmount * buyPrice;
+          initialInvestment = calculatedAmount * buyPrice / (1 - perTransactionFee); // Back-calculate investment before fee
+          // Clear the other input field to avoid confusion
+          // investInput.value = '';
       } else if (invest > 0 && buyPrice > 0) {
           // Calculate coin amount from USDT Invest and Buy Price, considering buy fee
           calculatedAmount = (invest / buyPrice) * (1 - perTransactionFee);
           initialInvestment = invest; // Initial investment is the USDT amount
+          // Clear the other input field
+          // amountInput.value = '';
       } else {
            manualProfitDisplay.textContent = '0.00 USDT';
            manualProfitDisplay.className = 'manual-profit-display'; // Reset classes
+           updateTableInlineProfits(); // Update table
+           calculateTotalManualProfit(); // Recalculate total profit
            return;
       }
 
@@ -834,19 +1143,66 @@
 
 
       manualProfitDisplay.textContent = manualProfit.toFixed(2) + ' USDT';
+      // Use text color classes for manual profit display
+      manualProfitDisplay.className = 'manual-profit-display'; // Reset base classes
       manualProfitDisplay.classList.toggle('profit-positive', manualProfit >= 0);
       manualProfitDisplay.classList.toggle('profit-negative', manualProfit < 0);
+
+      // *** UPDATE: Update the inline profit display in the table ***
+      updateTableInlineProfits();
+      calculateTotalManualProfit(); // Recalculate total profit
   }
 
-  // *** UPDATE 1: Modified updateAllManualCalcs to update all 5 calculators and calculate total ***
-  function updateAllManualCalcs() {
+  // *** NEW Function: Update inline profit displays in the table ***
+  function updateTableInlineProfits() {
+      // Clear all existing inline profit displays first
+      document.querySelectorAll('.manual-profit-inline').forEach(span => {
+          span.textContent = '';
+          // Keep the ml-2 and text-sm classes, remove color classes
+          span.className = 'manual-profit-inline ml-2 text-sm';
+      });
+
+      // Loop through each manual calculator (1 to 5)
+      for (let calcIndex = 1; calcIndex <= 5; calcIndex++) {
+          const selectElement = document.getElementById(`manualCoinSelect${calcIndex}`);
+          const profitElement = document.getElementById(`manualProfit${calcIndex}`);
+
+          // Check if the elements exist and are currently visible (or in the hidden container)
+          // We update inline profits for ALL 5 calculators regardless of visibility
+          if (!selectElement || !profitElement) continue; // Skip if elements don't exist
+
+          const selectedSymbol = selectElement.value;
+          const profitText = profitElement.textContent;
+          const isPositive = profitElement.classList.contains('profit-positive');
+          const isNegative = profitElement.classList.contains('profit-negative');
+
+          // Check if profit is calculated and valid
+          if (profitText.includes('USDT') && (isPositive || isNegative)) {
+              const profitValue = parseFloat(profitText.replace(' USDT', ''));
+              if (!isNaN(profitValue)) {
+                  // Find the corresponding span in the table body
+                  const targetSpan = document.querySelector(`#body .manual-profit-inline[data-coin-symbol='${selectedSymbol}']`);
+                  if (targetSpan) {
+                      // Update the span content to show "Profit +X.XX$" or "Loss -X.XX$"
+                      const label = profitValue >= 0 ? 'Profit' : 'Loss';
+                      const sign = profitValue >= 0 ? '+' : '-';
+                      targetSpan.textContent = `${label} ${sign}${Math.abs(profitValue).toFixed(2)}$`;
+                      // Add color classes
+                      targetSpan.classList.add(isPositive ? 'profit-positive' : 'profit-negative');
+                  }
+              }
+          }
+      }
+  }
+
+
+  // *** NEW Function: Calculate and display total manual profit ***
+  function calculateTotalManualProfit() {
       let totalProfit = 0;
       for (let i = 1; i <= 5; i++) {
-          // Check if the element exists before updating (important if elements are moved)
-          if (document.getElementById(`manualCoinSelect${i}`)) {
-              updateManualCalc(i);
-              // Add the profit of this calculator to the total, if it's a valid number
-              const profitElement = document.getElementById(`manualProfit${i}`);
+          const profitElement = document.getElementById(`manualProfit${i}`);
+          // Check if the profit element exists (it should for all 5)
+          if (profitElement) {
               const profitText = profitElement.textContent;
               if (profitText.includes('USDT')) {
                   const profitValue = parseFloat(profitText.replace(' USDT', ''));
@@ -861,28 +1217,188 @@
       const totalProfitElement = document.getElementById('manualTotalProfit');
       if (totalProfitElement) {
           totalProfitElement.textContent = totalProfit.toFixed(2) + ' USDT';
+          // Use text color classes for total profit display
+          totalProfitElement.className = 'manual-profit-display font-bold text-center flex-grow min-w-[150px] md:min-w-[180px]'; // Reset base classes
           totalProfitElement.classList.toggle('profit-positive', totalProfit >= 0);
           totalProfitElement.classList.toggle('profit-negative', totalProfit < 0);
       }
   }
 
-  // *** UPDATE 1: Modified populateManualCoinSelect to populate all 5 selects ***
+  // *** UPDATE: Modified updateAllManualCalcs to simply call updateManualCalc for each and then calculate total ***
+  function updateAllManualCalcs() {
+      for (let i = 1; i <= 5; i++) {
+          // Check if the element exists before updating
+          if (document.getElementById(`manualCoinSelect${i}`)) {
+              updateManualCalc(i); // This now handles individual calc update AND triggers table update
+          }
+      }
+      // Total calculation is handled within updateManualCalc now.
+      // calculateTotalManualProfit(); // This call is now redundant here as updateManualCalc calls it.
+  }
+
+  // *** UPDATE: Modified populateManualCoinSelect to set new defaults and XRP for Calc 4 ***
   function populateManualCoinSelect() {
+      // Define default coins for each calculator index (1-based)
+      const defaultManualCalcCoins = {
+          1: 'SUIUSDT',
+          2: 'PEPEUSDT',
+          3: 'XRPUSDT',
+          4: 'XRPUSDT',
+          5: 'TRUMPUSDT'
+      };
+
       const selects = document.querySelectorAll('.manualCoinSelect'); // Select all dropdowns
       selects.forEach((select, index) => {
           select.innerHTML = ''; // Clear existing options
-          coins.forEach(coin => {
+          // Sort coins alphabetically by name for the dropdown
+          const sortedCoins = [...coins].sort((a, b) => a.name.localeCompare(b.name));
+          sortedCoins.forEach(coin => {
               const option = document.createElement('option');
               option.value = coin.symbol;
               option.textContent = coin.name;
               select.appendChild(option);
           });
-          // Set default selected coin for each calculator (can customize)
-          const defaultCoins = ['SUIUSDT', 'BTCUSDT', 'PEPEUSDT', 'XRPUSDT', 'SHIBUSDT']; // Example defaults
-          select.value = defaultCoins[index] || coins[0].symbol; // Fallback to first coin
-          updateManualCalc(index + 1); // Initial calculation for this calculator
+
+          // Set default selected coin based on the calculator index (1-based)
+          const calcIndex = index + 1;
+          const defaultCoinSymbol = defaultManualCalcCoins[calcIndex];
+
+          // Try to load saved coin first
+          const savedData = localStorage.getItem(`manualCalcData${calcIndex}`);
+          let selectedSymbol = savedData ? JSON.parse(savedData).symbol : null;
+
+          // If no saved coin or saved coin not in current list, use default
+          if (!selectedSymbol || !coins.some(c => c.symbol === selectedSymbol)) {
+              selectedSymbol = defaultCoinSymbol;
+          }
+
+           // Ensure the selected coin exists in the current coin list before setting
+          if (selectedSymbol && coins.some(c => c.symbol === selectedSymbol)) {
+              select.value = selectedSymbol;
+          } else {
+              select.value = sortedCoins[0]?.symbol || ''; // Fallback to first coin if default not found
+          }
+
+          // Initial calculation for this calculator (will also trigger table update)
+          // updateManualCalc(calcIndex); // Moved initial calculation to DOMContentLoaded
       });
   }
+
+  // *** NEW Function: Toggle visibility of hidden calculators ***
+  function toggleHiddenCalcs() {
+      const hiddenContainer = document.getElementById('hiddenManualCalcs');
+      const showMoreBtn = document.getElementById('showMoreCalcsBtn');
+
+      if (hiddenContainer.style.display === 'none' || hiddenContainer.style.display === '') {
+          hiddenContainer.style.display = 'flex'; // Use flex to maintain layout
+          hiddenContainer.style.flexDirection = 'column'; // Stack rows vertically
+          hiddenContainer.style.gap = '0.5rem'; // Add gap between rows
+          showMoreBtn.textContent = 'Hide Extra Calculators';
+      } else {
+          hiddenContainer.style.display = 'none';
+          showMoreBtn.textContent = 'Show More Calculators';
+      }
+      // Recalculate total profit just in case (though updateManualCalc should handle it)
+      calculateTotalManualProfit();
+  }
+
+  // --- Coin Management Functions ---
+  function addCoin() {
+      const input = document.getElementById('coinSymbolInput');
+      const symbol = input.value.trim().toUpperCase(); // Use uppercase for consistency
+
+      if (!symbol) {
+          updateErrorDisplay('Enter symbol to add.');
+          return;
+      }
+
+      // Check if the coin already exists in the list
+      if (coins.some(coin => coin.symbol === symbol)) {
+          updateErrorDisplay(`${symbol} already in list.`);
+          input.value = ''; // Clear input
+          return;
+      }
+
+      // Basic validation: Check if it ends with USDT (a common pair)
+      if (!symbol.endsWith('USDT')) {
+           updateErrorDisplay(`Invalid format. Use USDT pair (e.g., ${symbol}USDT).`);
+           return;
+      }
+
+      // Add the new coin object. We'll need a placeholder name and label.
+      // Realistically, we might need to fetch basic info like name, but for simplicity, use symbol as name.
+      const newCoin = {
+          symbol: symbol,
+          name: symbol.replace('USDT', ''), // Use symbol without USDT as name
+          label: 'Custom', // Label for user-added coins
+          // No highlight by default for custom coins
+      };
+
+      coins.push(newCoin); // Add to the end of the list (All Coins)
+      saveCoins(); // Save the updated list
+      input.value = ''; // Clear the input field
+      updateErrorDisplay(''); // Clear any previous error message
+      console.log(`Added coin: ${symbol}`);
+
+      // Refresh data and table
+      populateManualCoinSelect(); // Update manual calculator dropdowns
+      loadData(); // Fetch data for the new coin and re-render table
+  }
+
+  function removeCoin() {
+      const input = document.getElementById('coinSymbolInput');
+      const symbolToRemove = input.value.trim().toUpperCase(); // Use uppercase
+
+      if (!symbolToRemove) {
+          updateErrorDisplay('Enter symbol to remove.');
+          return;
+      }
+
+      // Check if the coin exists in the list
+      const initialLength = coins.length;
+      coins = coins.filter(coin => coin.symbol !== symbolToRemove);
+
+      if (coins.length === initialLength) {
+          updateErrorDisplay(`${symbolToRemove} not found.`);
+          input.value = ''; // Clear input
+          return;
+      }
+
+      // Also remove from topCoins if it was a top coin
+      topCoins = topCoins.filter(symbol => symbol !== symbolToRemove);
+
+      // Remove associated manual calculator data
+      removeManualCalcDataForCoin(symbolToRemove);
+
+      saveCoins(); // Save the updated list
+      input.value = ''; // Clear the input field
+      updateErrorDisplay(''); // Clear any previous error message
+      console.log(`Removed coin: ${symbolToRemove}`);
+
+      // Refresh data and table
+      populateManualCoinSelect(); // Update manual calculator dropdowns
+      loadData(); // Re-fetch data and re-render table
+  }
+
+  // *** NEW Function: Toggle coin in topCoins list ***
+  function toggleTopCoin(symbol) {
+      const index = topCoins.indexOf(symbol);
+      if (index > -1) {
+          // Coin is in topCoins, remove it
+          topCoins.splice(index, 1);
+          console.log(`Removed ${symbol} from Top Coins.`);
+      } else {
+          // Coin is not in topCoins, add it
+          topCoins.push(symbol);
+          console.log(`Added ${symbol} to Top Coins.`);
+      }
+      saveCoins(); // Save the updated topCoins list
+      renderTable(); // Re-render the table to update star icons/filtering
+  }
+
+
+  // Reset Coins function removed as requested
+  // function resetCoins() { ... }
 
 
   // --- Data Fetching and Processing ---
@@ -921,7 +1437,7 @@
     }
   }
 
-  // Function to fetch Order Book Depth data from Binance API
+  // Function to fetch Order Book Depth data from Binance API (Only used for pressure indicators now)
   async function getDepthData(symbol, limit = 20) {
       try {
           const apiUrl = `https://api.binance.com/api/v3/depth?symbol=${symbol}&limit=${limit}`;
@@ -939,7 +1455,9 @@
       }
   }
 
-  // Function to calculate pressure from depth data
+  // Removed findLargestWall function
+
+  // Function to calculate pressure from depth data (reused)
   function calculatePressure(depthData) {
       if (!depthData || !depthData.bids || !depthData.asks) return { type: 'Neutral', percentage: 50 };
       let totalBids = depthData.bids.reduce((sum, bid) => sum + parseFloat(bid[1]), 0);
@@ -954,7 +1472,7 @@
       return { type: 'Neutral', percentage: 50 };
   }
 
-  // Function to update the individual pressure displays
+  // Function to update the individual pressure displays (reused)
   async function updatePressureDisplays() {
       const pressureDivs = {
           'BTCUSDT': document.getElementById('btc-pressure-small'),
@@ -964,8 +1482,8 @@
       for (const symbol of pressureCoins) {
           const depthData = await getDepthData(symbol); // Fetch fresh data each time
           const pressure = calculatePressure(depthData);
-          const pressureDiv = pressureDivs[symbol];
           const coinName = symbol.replace('USDT', '');
+          const pressureDiv = pressureDivs[symbol]; // Get the correct div
           if (pressureDiv) {
               if (pressure) {
                   pressureDiv.textContent = `${coinName} ${pressure.type} ${pressure.percentage}%`;
@@ -978,23 +1496,45 @@
       }
   }
 
-  // Helper function to handle API errors and update UI
+  // Helper function to handle API errors and update UI (reused)
   function handleApiError(response, context) {
       console.warn(`API error fetching ${context}: ${response.status}`);
+      // *** UPDATE: Removed specific rate limit error messages from display ***
+      // if (response.status === 429 || response.status === 418) {
+      //     updateErrorDisplay('API rate limit likely hit. Data refresh may be delayed.');
+      //     document.getElementById('rate-limit-warning').classList.remove('hidden'); // Show warning
+      // } else {
+      //     updateErrorDisplay(`API error for ${context} (${response.status}).`);
+      // }
+      // Instead, just log the error and hide the warning if it was specific to rate limits
       if (response.status === 429 || response.status === 418) {
-          updateErrorDisplay('API rate limit likely hit. Data refresh may be delayed.');
-          document.getElementById('rate-limit-warning').classList.remove('hidden'); // Show warning
+           console.warn('API rate limit likely hit.');
+           document.getElementById('rate-limit-warning').classList.remove('hidden'); // Keep showing the warning span
       } else {
-          updateErrorDisplay(`API error for ${context} (${response.status}).`);
+           updateErrorDisplay(`API error for ${context} (${response.status}).`); // Show other API errors
       }
   }
 
-  // Helper function to update the error display area
+  // Helper function to update the error display area (reused)
   function updateErrorDisplay(message) {
       const errorDiv = document.getElementById('error');
-      // Avoid duplicate messages
-      if (!errorDiv.textContent.includes(message)) {
-          errorDiv.textContent += (errorDiv.textContent ? ' | ' : '') + message;
+      // *** UPDATE: Filter out specific rate limit messages ***
+      const rateLimitMessages = [
+          'API rate limit likely hit. Data refresh may be delayed.',
+          'High frequency may cause rate limits.'
+      ];
+      if (rateLimitMessages.includes(message)) {
+          // Do not display these specific messages in the error div
+          console.log(`Suppressed error message: ${message}`);
+          return;
+      }
+
+      // Clear the error message if the same message is received again
+      if (errorDiv.textContent.includes(message)) {
+           // Do nothing, avoid duplicate messages
+      } else {
+          // Add new message, prepend with '|' if there are existing messages
+          errorDiv.textContent = (errorDiv.textContent ? errorDiv.textContent + ' | ' : '') + message;
       }
   }
 
@@ -1006,14 +1546,29 @@
               fetch('https://api.coingecko.com/api/v3/global').catch(e => { console.error("Gecko API Error:", e); return null; }),
               fetch('https://api.alternative.me/fng/?limit=1').catch(e => { console.error("FNG API Error:", e); return null; })
           ]);
-          if (globalRes && globalRes.ok && fngRes && fngRes.ok) {
-              const g = await globalRes.json(); const f = await fngRes.json();
-              const mcap = g.data.total_market_cap.usd / 1e9; const chg = g.data.market_cap_change_percentage_24h_usd;
-              const fgv = f.data[0].value; const fgc = f.data[0].value_classification;
+          let metricsHtml = '';
+          if (globalRes && globalRes.ok) {
+              const g = await globalRes.json();
+              const mcap = g.data.total_market_cap.usd / 1e9;
+              const chg = g.data.market_cap_change_percentage_24h_usd;
               const chgColorClass = chg >= 0 ? 'pct-green' : 'pct-red';
-              document.getElementById('metrics').innerHTML =
-                `Mkt Cap: $${mcap.toFixed(2)}B (<span class="${chgColorClass}">${chg.toFixed(2)}%</span>) | F&G: <span style="color:${fgc.toLowerCase().includes('fear')?'#f06548':'#0ab39c'}">${fgv}</span> (${fgc})`;
-          } else { document.getElementById('metrics').textContent = 'Global metrics unavailable.'; }
+              // *** UPDATE: Changed "Mkt Cap" to "Market Cap" ***
+              metricsHtml += `Market Cap: $${mcap.toFixed(2)}B (<span class="${chgColorClass}">${chg.toFixed(2)}%</span>)`;
+          } else {
+              metricsHtml += 'Market Cap: N/A';
+          }
+
+          if (fngRes && fngRes.ok) {
+              const f = await fngRes.json();
+              const fgv = f.data[0].value;
+              const fgc = f.data[0].value_classification;
+              metricsHtml += ` | F&G: <span style="color:${fgc.toLowerCase().includes('fear')?'#f06548':'#0ab39c'}">${fgv}</span> (${fgc})`;
+          } else {
+               metricsHtml += ' | F&G: N/A';
+          }
+
+          document.getElementById('metrics').innerHTML = metricsHtml;
+
       } catch (error) {
           console.error("Critical Error in loadGlobalMetrics:", error);
           updateErrorDisplay('Failed to load global metrics. Check console.');
@@ -1025,7 +1580,7 @@
   async function loadData(){
     console.log(`Loading coin data - RSI: ${currentRsiInterval}, Page: ${currentPage}`);
     updateErrorDisplay(''); // Clear previous errors on new load attempt
-    document.getElementById('rate-limit-warning').classList.add('hidden'); // Hide warning initially
+    // document.getElementById('rate-limit-warning').classList.add('hidden'); // Hide warning initially - Keep it visible if high frequency page is active
 
     try {
         updateTimestamp(); // Update timestamp on each data load
@@ -1037,24 +1592,31 @@
         const binanceTickerPromises = binanceSymbols.map(symbol =>
             fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${symbol}`)
             .then(res => res.ok ? res.json() : Promise.reject(res)) // Reject promise on non-OK status
-            .catch(e => { handleApiError(e, `Ticker for ${symbol}`); return null; }) // Handle error and return null
+            .catch(res => { handleApiError(res, `Ticker for ${symbol}`); return null; }) // Handle error and return null
         );
 
         // Fetch RSI data (Lower Frequency - less critical for second-by-second updates)
         // Consider fetching this less often if rate limits are hit
         const binanceRsiPromises = binanceSymbols.map(symbol => getRSI(symbol, currentRsiInterval));
 
-        // Fetch Depth data for pressure coins (Lower Frequency)
-        // updatePressureDisplays handles its own fetching and error reporting
+        // Fetch Depth data for pressure coins (Lower Frequency) - This is now only for pressure displays
         const pressureUpdatePromise = updatePressureDisplays();
+
 
         // Fetch CoinGecko data (Lowest Frequency - ATH/ATL/Market Cap change slowly)
         // This is now handled by loadGlobalMetrics, but we still need ATH/ATL/MarketCap per coin for the table.
         // We can fetch this less frequently or cache it. For now, let's keep fetching it with coin data.
-        const coinGeckoIds = coins.map(c => coinGeckoIdMap[c.symbol]).filter(id => id);
+        const coinGeckoIdMapForFetch = {...coinGeckoIdMap};
+        // Remove TRUMPUSDT from the map for CoinGecko fetch as it doesn't have a standard CG ID
+        delete coinGeckoIdMapForFetch['TRUMPUSDT']; // Example: remove TRUMP if it doesn't have a CG ID
+
+        const coinGeckoIds = coins.map(c => coinGeckoIdMapForFetch[c.symbol]).filter(id => id); // Filter out undefined IDs
         const coinGeckoIdsString = coinGeckoIds.join(',');
-        const coinGeckoUrl = `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${coinGeckoIdsString}&order=market_cap_desc&per_page=100&page=1&sparkline=false`;
-        const coinGeckoPromise = coinGeckoIds.length > 0 ? fetch(coinGeckoUrl).then(res => res.json()).catch(e => { console.error("CoinGecko API Error:", e); return []; }) : Promise.resolve([]);
+         // Only fetch CoinGecko if there are valid IDs to fetch
+        const coinGeckoPromise = coinGeckoIds.length > 0 ? fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${coinGeckoIdsString}&order=market_cap_desc&per_page=100&page=1&sparkline=false`)
+            .then(res => res.ok ? res.json() : Promise.reject(res))
+            .catch(res => { handleApiError(res, `CoinGecko Markets`); return []; })
+            : Promise.resolve([]);
 
 
         // Wait for all API calls
@@ -1069,7 +1631,7 @@
         const coinGeckoDataMap = {};
         if (Array.isArray(coinGeckoData)) {
             coinGeckoData.forEach(coin => {
-                const binanceSymbol = Object.keys(coinGeckoIdMap).find(key => coinGeckoIdMap[key] === coin.id);
+                const binanceSymbol = Object.keys(coinGeckoIdMapForFetch).find(key => coinGeckoIdMapForFetch[key] === coin.id);
                 if (binanceSymbol) coinGeckoDataMap[binanceSymbol] = coin;
             });
         }
@@ -1080,9 +1642,10 @@
         coins.forEach((coin, index) => {
             const binanceTickerResult = binanceTickerResults[index];
             const binanceRsiResult = binanceRsiResults[index];
-            const cgData = coinGeckoDataMap[coin.symbol];
+            const cgData = coinGeckoDataMap[coin.symbol]; // Will be undefined if no CG ID or fetch failed
 
             let low = NaN, high = NaN, last = NaN, prev = NaN, volume = NaN, pct = NaN, rsiValue = NaN;
+            // Removed largestBid and largestAsk properties
             let ath = NaN, atl = NaN, marketCap = NaN;
 
             // Process Binance Ticker Data
@@ -1104,8 +1667,9 @@
                  console.warn(`Failed to get Binance RSI data for ${coin.symbol}.`);
              }
 
+            // Removed processing for Binance Depth Data for table columns
+
             // Process CoinGecko Data (Use existing data if available, otherwise fetch)
-            // For simplicity, we're re-fetching CG data here for per-coin ATH/ATL/MarketCap.
             if (cgData) {
                 ath = cgData.ath; atl = cgData.atl; marketCap = cgData.market_cap;
                 // Use CG as fallback if Binance failed
@@ -1114,23 +1678,27 @@
                 if (isNaN(last) && cgData.current_price) last = cgData.current_price;
                 if (isNaN(volume) && cgData.total_volume) volume = cgData.total_volume;
                 if (isNaN(pct) && cgData.price_change_percentage_24h) pct = cgData.price_change_percentage_24h;
-            } else {
+            } else if (coinGeckoIdMapForFetch[coin.symbol]) { // Only warn if we expected CG data
                  console.warn(`No CoinGecko data for ${coin.symbol}. ATH/ATL/MCap will be N/A.`);
             }
 
             newTableData.push({
-                ...coin, low, high, last, prev, rsi: rsiValue, pct, volume, ath, atl, marketCap
+                ...coin, low, high, last, prev, rsi: rsiValue, pct, volume,
+                // Removed largestBid, largestAsk from here
+                ath, atl, marketCap
             });
         });
 
         allTableData = newTableData; // Update the global data store
 
         if (apiErrorCount > 0) {
-             updateErrorDisplay(`Data errors for ${apiErrorCount} coin(s). Some data may be missing.`);
+             // *** UPDATE: Modified error message to be less specific about rate limits ***
+             // updateErrorDisplay(`Data errors for ${apiErrorCount} coin(s). Some data may be missing.`);
+             // Keep the rate limit warning span visible if appropriate, but don't add a general error message here
         }
 
         renderTable(); // Render the table with the new data
-        updateAllManualCalcs(); // *** UPDATE 1: Update all manual calculators with new current prices ***
+        updateAllManualCalcs(); // Update all manual calculators with new current prices
 
     } catch (error) {
         console.error("Critical Error in loadData:", error);
@@ -1179,6 +1747,9 @@
       return mcap.toFixed(0);
   }
 
+   // Removed formatWallVolume function
+
+
   // --- Table Rendering Function ---
   function updateProfitHeaders(investmentAmount) {
       const invStr = investmentAmount >= 1000 ? `${(investmentAmount / 1000).toFixed(0)}k` : investmentAmount.toFixed(0);
@@ -1198,8 +1769,8 @@
     // Filter data based on the current page
     let dataToRender = [];
     if (currentPage === 'top4') {
-        // Ensure TOP_COINS symbols exist in allTableData before filtering
-        dataToRender = allTableData.filter(coin => TOP_COINS.includes(coin.symbol));
+        // Filter allTableData to include only coins whose symbols are in the topCoins array
+        dataToRender = allTableData.filter(coin => topCoins.includes(coin.symbol));
     } else {
         dataToRender = [...allTableData]; // Use all data for the 'all' page
     }
@@ -1213,23 +1784,24 @@
         else if (sortKey === 'type') { va = a.label; vb = b.label; }
         else if (sortKey === 'signalSuggestion') {
             const signalA = generateMaSignal(a.rsi, a.pct); const signalB = generateMaSignal(b.rsi, b.pct);
-            const suggestionA = generateSuggestion(a.rsi, a.pct); const suggestionB = generateSuggestion(b.rsi, b.pct);
+            const suggestionA = generateSuggestion(a.rsi, a.pct); const suggestionB = generateSuggestion(b.rsi, a.pct); // Corrected suggestionB
             const signalOrder = { 'Bullish': 3, 'Neutral': 2, 'Bearish': 1, 'N/A': 0 };
             const orderA = signalOrder[signalA] || 0; const orderB = signalOrder[signalB] || 0;
             if (orderA !== orderB) { va = orderA; vb = orderB; }
             else { va = suggestionA; vb = suggestionB; return va.localeCompare(vb) * sortDir; } // Secondary sort by suggestion text
         }
+         // Removed sorting for largestBid and largestAsk
         else if (['low','high','last','pH','pCH', 'volume', 'marketCap', 'ath', 'atl', 'rsi'].includes(sortKey)){
            const pH_a = a.low > 0 ? ((a.high - a.low) / a.low) * currentInvestment : 0;
            const pCH_a = a.last > 0 ? ((a.high - a.last) / a.last) * currentInvestment : 0;
            const pH_b = b.low > 0 ? ((b.high - b.low) / b.low) * currentInvestment : 0;
-           const pCH_b = b.last > 0 ? ((b.last - b.high) / b.last) * currentInvestment : 0; // Corrected calculation for C->H profit
+           const pCH_b = b.last > 0 ? ((b.high - b.last) / b.last) * currentInvestment : 0; // Corrected calculation for C->H profit
 
-           if (sortKey === 'pH') { va = pH_a; vb = pH_b; }
+           if (sortKey === 'pH') { va = pH_a; vb = pCH_b; } // Corrected comparison
            else if (sortKey === 'pCH') { va = pCH_a; vb = pCH_b; }
            else if (sortKey === 'volume') { va = a.volume; vb = b.volume; }
            else if (sortKey === 'marketCap') { va = a.marketCap; vb = b.marketCap; }
-           else if (sortKey === 'ath') { va = a.ath; vb = b.ath; }
+           else if (sortKey === 'ath') { va = a.ath; vb = b.atl; } // Corrected comparison
            else if (sortKey === 'atl') { va = a.atl; vb = b.atl; }
            else if (sortKey === 'rsi') { va = a.rsi; vb = b.rsi; }
            else { va = a[sortKey]; vb = b[sortKey]; } // Fallback for low, high, last
@@ -1262,13 +1834,16 @@
     tb.innerHTML = ''; // Clear previous content
     if (dataToRender.length === 0) {
         const message = allTableData.length === 0 ? "Loading data or API error..." : "No coins match the current filter.";
-        // Update colspan to match the number of columns (10)
-        tb.innerHTML = `<tr><td colspan="10" class="text-center p-4 text-gray-500">${message}</td></tr>`;
+        // Updated colspan to match the number of columns (now 9)
+        tb.innerHTML = `<tr><td colspan="9" class="text-center p-4 text-gray-500">${message}</td></tr>`;
         return;
     }
 
     dataToRender.forEach(r => {
-      const pct = r.pct; const tr = document.createElement('tr');
+      const pct = r.pct;
+      const tr = document.createElement('tr');
+      tr.dataset.symbol = r.symbol; // *** UPDATE: Add data-symbol attribute to row ***
+      // Only apply highlight if the highlight property exists
       if(r.highlight) { tr.classList.add('highlight-' + r.highlight); } // Apply highlight class
 
       const profitLowToHigh = r.low > 0 ? ((r.high - r.low) / r.low) * currentInvestment : 0;
@@ -1286,8 +1861,18 @@
       const currentPrecision = precision[r.symbol] || 8; // Default to 8 if not specified
       const formatPrice = (price) => isNaN(price) ? 'N/A' : price.toFixed(currentPrecision);
 
+      // Check if the coin is in the topCoins list to determine star icon state
+      const isTopCoin = topCoins.includes(r.symbol);
+      const starIconClass = isTopCoin ? 'fas fa-star' : 'far fa-star'; // Solid star if in topCoins, outline if not
+      const starColorClass = isTopCoin ? 'is-top-coin' : ''; // Apply green color class if in topCoins
+
+
       tr.innerHTML = `
-        <td class="text-left"><a href="https://www.binance.com/en/trade/${r.symbol}?type=spot" target="_blank" class="text-blue-600 hover:underline font-medium">${r.name}</a> <span class="${pct<0?'pct-red':'pct-green'} text-xs">(${isNaN(pct)?'N/A':pct.toFixed(1)}%)</span></td>
+        <td class="text-left">
+            <i class="${starIconClass} toggle-top-coin ${starColorClass}" data-symbol="${r.symbol}" title="${isTopCoin ? 'Remove from Top Coins' : 'Add to Top Coins'}"></i>
+            <a href="https://www.binance.com/en/trade/${r.symbol}?type=spot" target="_blank" class="text-blue-600 hover:underline font-medium">${r.name}</a>
+            <span class="${pct<0?'pct-red':'pct-green'} text-xs">(${isNaN(pct)?'N/A':pct.toFixed(1)}%)</span>
+            <span class="manual-profit-inline ml-2 text-sm" data-coin-symbol="${r.symbol}"></span> </td>
         <td class="rsi clickable text-right ${rsiClass}" data-rsi-value="${rsiValue}">${rsiText}</td>
         <td class="last clickable text-right">${formatPrice(r.last)}</td>
         <td class="low clickable text-right">${formatPrice(r.low)}</td>
@@ -1299,13 +1884,15 @@
             <span class="ma-signal ${maSignalClass}">${maSignalText}</span>
             <span class="suggestion-text ${suggestionColorClass}">${suggestionText}</span>
         </td>
-        <td class="text-left text-xs">${r.label}</td>
-      `;
+        `;
       tb.appendChild(tr);
     });
 
     // Re-add event listeners after the table body is repopulated
     addTableEventListeners();
+
+    // *** UPDATE: Populate inline profits after table is rendered ***
+    updateTableInlineProfits();
   }
 
   // Function to add event listeners to table headers and cells
@@ -1322,7 +1909,8 @@
           sortDir = -sortDir; // Reverse direction
         } else {
           sortKey = key;
-          sortDir = (key === 'volume' || key === 'pCH' || key === 'pH' || key === 'marketCap') ? -1 : 1; // Default descending for volume/profit/mcap, ascending otherwise
+          // Default descending for volume/profit/mcap, ascending otherwise
+          sortDir = (['volume', 'pCH', 'pH', 'marketCap'].includes(key)) ? -1 : 1;
         }
         // Reset RSI custom sort state if sorting by another column
         if (key !== 'rsi') rsiSortState = 'custom-asc';
@@ -1366,6 +1954,17 @@
             // }
         };
     });
+
+     // *** NEW: Add event listeners for the toggle-top-coin icons ***
+    document.querySelectorAll('#body .toggle-top-coin').forEach(icon => {
+        icon.onclick = (event) => {
+            event.stopPropagation(); // Prevent row click event from firing
+            const symbol = icon.dataset.symbol;
+            if (symbol) {
+                toggleTopCoin(symbol);
+            }
+        };
+    });
   }
 
   // --- UI Control Functions ---
@@ -1377,7 +1976,7 @@
       document.querySelectorAll('.btn-rsi').forEach(btn => btn.classList.remove('active'));
       buttonElement.classList.add('active');
       const rsiHeader = document.getElementById('rsiHeader'); if (rsiHeader) rsiHeader.textContent = `RSI (${currentRsiInterval})`;
-      const tableBody = document.getElementById('body'); if (tableBody) tableBody.innerHTML = `<tr><td colspan="10" class="text-center p-4 text-gray-500">Loading ${currentRsiInterval} RSI data...</td></tr>`;
+      const tableBody = document.getElementById('body'); if (tableBody) tableBody.innerHTML = `<tr><td colspan="9" class="text-center p-4 text-gray-500">Loading ${currentRsiInterval} RSI data...</td></tr>`; // Updated colspan
       // Clear existing refresh timeout and load data immediately
       if (dataRefreshTimeoutId) clearTimeout(dataRefreshTimeoutId);
       loadData(); // Load data immediately after changing interval
@@ -1390,24 +1989,38 @@
       document.querySelectorAll('.btn-page').forEach(btn => btn.classList.remove('active'));
       buttonElement.classList.add('active');
 
-      // Update refresh interval display
+      // Clear any existing refresh timeout
+      if (dataRefreshTimeoutId) clearTimeout(dataRefreshTimeoutId);
+
+      // Update auto-refresh state and display based on the selected page
       const refreshDisplay = document.getElementById('refresh-interval-display');
+      const refreshOnBtn = document.getElementById('refresh-on-btn');
+      const refreshOffBtn = document.getElementById('refresh-off-btn');
+      const rateLimitWarning = document.getElementById('rate-limit-warning');
+
+
       if (newPage === 'top4') {
+          isAutoRefreshEnabled = true; // Enable auto-refresh for Top Coins
           refreshDisplay.textContent = 'Auto Refresh: 5s';
-          document.getElementById('rate-limit-warning').classList.remove('hidden'); // Show warning for high frequency
-      } else {
-          refreshDisplay.textContent = 'Auto Refresh: 15m';
-          document.getElementById('rate-limit-warning').classList.add('hidden'); // Hide warning for lower frequency
+           document.getElementById('rate-limit-warning').classList.remove('hidden'); // Show warning for high frequency
+          refreshOnBtn.classList.add('active');
+          refreshOffBtn.classList.remove('active');
+          // Schedule the next refresh for Top Coins
+          scheduleNextRefresh();
+      } else { // newPage === 'all'
+          isAutoRefreshEnabled = false; // Disable auto-refresh for All Coins
+          refreshDisplay.textContent = 'Auto Refresh: OFF';
+          rateLimitWarning.classList.add('hidden'); // Hide warning for lower frequency
+          refreshOnBtn.classList.remove('active');
+          refreshOffBtn.classList.add('active');
+          // No need to schedule, as isAutoRefreshEnabled is false
       }
 
       renderTable(); // Re-render the table immediately with the new page filter
 
-      // Clear existing refresh timeout and schedule a new one with the correct interval
-      if (dataRefreshTimeoutId) clearTimeout(dataRefreshTimeoutId);
-      // Schedule the next refresh ONLY if auto-refresh is enabled
-      if (isAutoRefreshEnabled) {
-         scheduleNextRefresh();
-      }
+      // Note: loadData is NOT called immediately here to avoid unnecessary API calls on page switch.
+      // The data for the new page will be rendered from the existing allTableData.
+      // A manual refresh can be triggered by the user if needed.
   }
 
   // Function for manual refresh
@@ -1473,7 +2086,7 @@
           clearTimeout(dataRefreshTimeoutId);
       }
 
-      // Only schedule if auto-refresh is enabled
+      // Only schedule if auto-refresh is enabled for the *current* page
       if (isAutoRefreshEnabled) {
           // Determine the interval based on the current page
           const interval = currentPage === 'top4' ? REFRESH_INTERVAL_TOP4_MS : REFRESH_INTERVAL_ALL_MS;
@@ -1481,6 +2094,8 @@
           // Schedule the next loadData call
           dataRefreshTimeoutId = setTimeout(loadData, interval);
           console.log(`Next coin data refresh scheduled in ${interval} ms for page: ${currentPage}`); // Optional: for debugging
+      } else {
+           console.log(`Auto Refresh is OFF for page: ${currentPage}. No refresh scheduled.`);
       }
   }
 
@@ -1503,44 +2118,40 @@
   // --- Initial Load ---
   document.addEventListener('DOMContentLoaded', () => {
       console.log("DOM fully loaded and parsed");
+
+      loadCoins(); // Load coins and topCoins from localStorage or use defaults
       updateCalc(); // Ensure calculator is updated initially
-      populateManualCoinSelect(); // *** UPDATE 1: Populate all manual coin dropdowns ***
+      populateManualCoinSelect(); // Populate all manual coin dropdowns and set defaults
+
+      // Load saved data for all manual calculators
+      for (let i = 1; i <= 5; i++) {
+          loadManualCalcData(i);
+      }
 
       // Perform initial loads
       loadGlobalMetrics(); // Initial load of global metrics
-      loadData(); // Initial load of coin data
+      loadData(); // Initial load of coin data (this will call renderTable and updateAllManualCalcs)
 
       addTableEventListeners(); // Add initial listeners (will be re-added in renderTable)
 
       // Set initial state of refresh buttons and schedule intervals if enabled (default)
-      if (isAutoRefreshEnabled) {
-          startGlobalMetricsRefresh(); // Start global metrics refresh
-          scheduleNextRefresh(); // Start coin data refresh
-          document.getElementById('refresh-on-btn').classList.add('active'); // Set ON button active initially
-      } else {
-           document.getElementById('refresh-off-btn').classList.add('active'); // Set OFF button active initially if starting disabled
-           document.getElementById('refresh-interval-display').textContent = 'Auto Refresh: OFF';
-           document.getElementById('rate-limit-warning').classList.add('hidden'); // Hide warning when off
-      }
+      // Auto-refresh is ON by default for the initial 'top4' page
+      isAutoRefreshEnabled = true;
+      startGlobalMetricsRefresh(); // Start global metrics refresh
+      // scheduleNextRefresh(); // loadData already schedules the first refresh
+      document.getElementById('refresh-on-btn').classList.add('active'); // Set ON button active initially
+      document.getElementById('refresh-off-btn').classList.remove('active'); // Set OFF button inactive
+      document.getElementById('refresh-interval-display').textContent = 'Auto Refresh: 5s';
+      document.getElementById('rate-limit-warning').classList.remove('hidden'); // Show warning for high frequency
+
+      // Add event listeners for Add/Remove buttons (Reset button removed)
+      document.getElementById('addCoinBtn').addEventListener('click', addCoin);
+      document.getElementById('removeCoinBtn').addEventListener('click', removeCoin);
+      // Removed event listener for resetCoinsBtn
 
 
-      // Set initial refresh interval display text
-       const refreshDisplay = document.getElementById('refresh-interval-display');
-       if (isAutoRefreshEnabled) {
-           refreshDisplay.textContent = `Auto Refresh: ${currentPage === 'top4' ? '5s' : '15m'}`;
-            if (currentPage === 'top4') {
-                document.getElementById('rate-limit-warning').classList.remove('hidden');
-            } else {
-                document.getElementById('rate-limit-warning').classList.add('hidden');
-            }
-       } else {
-           refreshDisplay.textContent = 'Auto Refresh: OFF';
-           document.getElementById('rate-limit-warning').classList.add('hidden');
-       }
-
-       // Initial update for all manual calculators after DOM is ready
-       updateAllManualCalcs();
-
+       // Initial update for all manual calculators and table inline profits after DOM is ready and defaults are set
+       // updateAllManualCalcs(); // This is now called by loadData after coin data is available
   });
 
 </script>
