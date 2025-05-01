@@ -8,90 +8,148 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <style>
-    /* Base styles */
+    /* Base styles (Light Mode) */
     body {
       font-family: 'Inter', sans-serif;
       background-color: #f0f2f5; /* Light gray background */
       color: #495057; /* Dark text color */
+      transition: background-color 0.3s ease, color 0.3s ease; /* Smooth transition */
     }
-    /* Custom styles for specific elements */
-    .profit-positive { color: #0ab39c !important; /* Velzon success green - Use !important to override potential conflicts */ }
-    .profit-negative { color: #f06548 !important; /* Velzon danger red - Use !important */ }
+
+    /* Dark Mode Styles */
+    body.dark-mode {
+      background-color: #212529; /* Dark background */
+      color: #ced4da; /* Light gray text color */
+    }
+
+    /* Custom styles for specific elements (Light Mode) */
+    .profit-positive { color: #0ab39c !important; /* Velzon success green */ }
+    .profit-negative { color: #f06548 !important; /* Velzon danger red */ }
     .pct-green { color: #0ab39c; } /* Green for positive percentage change */
     .pct-red { color: #f06548; } /* Red for negative percentage change */
     .rsi.green { color: #0ab39c; } /* Green for low RSI */
     .rsi.red { color: #f06548; } /* Red for high RSI */
-    /* Combined signal/suggestion colors */
+
+    /* Dark Mode overrides for text colors */
+    body.dark-mode .profit-positive { color: #38c172 !important; /* Brighter green for dark mode */ }
+    body.dark-mode .profit-negative { color: #e3342f !important; /* Brighter red for dark mode */ }
+    body.dark-mode .pct-green { color: #38c172; }
+    body.dark-mode .pct-red { color: #e3342f; }
+    body.dark-mode .rsi.green { color: #38c172; }
+    body.dark-mode .rsi.red { color: #e3342f; }
+
+
+    /* Combined signal/suggestion colors (Light Mode) */
     .signal-suggestion .ma-signal.bullish { color: #0ab39c; }
     .signal-suggestion .ma-signal.bearish { color: #f06548; }
     .signal-suggestion .suggestion-text.buy-color { color: #0ab39c; }
     .suggestion-text.sell-color { color: #f06548; }
-    /* Styles for Pressure indicators */
+
+     /* Dark Mode overrides for signal/suggestion colors */
+    body.dark-mode .signal-suggestion .ma-signal.bullish { color: #38c172; }
+    body.dark-mode .signal-suggestion .ma-signal.bearish { color: #e3342f; }
+    body.dark-mode .signal-suggestion .suggestion-text.buy-color { color: #38c172; }
+    body.dark-mode .suggestion-text.sell-color { color: #e3342f; }
+
+
+    /* Styles for Pressure indicators (Light Mode) */
     .pressure.buy { color: #0ab39c; } /* Green for Buy Pressure */
     .pressure.sell { color: #f06548; } /* Red for Sell Pressure */
     .pressure.neutral { color: #626c76; } /* Gray for Neutral Pressure */
 
-    /* Styling for the individual smaller pressure displays */
+     /* Dark Mode overrides for pressure colors */
+    body.dark-mode .pressure.buy { color: #38c172; }
+    body.dark-mode .pressure.sell { color: #e3342f; }
+    body.dark-mode .pressure.neutral { color: #adb5bd; /* Lighter gray */ }
+
+
+    /* Styling for the individual smaller pressure displays (Light Mode) */
     .small-pressure-display {
-        padding: 0.1rem 0.3rem; /* Very small padding */
-        border-radius: 0.25rem; /* Match button border-radius */
+        padding: 0.1rem 0.3rem;
+        border-radius: 0.25rem;
         background-color: #e9ecef; /* Match button background */
         color: #495057; /* Match button text color */
-        font-weight: 500; /* Match button font weight */
-        display: inline-block; /* Allow it to sit inline with buttons */
-        text-align: center; /* Center text */
-        font-size: 0.65rem; /* Even smaller font size */
-        white-space: nowrap; /* Prevent text wrapping */
+        font-weight: 500;
+        display: inline-block;
+        text-align: center;
+        font-size: 0.65rem;
+        white-space: nowrap;
+        transition: background-color 0.3s ease, color 0.3s ease; /* Smooth transition */
     }
-    /* Apply pressure colors directly to the small-pressure-display spans */
+    /* Apply pressure colors directly to the small-pressure-display spans (Light Mode) */
     .small-pressure-display.buy { color: #0ab39c; }
     .small-pressure-display.sell { color: #f06548; }
     .small-pressure-display.neutral { color: #626c76; }
 
+    /* Dark Mode overrides for small pressure displays */
+    body.dark-mode .small-pressure-display {
+        background-color: #495057; /* Darker background */
+        color: #ced4da; /* Lighter text */
+    }
+    body.dark-mode .small-pressure-display.buy { color: #38c172; }
+    body.dark-mode .small-pressure-display.sell { color: #e3342f; }
+    body.dark-mode .small-pressure-display.neutral { color: #adb5bd; }
 
-    /* Style the select dropdown arrow */
-    #inv, .manualCoinSelect { /* Apply to both select elements */
+
+    /* Style the select dropdown arrow (Light Mode) */
+    #inv, .manualCoinSelect {
         background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%2F%3E%3Cpath%20fill%3D%22%23495057%22%20d%3D%22M287%2C114.7L159.2%2C242.5c-8.8%2C8.8-23.2%2C8.8-32%2C0l-128-128c-8.8-8.8-8.8-23.2%2C0-32s23.2-8.8%2C32%2C0l112%2C112l112-112c8.8-8.8%2C23.2-8.8%2C32%2C0S295.8%2C105.9%2C287%2C114.7z%22%2F%3E%3C%2FSVG%3E');
         background-repeat: no-repeat;
         background-position: right 0.75rem top 50%;
         background-size: 0.65em auto;
-        padding-right: 2.5rem; /* Increased padding */
-        -webkit-appearance: none; /* Remove default appearance */
+        padding-right: 2.5rem;
+        -webkit-appearance: none;
         -moz-appearance: none;
         appearance: none;
     }
 
-     /* Highlight for clickable suggestion row */
+     /* Dark Mode override for select dropdown arrow */
+    body.dark-mode #inv, body.dark-mode .manualCoinSelect {
+         background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%2F%3E%3Cpath%20fill%3D%22%23ced4da%22%20d%3D%22M287%2C114.7L159.2%2C242.5c-8.8%2C8.8-23.2%2C8.8-32%2C0l-128-128c-8.8-8.8-8.8-23.2%2C0-32s23.2-8.8%2C32%2C0l112%2C112l112-112c8.8-8.8%2C23.2-8.8%2C32%2C0S295.8%2C105.9%2C287%2C114.7z%22%2F%3E%3C%2FSVG%3E'); /* Lighter arrow color */
+    }
+
+
+     /* Highlight for clickable suggestion row (Light Mode) */
     .highlight-suggestion { background-color: #e0e7ff !important; } /* Lighter blue highlight */
 
-    /* Custom highlight colors for specific coins */
+    /* Dark Mode override for suggestion highlight */
+    body.dark-mode .highlight-suggestion { background-color: #495057 !important; /* Darker highlight */ }
+
+
+    /* Custom highlight colors for specific coins (Light Mode) */
     .highlight-btc-red { background-color: #fee2e2 !important; } /* Light Red */
     .highlight-sui-yellow { background-color: #fef9c3 !important; } /* Light Yellow */
     .highlight-pepe-green { background-color: #dcfce7 !important; } /* Light Green */
-    /* Removed highlight-xrp-blue */
-    /* Keep other generic highlights if needed */
     .highlight-sui-xrp { background-color: #e9eef4; } /* Consistent light highlight color */
 
+    /* Dark Mode overrides for custom highlights */
+    body.dark-mode .highlight-btc-red { background-color: #4a2c2c !important; /* Darker Red */ }
+    body.dark-mode .highlight-sui-yellow { background-color: #4a4a2c !important; /* Darker Yellow */ }
+    body.dark-mode .highlight-pepe-green { background-color: #2c4a2c !important; /* Darker Green */ }
+    body.dark-mode .highlight-sui-xrp { background-color: #343a40; } /* Darker highlight */
 
-    /* Table styles */
+
+    /* Table styles (Light Mode) */
     table {
         border-collapse: collapse;
         width: 100%;
     }
     th, td {
-        padding: 0.75rem 1rem; /* Adjusted padding */
+        padding: 0.75rem 1rem;
         border-bottom: 1px solid #e9eef4; /* Lighter border for rows */
         text-align: left;
-        font-size: 0.875rem; /* Font size for table data */
-        vertical-align: middle; /* Align content vertically */
+        font-size: 0.875rem;
+        vertical-align: middle;
+        transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease; /* Smooth transition */
     }
     th {
         background-color: #f8f9fa; /* Light background for headers */
         font-weight: 600;
         text-transform: uppercase;
-        font-size: 0.75rem; /* Even smaller font size for headers */
+        font-size: 0.75rem;
         color: #626c76; /* Darker gray for header text */
-        white-space: nowrap; /* Prevent header text wrapping */
+        white-space: nowrap;
+        transition: background-color 0.3s ease, color 0.3s ease; /* Smooth transition */
     }
     tbody tr:hover {
         background-color: #e9eef4; /* Hover effect on rows */
@@ -103,28 +161,54 @@
        /* Keep original highlight color on hover */
     }
 
+    /* Dark Mode overrides for table styles */
+    body.dark-mode th, body.dark-mode td {
+        border-bottom-color: #495057; /* Darker border */
+    }
+    body.dark-mode th {
+        background-color: #343a40; /* Darker header background */
+        color: #adb5bd; /* Lighter header text */
+    }
+    body.dark-mode tbody tr:hover {
+        background-color: #495057; /* Darker hover effect */
+    }
+    /* Dark Mode overrides for custom highlights on hover */
+    body.dark-mode tbody tr.highlight-btc-red:hover { background-color: #4a2c2c !important; }
+    body.dark-mode tbody tr.highlight-sui-yellow:hover { background-color: #4a4a2c !important; }
+    body.dark-mode tbody tr.highlight-pepe-green:hover { background-color: #2c4a2c !important; }
+    body.dark-mode tbody tr.highlight-sui-xrp:hover { background-color: #343a40; }
+
+
     .text-right { text-align: right; }
     .text-left { text-align: left; }
     .clickable { cursor: pointer; }
 
-    /* Style for the main data container (card) */
+    /* Style for the main data container (card) (Light Mode) */
     .data-container {
         background-color: #ffffff; /* Card background color */
         border-radius: 0.5rem;
         box-shadow: 0 0.75rem 1.5rem rgba(18,38,63,.03); /* Velzon-like shadow */
         padding: 1.5rem;
-        margin-top: 1.5rem; /* Add margin */
+        margin-top: 1.5rem;
+        transition: background-color 0.3s ease, box-shadow 0.3s ease; /* Smooth transition */
     }
 
-    /* Style for form inputs and selects */
+    /* Dark Mode override for data container */
+    body.dark-mode .data-container {
+        background-color: #343a40; /* Darker card background */
+        box-shadow: 0 0.75rem 1.5rem rgba(0,0,0,.1); /* Darker shadow */
+    }
+
+
+    /* Style for form inputs and selects (Light Mode) */
     .input {
         border: 1px solid #ced4da; /* Light border */
         border-radius: 0.25rem;
-        padding: 0.5rem 0.9rem; /* Adjusted padding */
+        padding: 0.5rem 0.9rem;
         color: #495057;
         background-color: #ffffff;
-        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-        font-size: 0.875rem; /* Consistent font size */
+        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out, background-color 0.3s ease, color 0.3s ease; /* Smooth transition */
+        font-size: 0.875rem;
     }
     .input:focus {
         border-color: #86b7fe; /* Blue focus border */
@@ -136,12 +220,28 @@
     input[type=number]::-webkit-outer-spin-button { -webkit-appearance:none; margin:0; }
     input[type=number] { -moz-appearance:textfield; }
 
-    /* Style for buttons */
+    /* Dark Mode overrides for inputs */
+    body.dark-mode .input {
+        border-color: #495057; /* Darker border */
+        color: #ced4da; /* Lighter text */
+        background-color: #495057; /* Darker background */
+    }
+     body.dark-mode .input:focus {
+        border-color: #0d6efd; /* Brighter blue focus border */
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.5); /* Brighter blue focus shadow */
+    }
+     body.dark-mode .input[disabled] {
+         background-color: #6c757d; /* Darker disabled background */
+         color: #adb5bd; /* Lighter disabled text */
+     }
+
+
+    /* Style for buttons (Light Mode) */
     .btn {
-        display: inline-flex; /* Use flex for centering content */
+        display: inline-flex;
         align-items: center;
         justify-content: center;
-        font-weight: 500; /* Medium font weight */
+        font-weight: 500;
         line-height: 1.5;
         color: #495057;
         text-align: center;
@@ -153,8 +253,8 @@
         user-select: none;
         background-color: #e9ecef; /* Light background */
         border: 1px solid transparent;
-        padding: 0.5rem 0.9rem; /* Adjusted padding */
-        font-size: 0.875rem; /* Smaller font size */
+        padding: 0.5rem 0.9rem;
+        font-size: 0.875rem;
         border-radius: 0.25rem;
         transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
     }
@@ -163,46 +263,69 @@
         background-color: #d3d9df;
         border-color: #c6cd D2;
     }
-    .btn-sm { /* Smaller button variant */
-        padding: 0.1rem 0.3rem; /* Very small padding */
+    .btn-sm {
+        padding: 0.1rem 0.3rem;
         font-size: 0.75rem;
     }
-    .btn-rsi, .btn-page { /* RSI & Page Button specific styles */
+    .btn-rsi, .btn-page {
         background-color: #e9ecef;
         color: #495057;
         border: 1px solid #ced4da;
     }
-    .btn-rsi.active, .btn-page.active { /* Active RSI/Page button style */
+    .btn-rsi.active, .btn-page.active {
         background-color: #0ab39c; /* Use success green */
         color: #ffffff;
         border-color: #0ab39c;
     }
 
+    /* Dark Mode overrides for buttons */
+    body.dark-mode .btn {
+        color: #ced4da; /* Lighter text */
+        background-color: #495057; /* Darker background */
+        border-color: #6c757d; /* Darker border */
+    }
+    body.dark-mode .btn:hover {
+        color: #ffffff; /* White text on hover */
+        background-color: #6c757d; /* Even darker background on hover */
+        border-color: #adb5bd; /* Lighter border on hover */
+    }
+     body.dark-mode .btn-rsi, body.dark-mode .btn-page {
+        background-color: #495057;
+        color: #ced4da;
+        border: 1px solid #6c757d;
+    }
+    body.dark-mode .btn-rsi.active, body.dark-mode .btn-page.active {
+        background-color: #38c172; /* Brighter green */
+        color: #ffffff;
+        border-color: #38c172;
+    }
+
+
     /* Style for the combined control button container */
     .button-controls-container {
         display: flex;
         flex-wrap: wrap;
-        justify-content: space-between; /* Push items to ends */
+        justify-content: space-between;
         align-items: center;
-        gap: 1rem; /* Space between button groups */
-        margin-bottom: 1rem; /* Add some bottom margin */
+        gap: 1rem;
+        margin-bottom: 1rem;
     }
     .rsi-buttons, .page-buttons {
         display: flex;
-        flex-wrap: wrap; /* Allow buttons to wrap */
-        gap: 0.5rem; /* Space between buttons within a group */
+        flex-wrap: wrap;
+        gap: 0.5rem;
         align-items: center;
     }
      /* Container for the three small pressure displays */
     .pressure-displays-small {
         display: flex;
-        gap: 0.5rem; /* Space between the small pressure divs */
+        gap: 0.5rem;
         align-items: center;
-        flex-wrap: wrap; /* Allow wrapping on small screens */
+        flex-wrap: wrap;
     }
 
 
-     /* Specific styles for buy/sell inputs */
+     /* Specific styles for buy/sell inputs (Light Mode) */
     .buy {
         background-color: #eaf6f5; /* Light greenish */
         border-color: #d3edea;
@@ -214,169 +337,240 @@
         color: #f06548;
     }
 
-    /* Specific style for profit display */
-    .profit {
-        font-weight: 700; /* Bolder font */
-        padding: 0.75rem 1.25rem !important; /* Increased padding */
-        font-size: 1.125rem !important; /* Larger font size (text-lg) */
-        border-width: 2px; /* Add border */
-        border-style: solid;
+    /* Dark Mode overrides for buy/sell inputs */
+    body.dark-mode .buy {
+        background-color: #2c4a2c; /* Darker greenish */
+        border-color: #38c172;
+        color: #38c172;
     }
-    /* Enhance positive/negative profit styles */
-     .profit-positive-bg { /* Renamed to avoid conflict with text color class */
+     body.dark-mode .sell {
+        background-color: #4a2c2c; /* Darker reddish */
+        border-color: #e3342f;
+        color: #e3342f;
+    }
+
+
+    /* Specific style for profit display (Light Mode) */
+    .profit {
+        font-weight: 700;
+        padding: 0.75rem 1.25rem !important;
+        font-size: 1.125rem !important;
+        border-width: 2px;
+        border-style: solid;
+        transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease; /* Smooth transition */
+    }
+    /* Enhance positive/negative profit styles (Light Mode) */
+     .profit-positive-bg {
         color: #087a6a; /* Darker Success Green */
         background-color: #d1fdee; /* Lighter Success Green background */
         border-color: #a3e9dd; /* Success Green border */
      }
-     .profit-negative-bg { /* Renamed to avoid conflict with text color class */
+     .profit-negative-bg {
          color: #d6472c; /* Darker Danger Red */
          background-color: #fde8e4; /* Lighter Danger Red background */
          border-color: #fcc5ba; /* Danger Red border */
      }
 
-    /* Style for the smaller suggestion text within the merged cell */
-    .suggestion-text {
-        font-size: 0.75rem; /* text-xs */
-        color: #6b7280; /* gray-500 */
-        display: block; /* Ensure it takes its own line */
-        margin-top: 0.1rem; /* Small top margin */
+    /* Dark Mode overrides for profit display */
+    body.dark-mode .profit {
+         /* No specific overrides needed for base profit style, colors handled by profit-positive/negative-bg */
     }
-    /* Apply specific suggestion colors to the smaller text */
+     body.dark-mode .profit-positive-bg {
+        color: #38c172; /* Brighter Success Green */
+        background-color: #2c4a2c; /* Darker Success Green background */
+        border-color: #38c172; /* Brighter Success Green border */
+     }
+     body.dark-mode .profit-negative-bg {
+         color: #e3342f; /* Brighter Danger Red */
+         background-color: #4a2c2c; /* Darker Danger Red background */
+         border-color: #e3342f; /* Brighter Danger Red border */
+     }
+
+
+    /* Style for the smaller suggestion text within the merged cell (Light Mode) */
+    .suggestion-text {
+        font-size: 0.75rem;
+        color: #6b7280; /* gray-500 */
+        display: block;
+        margin-top: 0.1rem;
+        transition: color 0.3s ease; /* Smooth transition */
+    }
+    /* Apply specific suggestion colors to the smaller text (Light Mode) */
     .suggestion-text.buy-color { color: #0ab39c !important; }
     .suggestion-text.sell-color { color: #f06548 !important; }
 
+    /* Dark Mode overrides for suggestion text */
+    body.dark-mode .suggestion-text {
+        color: #adb5bd; /* Lighter gray */
+    }
+    body.dark-mode .suggestion-text.buy-color { color: #38c172 !important; }
+    body.dark-mode .suggestion-text.sell-color { color: #e3342f !important; }
+
+
     /* Style for smaller font in table cells (for ATH/ATL) */
     .text-xxs {
-        font-size: 0.65rem; /* Even smaller font size */
+        font-size: 0.65rem;
     }
 
-    /* Manual Profit Calculator Section Styles */
+    /* Manual Profit Calculator Section Styles (Light Mode) */
     .manual-calc-row {
         display: flex;
         flex-wrap: wrap;
         align-items: center;
-        gap: 0.75rem; /* Smaller gap */
-        padding: 1rem; /* Add padding to the row itself */
+        gap: 0.75rem;
+        padding: 1rem;
         background-color: #ffffff; /* White background for each row */
-        border-radius: 0.5rem; /* Rounded corners for each row */
-        box-shadow: 0 0.75rem 1.5rem rgba(18,38,63,.03); /* Shadow for each row */
-        border: 1px solid #e9eef4; /* Border for each row */
-        margin-bottom: 0.5rem; /* Add bottom margin to separate rows */
+        border-radius: 0.5rem;
+        box-shadow: 0 0.75rem 1.5rem rgba(18,38,63,.03);
+        border: 1px solid #e9eef4;
+        margin-bottom: 0.5rem;
+        transition: background-color 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease; /* Smooth transition */
     }
+
+    /* Dark Mode overrides for manual calc rows */
+    body.dark-mode .manual-calc-row {
+        background-color: #343a40; /* Darker background */
+        box-shadow: 0 0.75rem 1.5rem rgba(0,0,0,.1);
+        border-color: #495057; /* Darker border */
+    }
+
 
     /* Hide the container for calculators 3, 4, 5 by default */
     #hiddenManualCalcs {
         display: none;
+        flex-direction: column; /* Ensure it stacks vertically when shown */
+        gap: 0.5rem; /* Add gap between rows when shown */
     }
 
     .manual-calc-row > div {
         display: flex;
         align-items: center;
-        gap: 0.25rem; /* Even smaller gap for inputs */
+        gap: 0.25rem;
     }
 
     .manual-calc-row label {
-        font-size: 0.75rem; /* Smaller label font */
+        font-size: 0.75rem;
         color: #626c76;
-        white-space: nowrap; /* Prevent wrapping */
+        white-space: nowrap;
+        transition: color 0.3s ease; /* Smooth transition */
     }
 
+     /* Dark Mode override for manual calc labels */
+    body.dark-mode .manual-calc-row label {
+        color: #adb5bd; /* Lighter gray */
+    }
+
+
     .manual-calc-row .input {
-        padding: 0.3rem 0.6rem; /* Smaller input padding */
-        font-size: 0.75rem; /* Smaller input font */
-        width: 80px; /* Fixed width for inputs */
+        padding: 0.3rem 0.6rem;
+        font-size: 0.75rem;
+        width: 80px;
         text-align: right;
     }
 
      .manual-calc-row select.input {
-        width: 100px; /* Slightly wider for coin select */
+        width: 100px;
      }
 
     .manual-profit-display {
         font-weight: 700;
-        padding: 0.5rem 0.9rem !important; /* Smaller padding */
-        font-size: 0.875rem !important; /* Smaller font size */
-        border-width: 1px; /* Thinner border */
+        padding: 0.5rem 0.9rem !important;
+        font-size: 0.875rem !important;
+        border-width: 1px;
         border-style: solid;
         text-align: center;
-        flex-grow: 1; /* Allow it to grow */
-        min-width: 120px; /* Minimum width */
+        flex-grow: 1;
+        min-width: 120px;
+        transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease; /* Smooth transition */
     }
+    /* Manual profit display colors handled by profit-positive/negative */
 
-    /* Compact Main Calculator Styles */
+
+    /* Compact Main Calculator Styles (Light Mode) */
     .compact-calc-row {
         display: flex;
         flex-wrap: wrap;
         align-items: center;
-        gap: 0.75rem; /* Match manual calc gap */
+        gap: 0.75rem;
     }
 
     .compact-calc-row > div {
         display: flex;
         align-items: center;
-        gap: 0.25rem; /* Match manual calc input gap */
+        gap: 0.25rem;
     }
 
      .compact-calc-row label {
-        font-size: 0.75rem; /* Match manual calc label font */
+        font-size: 0.75rem;
         color: #626c76;
         white-space: nowrap;
+        transition: color 0.3s ease; /* Smooth transition */
      }
 
+     /* Dark Mode override for compact calc labels */
+     body.dark-mode .compact-calc-row label {
+         color: #adb5bd; /* Lighter gray */
+     }
+
+
      .compact-calc-row .input {
-        padding: 0.3rem 0.6rem; /* Match manual calc input padding */
-        font-size: 0.75rem; /* Match manual calc input font */
-        width: 80px; /* Match manual calc input width */
+        padding: 0.3rem 0.6rem;
+        font-size: 0.75rem;
+        width: 80px;
         text-align: right;
      }
 
      .compact-calc-row select.input {
-         width: 100px; /* Match manual calc select width */
+         width: 100px;
      }
 
      .compact-profit-display {
         font-weight: 700;
-        padding: 0.5rem 0.9rem !important; /* Match manual calc padding */
-        font-size: 0.875rem !important; /* Match manual calc font size */
-        border-width: 1px; /* Match manual calc border */
+        padding: 0.5rem 0.9rem !important;
+        font-size: 0.875rem !important;
+        border-width: 1px;
         border-style: solid;
         text-align: center;
         flex-grow: 1;
         min-width: 120px;
+        transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease; /* Smooth transition */
      }
+     /* Compact profit display colors handled by profit-positive/negative-bg */
 
-    /* Style for inline profit display in the table */
+
+    /* Style for inline profit display in the table (Light Mode) */
     .manual-profit-inline {
-        font-weight: 500; /* Slightly less bold than main profit */
-        font-size: 0.875rem; /* Increased font size to text-sm */
+        font-weight: 500;
+        font-size: 0.875rem;
+        transition: color 0.3s ease; /* Smooth transition */
     }
-    /* Ensure profit colors apply */
+    /* Ensure profit colors apply (Light Mode) */
     .manual-profit-inline.profit-positive { color: #0ab39c !important; }
     .manual-profit-inline.profit-negative { color: #f06548 !important; }
 
-    /* Styles for the new Order Book Wall columns */
-    /* Removed Order Book Wall specific styles */
+    /* Dark Mode overrides for inline profit display */
+    body.dark-mode .manual-profit-inline.profit-positive { color: #38c172 !important; }
+    body.dark-mode .manual-profit-inline.profit-negative { color: #e3342f !important; }
 
-    /* Styles for Add/Remove Coin Controls */
-    /* Adjusted to be inline with refresh info */
+
+    /* Styles for Add/Remove Coin Controls (Light Mode) */
     .coin-management-controls {
         display: flex;
         align-items: center;
-        gap: 0.5rem; /* Space between elements */
-        /* Removed margin-bottom */
-        flex-wrap: wrap; /* Allow wrapping on small screens */
-        font-size: 0.75rem; /* Small font for the container */
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        font-size: 0.75rem;
     }
 
     .coin-management-controls .input {
-        font-size: 0.75rem; /* Small font for input */
-        padding: 0.1rem 0.3rem; /* Smaller padding */
-        width: 80px; /* Fixed width for the input */
+        font-size: 0.75rem;
+        padding: 0.1rem 0.3rem;
+        width: 80px;
     }
 
     .coin-management-controls .btn-sm {
-        font-size: 0.75rem; /* Small font for buttons */
-        padding: 0.1rem 0.3rem; /* Smaller padding */
+        font-size: 0.75rem;
+        padding: 0.1rem 0.3rem;
     }
 
     .btn-add-coin {
@@ -409,28 +603,60 @@
          border-color: #c6cd D2;
      }
 
+     /* Dark Mode overrides for coin management buttons */
+     body.dark-mode .btn-add-coin {
+        background-color: #2c4a2c; /* Darker green */
+        color: #38c172; /* Brighter green text */
+        border-color: #38c172; /* Brighter green border */
+    }
+    body.dark-mode .btn-add-coin:hover {
+        background-color: #38c172; /* Brighter green on hover */
+        border-color: #2c4a2c;
+    }
+
+    body.dark-mode .btn-remove-coin {
+        background-color: #4a2c2c; /* Darker red */
+        color: #e3342f; /* Brighter red text */
+        border-color: #e3342f; /* Brighter red border */
+    }
+    body.dark-mode .btn-remove-coin:hover {
+        background-color: #e3342f; /* Brighter red on hover */
+        border-color: #4a2c2c;
+    }
+
+     body.dark-mode .btn-reset-coins {
+         background-color: #495057; /* Darker gray */
+         color: #ced4da; /* Lighter text */
+         border-color: #6c757d; /* Darker border */
+     }
+     body.dark-mode .btn-reset-coins:hover {
+         background-color: #6c757d;
+         border-color: #adb5bd;
+     }
+
+
      /* Combined container for refresh info and coin management */
      .refresh-and-coin-controls {
          display: flex;
          flex-wrap: wrap;
          justify-content: space-between;
          align-items: center;
-         gap: 1rem; /* Space between the two groups */
-         margin-bottom: 1rem; /* Add some bottom margin */
+         gap: 1rem;
+         margin-bottom: 1rem;
      }
 
-    /* Style for the toggle top coin button/icon */
+    /* Style for the toggle top coin button/icon (Light Mode) */
     .toggle-top-coin {
         cursor: pointer;
-        margin-left: 0.5rem; /* Space from coin name */
-        font-size: 0.85rem; /* Slightly larger than text-xs */
+        margin-left: 0.5rem;
+        font-size: 0.85rem;
         color: #ced4da; /* Default gray color */
         transition: color 0.15s ease-in-out;
     }
     .toggle-top-coin:hover {
         color: #626c76; /* Darker gray on hover */
     }
-    /* *** UPDATE: Changed star color to green *** */
+    /* Star color to green */
     .toggle-top-coin.is-top-coin {
         color: #0ab39c; /* Green color for starred coins */
     }
@@ -438,99 +664,141 @@
         color: #087a6a; /* Darker green on hover */
     }
 
+     /* Dark Mode overrides for toggle top coin icon */
+    body.dark-mode .toggle-top-coin {
+        color: #6c757d; /* Darker gray */
+    }
+    body.dark-mode .toggle-top-coin:hover {
+        color: #adb5bd; /* Lighter gray on hover */
+    }
+    body.dark-mode .toggle-top-coin.is-top-coin {
+        color: #38c172; /* Brighter green */
+    }
+    body.dark-mode .toggle-top-coin.is-top-coin:hover {
+        color: #2c8b5a; /* Even brighter green on hover */
+    }
+
+
+    /* Dark Mode Toggle Button Styles */
+    #darkModeToggle {
+        background-color: #e9ecef; /* Light background */
+        color: #495057; /* Dark text */
+        border: 1px solid #ced4da; /* Light border */
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+        cursor: pointer;
+        font-size: 0.875rem;
+        transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease; /* Smooth transition */
+    }
+    #darkModeToggle:hover {
+        background-color: #d3d9df;
+        border-color: #c6cd D2;
+    }
+
+    /* Dark Mode override for the toggle button */
+    body.dark-mode #darkModeToggle {
+        background-color: #495057; /* Darker background */
+        color: #ced4da; /* Lighter text */
+        border-color: #6c757d; /* Darker border */
+    }
+    body.dark-mode #darkModeToggle:hover {
+        background-color: #6c757d;
+        border-color: #adb5bd;
+    }
+
 
     /* Responsive adjustments */
     @media (max-width: 768px) {
-        .calc-row > div { /* Stack calculator elements vertically */
+        .calc-row > div {
             width: 100%;
             margin-bottom: 0.5rem;
         }
         .calc-row > div:last-child { margin-bottom: 0; }
-        /* Allow button groups to wrap and stack */
         .button-controls-container { flex-direction: column; align-items: flex-start; gap: 0.75rem; }
-        .rsi-buttons, .page-buttons { justify-content: flex-start; } /* Align buttons left */
+        .rsi-buttons, .page-buttons { justify-content: flex-start; }
         th, td { padding: 0.5rem; font-size: 0.8rem; }
-        th { font-size: 0.65rem; } /* Further reduce header font size */
+        th { font-size: 0.65rem; }
         .profit { font-size: 1rem !important; padding: 0.6rem 1rem !important; }
-        .pressure-displays-small { min-width: auto; width: 100%; justify-content: flex-start; } /* Align left */
-        .small-pressure-display { flex-grow: 0; } /* Prevent growing */
+        .pressure-displays-small { min-width: auto; width: 100%; justify-content: flex-start; }
+        .small-pressure-display { flex-grow: 0; }
 
-        /* Manual Calc adjustments */
         .manual-calc-row {
-             flex-direction: column; /* Stack manual calc items */
+             flex-direction: column;
              align-items: flex-start;
              gap: 0.5rem;
         }
          .manual-calc-row > div {
-             width: 100%; /* Make input groups full width */
-             justify-content: space-between; /* Spread label and input */
+             width: 100%;
+             justify-content: space-between;
          }
          .manual-calc-row .input {
-             width: auto; /* Auto width */
-             flex-grow: 1; /* Allow input to grow */
+             width: auto;
+             flex-grow: 1;
          }
           .manual-calc-row select.input {
              width: auto;
              flex-grow: 1;
          }
          .manual-profit-display {
-             width: 100%; /* Full width */
+             width: 100%;
          }
 
-         /* Compact Main Calc adjustments */
          .compact-calc-row {
-             flex-direction: column; /* Stack manual calc items */
+             flex-direction: column;
              align-items: flex-start;
              gap: 0.5rem;
          }
           .compact-calc-row > div {
-             width: 100%; /* Make input groups full width */
-             justify-content: space-between; /* Spread label and input */
+             width: 100%;
+             justify-content: space-between;
          }
          .compact-calc-row .input {
-             width: auto; /* Auto width */
-             flex-grow: 1; /* Allow input to grow */
+             width: auto;
+             flex-grow: 1;
          }
           .compact-calc-row select.input {
              width: auto;
              flex-grow: 1;
          }
          .compact-profit-display {
-             width: 100%; /* Full width */
+             width: 100%;
          }
-         /* Adjust inline profit display on mobile */
          .manual-profit-inline {
-            display: block; /* Stack below coin name */
-            margin-left: 0; /* Remove left margin */
-            margin-top: 0.2rem; /* Add a small top margin */
+            display: block;
+            margin-left: 0;
+            margin-top: 0.2rem;
          }
 
-         /* Adjust order wall display on mobile */
-         /* Removed Order Book Wall specific responsive adjustments */
-
-         /* Combined container responsive */
          .refresh-and-coin-controls {
              flex-direction: column;
              align-items: flex-start;
              gap: 0.75rem;
          }
          .refresh-info, .coin-management-controls {
-             width: 100%; /* Make both groups full width */
-             justify-content: space-between; /* Spread items within the group */
+             width: 100%;
+             justify-content: space-between;
          }
          .coin-management-controls input {
-             width: auto; /* Auto width */
-             flex-grow: 1; /* Allow input to grow */
+             width: auto;
+             flex-grow: 1;
          }
          .coin-management-controls button {
-             width: auto; /* Auto width */
+             width: auto;
+         }
+         /* Adjust dark mode toggle position on mobile */
+         #darkModeToggle {
+             margin-top: 0.5rem; /* Add space above toggle */
+             align-self: flex-start; /* Align left */
          }
     }
   </style>
 </head>
 <body class="p-4 md:p-8">
   <div class="max-w-7xl mx-auto">
-    <div id="clock" class="font-bold text-blue-600 text-lg md:text-xl mb-1">BD Time: --:--:--</div>
+    <div class="flex justify-between items-center mb-1">
+        <div id="clock" class="font-bold text-blue-600 text-lg md:text-xl">BD Time: --:--:--</div>
+        <button id="darkModeToggle">Toggle Dark Mode</button>
+    </div>
     <div id="timestamp" class="text-xs md:text-sm text-gray-600 mb-2">Loading...</div>
     <div id="metrics" class="text-xs md:text-sm text-gray-600 mb-4"></div>
     <div id="error" class="text-sm text-red-600 mb-4"></div>
@@ -776,6 +1044,7 @@
   let dataRefreshTimeoutId;
   let globalMetricsIntervalId; // New interval ID for global metrics
   let isAutoRefreshEnabled = true; // Flag to control auto-refresh
+  let isDarkMode = false; // State for dark mode
 
   // Define refresh intervals for each page and global metrics
   const REFRESH_INTERVAL_TOP4_MS = 5000; // 5 seconds
@@ -811,7 +1080,7 @@
     {symbol:'BERAUSDT',name:'BERA', label:'Layer 1 ⚖️'}
   ];
 
-  // *** UPDATE: TOP_COINS is now a mutable array loaded from storage ***
+  // TOP_COINS is now a mutable array loaded from storage
   let topCoins = ['BTCUSDT', 'SUIUSDT', 'XRPUSDT', 'PEPEUSDT', 'TRUMPUSDT']; // Default Top Coins
 
   // Current active coin list (initially defaults, loaded from storage later)
@@ -915,6 +1184,33 @@
       calculateTotalManualProfit(); // Recalculate total after potentially removing data
   }
 
+  // --- Dark Mode Functions ---
+  function toggleDarkMode() {
+      isDarkMode = !isDarkMode;
+      const body = document.body;
+      if (isDarkMode) {
+          body.classList.add('dark-mode');
+          localStorage.setItem('darkMode', 'enabled');
+      } else {
+          body.classList.remove('dark-mode');
+          localStorage.setItem('darkMode', 'disabled');
+      }
+      // Update any elements that might need dynamic color adjustments based on mode
+      // (Most styling is handled by CSS classes, but some JS-driven colors might need update)
+      updateAllManualCalcs(); // Re-run calcs to update profit colors if needed (though CSS should handle this)
+  }
+
+  function loadDarkModeSetting() {
+      const savedSetting = localStorage.getItem('darkMode');
+      if (savedSetting === 'enabled') {
+          isDarkMode = true;
+          document.body.classList.add('dark-mode');
+      } else {
+          isDarkMode = false;
+          document.body.classList.remove('dark-mode');
+      }
+  }
+
 
   // --- Time Functions ---
   function tick() {
@@ -984,7 +1280,7 @@
     // Also update table headers (will be called again in renderTable)
     updateProfitHeaders(inv);
   }
-  updateCalc(); // Initial calculation
+  // updateCalc(); // Initial calculation - moved to DOMContentLoaded
 
 
   // --- Manual Profit Calculator Functions ---
@@ -1039,7 +1335,10 @@
               } else if (selectElement) {
                    // If saved coin doesn't exist, keep the default or first option
                    console.warn(`Saved coin ${data.symbol} for Calc ${calcIndex} not found in current list. Using default.`);
-                   selectElement.value = coins[0]?.symbol || ''; // Fallback
+                   // Find the default coin symbol for this calculator index
+                   const defaultManualCalcCoins = { 1: 'SUIUSDT', 2: 'PEPEUSDT', 3: 'XRPUSDT', 4: 'XRPUSDT', 5: 'TRUMPUSDT' };
+                   const defaultCoinSymbol = defaultManualCalcCoins[calcIndex];
+                   selectElement.value = coins.find(c => c.symbol === defaultCoinSymbol)?.symbol || coins[0]?.symbol || ''; // Fallback to first coin
               }
 
               if (amountInput) amountInput.value = data.amount;
@@ -1053,7 +1352,10 @@
               const amountInput = document.getElementById(`manualAmount${calcIndex}`);
               const investInput = document.getElementById(`manualInvest${calcIndex}`);
               const buyPriceInput = document.getElementById(`manualBuyPrice${calcIndex}`);
-              if (selectElement) selectElement.value = coins[0]?.symbol || '';
+              // Find the default coin symbol for this calculator index
+              const defaultManualCalcCoins = { 1: 'SUIUSDT', 2: 'PEPEUSDT', 3: 'XRPUSDT', 4: 'XRPUSDT', 5: 'TRUMPUSDT' };
+              const defaultCoinSymbol = defaultManualCalcCoins[calcIndex];
+              if (selectElement) selectElement.value = coins.find(c => c.symbol === defaultCoinSymbol)?.symbol || coins[0]?.symbol || ''; // Fallback to first coin
               if (amountInput) amountInput.value = '';
               if (investInput) investInput.value = '';
               if (buyPriceInput) buyPriceInput.value = '';
@@ -1067,7 +1369,10 @@
               const amountInput = document.getElementById(`manualAmount${calcIndex}`);
               const investInput = document.getElementById(`manualInvest${calcIndex}`);
               const buyPriceInput = document.getElementById(`manualBuyPrice${calcIndex}`);
-              if (selectElement) selectElement.value = coins[0]?.symbol || '';
+              // Find the default coin symbol for this calculator index
+              const defaultManualCalcCoins = { 1: 'SUIUSDT', 2: 'PEPEUSDT', 3: 'XRPUSDT', 4: 'XRPUSDT', 5: 'TRUMPUSDT' };
+              const defaultCoinSymbol = defaultManualCalcCoins[calcIndex];
+              if (selectElement) selectElement.value = coins.find(c => c.symbol === defaultCoinSymbol)?.symbol || coins[0]?.symbol || ''; // Fallback to first coin
               if (amountInput) amountInput.value = '';
               if (investInput) investInput.value = '';
               if (buyPriceInput) buyPriceInput.value = '';
@@ -1075,7 +1380,7 @@
   }
 
 
-  // *** UPDATE: Modified updateManualCalc to accept index and update inline table profit ***
+  // Modified updateManualCalc to accept index and update inline table profit
   function updateManualCalc(calcIndex) {
       // Get elements specific to this calculator instance
       const selectedSymbol = document.getElementById(`manualCoinSelect${calcIndex}`).value;
@@ -1147,13 +1452,17 @@
       manualProfitDisplay.className = 'manual-profit-display'; // Reset base classes
       manualProfitDisplay.classList.toggle('profit-positive', manualProfit >= 0);
       manualProfitDisplay.classList.toggle('profit-negative', manualProfit < 0);
+      // Add background classes for manual profit display
+      manualProfitDisplay.classList.toggle('profit-positive-bg', manualProfit >= 0);
+      manualProfitDisplay.classList.toggle('profit-negative-bg', manualProfit < 0);
 
-      // *** UPDATE: Update the inline profit display in the table ***
+
+      // Update the inline profit display in the table
       updateTableInlineProfits();
       calculateTotalManualProfit(); // Recalculate total profit
   }
 
-  // *** NEW Function: Update inline profit displays in the table ***
+  // NEW Function: Update inline profit displays in the table
   function updateTableInlineProfits() {
       // Clear all existing inline profit displays first
       document.querySelectorAll('.manual-profit-inline').forEach(span => {
@@ -1167,9 +1476,8 @@
           const selectElement = document.getElementById(`manualCoinSelect${calcIndex}`);
           const profitElement = document.getElementById(`manualProfit${calcIndex}`);
 
-          // Check if the elements exist and are currently visible (or in the hidden container)
-          // We update inline profits for ALL 5 calculators regardless of visibility
-          if (!selectElement || !profitElement) continue; // Skip if elements don't exist
+          // Check if the elements exist (they should for all 5)
+          if (!selectElement || !profitElement) continue;
 
           const selectedSymbol = selectElement.value;
           const profitText = profitElement.textContent;
@@ -1196,7 +1504,7 @@
   }
 
 
-  // *** NEW Function: Calculate and display total manual profit ***
+  // NEW Function: Calculate and display total manual profit
   function calculateTotalManualProfit() {
       let totalProfit = 0;
       for (let i = 1; i <= 5; i++) {
@@ -1221,10 +1529,13 @@
           totalProfitElement.className = 'manual-profit-display font-bold text-center flex-grow min-w-[150px] md:min-w-[180px]'; // Reset base classes
           totalProfitElement.classList.toggle('profit-positive', totalProfit >= 0);
           totalProfitElement.classList.toggle('profit-negative', totalProfit < 0);
+           // Add background classes for total profit display
+          totalProfitElement.classList.toggle('profit-positive-bg', totalProfit >= 0);
+          totalProfitElement.classList.toggle('profit-negative-bg', totalProfit < 0);
       }
   }
 
-  // *** UPDATE: Modified updateAllManualCalcs to simply call updateManualCalc for each and then calculate total ***
+  // Modified updateAllManualCalcs to simply call updateManualCalc for each and then calculate total
   function updateAllManualCalcs() {
       for (let i = 1; i <= 5; i++) {
           // Check if the element exists before updating
@@ -1236,7 +1547,7 @@
       // calculateTotalManualProfit(); // This call is now redundant here as updateManualCalc calls it.
   }
 
-  // *** UPDATE: Modified populateManualCoinSelect to set new defaults and XRP for Calc 4 ***
+  // Modified populateManualCoinSelect to set new defaults and XRP for Calc 4
   function populateManualCoinSelect() {
       // Define default coins for each calculator index (1-based)
       const defaultManualCalcCoins = {
@@ -1284,12 +1595,15 @@
       });
   }
 
-  // *** NEW Function: Toggle visibility of hidden calculators ***
+  // NEW Function: Toggle visibility of hidden calculators
   function toggleHiddenCalcs() {
       const hiddenContainer = document.getElementById('hiddenManualCalcs');
       const showMoreBtn = document.getElementById('showMoreCalcsBtn');
 
-      if (hiddenContainer.style.display === 'none' || hiddenContainer.style.display === '') {
+      // Check the current display style to determine state
+      const isHidden = hiddenContainer.style.display === 'none' || hiddenContainer.style.display === '';
+
+      if (isHidden) {
           hiddenContainer.style.display = 'flex'; // Use flex to maintain layout
           hiddenContainer.style.flexDirection = 'column'; // Stack rows vertically
           hiddenContainer.style.gap = '0.5rem'; // Add gap between rows
@@ -1380,7 +1694,7 @@
       loadData(); // Re-fetch data and re-render table
   }
 
-  // *** NEW Function: Toggle coin in topCoins list ***
+  // NEW Function: Toggle coin in topCoins list
   function toggleTopCoin(symbol) {
       const index = topCoins.indexOf(symbol);
       if (index > -1) {
@@ -1499,14 +1813,10 @@
   // Helper function to handle API errors and update UI (reused)
   function handleApiError(response, context) {
       console.warn(`API error fetching ${context}: ${response.status}`);
-      // *** UPDATE: Removed specific rate limit error messages from display ***
-      // if (response.status === 429 || response.status === 418) {
-      //     updateErrorDisplay('API rate limit likely hit. Data refresh may be delayed.');
-      //     document.getElementById('rate-limit-warning').classList.remove('hidden'); // Show warning
-      // } else {
-      //     updateErrorDisplay(`API error for ${context} (${response.status}).`);
-      // }
-      // Instead, just log the error and hide the warning if it was specific to rate limits
+      const rateLimitMessages = [
+          'API rate limit likely hit. Data refresh may be delayed.',
+          'High frequency may cause rate limits.'
+      ];
       if (response.status === 429 || response.status === 418) {
            console.warn('API rate limit likely hit.');
            document.getElementById('rate-limit-warning').classList.remove('hidden'); // Keep showing the warning span
@@ -1518,7 +1828,7 @@
   // Helper function to update the error display area (reused)
   function updateErrorDisplay(message) {
       const errorDiv = document.getElementById('error');
-      // *** UPDATE: Filter out specific rate limit messages ***
+      // Filter out specific rate limit messages
       const rateLimitMessages = [
           'API rate limit likely hit. Data refresh may be delayed.',
           'High frequency may cause rate limits.'
@@ -1552,7 +1862,6 @@
               const mcap = g.data.total_market_cap.usd / 1e9;
               const chg = g.data.market_cap_change_percentage_24h_usd;
               const chgColorClass = chg >= 0 ? 'pct-green' : 'pct-red';
-              // *** UPDATE: Changed "Mkt Cap" to "Market Cap" ***
               metricsHtml += `Market Cap: $${mcap.toFixed(2)}B (<span class="${chgColorClass}">${chg.toFixed(2)}%</span>)`;
           } else {
               metricsHtml += 'Market Cap: N/A';
@@ -1692,7 +2001,7 @@
         allTableData = newTableData; // Update the global data store
 
         if (apiErrorCount > 0) {
-             // *** UPDATE: Modified error message to be less specific about rate limits ***
+             // Modified error message to be less specific about rate limits
              // updateErrorDisplay(`Data errors for ${apiErrorCount} coin(s). Some data may be missing.`);
              // Keep the rate limit warning span visible if appropriate, but don't add a general error message here
         }
@@ -1784,7 +2093,7 @@
         else if (sortKey === 'type') { va = a.label; vb = b.label; }
         else if (sortKey === 'signalSuggestion') {
             const signalA = generateMaSignal(a.rsi, a.pct); const signalB = generateMaSignal(b.rsi, b.pct);
-            const suggestionA = generateSuggestion(a.rsi, a.pct); const suggestionB = generateSuggestion(b.rsi, a.pct); // Corrected suggestionB
+            const suggestionA = generateSuggestion(a.rsi, a.pct); const suggestionB = generateSuggestion(b.rsi, b.pct); // Corrected suggestionB
             const signalOrder = { 'Bullish': 3, 'Neutral': 2, 'Bearish': 1, 'N/A': 0 };
             const orderA = signalOrder[signalA] || 0; const orderB = signalOrder[signalB] || 0;
             if (orderA !== orderB) { va = orderA; vb = orderB; }
@@ -1797,11 +2106,11 @@
            const pH_b = b.low > 0 ? ((b.high - b.low) / b.low) * currentInvestment : 0;
            const pCH_b = b.last > 0 ? ((b.high - b.last) / b.last) * currentInvestment : 0; // Corrected calculation for C->H profit
 
-           if (sortKey === 'pH') { va = pH_a; vb = pCH_b; } // Corrected comparison
+           if (sortKey === 'pH') { va = pH_a; vb = pH_b; } // Corrected comparison
            else if (sortKey === 'pCH') { va = pCH_a; vb = pCH_b; }
            else if (sortKey === 'volume') { va = a.volume; vb = b.volume; }
            else if (sortKey === 'marketCap') { va = a.marketCap; vb = b.marketCap; }
-           else if (sortKey === 'ath') { va = a.ath; vb = b.atl; } // Corrected comparison
+           else if (sortKey === 'ath') { va = a.ath; vb = b.ath; } // Corrected comparison
            else if (sortKey === 'atl') { va = a.atl; vb = b.atl; }
            else if (sortKey === 'rsi') { va = a.rsi; vb = b.rsi; }
            else { va = a[sortKey]; vb = b[sortKey]; } // Fallback for low, high, last
@@ -1842,7 +2151,7 @@
     dataToRender.forEach(r => {
       const pct = r.pct;
       const tr = document.createElement('tr');
-      tr.dataset.symbol = r.symbol; // *** UPDATE: Add data-symbol attribute to row ***
+      tr.dataset.symbol = r.symbol; // Add data-symbol attribute to row
       // Only apply highlight if the highlight property exists
       if(r.highlight) { tr.classList.add('highlight-' + r.highlight); } // Apply highlight class
 
@@ -1891,7 +2200,7 @@
     // Re-add event listeners after the table body is repopulated
     addTableEventListeners();
 
-    // *** UPDATE: Populate inline profits after table is rendered ***
+    // Populate inline profits after table is rendered
     updateTableInlineProfits();
   }
 
@@ -1938,7 +2247,7 @@
         };
     });
 
-    // Add click listeners to Signal/Suggestion cells for row highlight
+     // Add click listeners to Signal/Suggestion cells for row highlight
     document.querySelectorAll('#body .signal-suggestion.clickable').forEach(c => {
         c.onclick = () => {
             const row = c.closest('tr');
@@ -1955,7 +2264,7 @@
         };
     });
 
-     // *** NEW: Add event listeners for the toggle-top-coin icons ***
+     // NEW: Add event listeners for the toggle-top-coin icons
     document.querySelectorAll('#body .toggle-top-coin').forEach(icon => {
         icon.onclick = (event) => {
             event.stopPropagation(); // Prevent row click event from firing
@@ -2119,6 +2428,8 @@
   document.addEventListener('DOMContentLoaded', () => {
       console.log("DOM fully loaded and parsed");
 
+      loadDarkModeSetting(); // Load dark mode setting from localStorage
+
       loadCoins(); // Load coins and topCoins from localStorage or use defaults
       updateCalc(); // Ensure calculator is updated initially
       populateManualCoinSelect(); // Populate all manual coin dropdowns and set defaults
@@ -2149,6 +2460,8 @@
       document.getElementById('removeCoinBtn').addEventListener('click', removeCoin);
       // Removed event listener for resetCoinsBtn
 
+      // Add event listener for the Dark Mode toggle button
+      document.getElementById('darkModeToggle').addEventListener('click', toggleDarkMode);
 
        // Initial update for all manual calculators and table inline profits after DOM is ready and defaults are set
        // updateAllManualCalcs(); // This is now called by loadData after coin data is available
