@@ -19,13 +19,14 @@
       background: linear-gradient(145deg, #121212, #0a0a0a); /* Very dark, near-black gradient */
       padding: 20px;
       display: flex;
+      flex-direction: column; /* Allow content to stack vertically */
       justify-content: center;
       align-items: center;
       min-height: 100vh;
       color: #f0f0f0; /* Lighter text color for better contrast on black */
     }
 
-    /* Container styling with enhanced glassy effect */
+    /* Main Container styling with enhanced glassy effect */
     .container {
       background: rgba(255, 255, 255, 0.05); /* Slightly more visible white tint for glass */
       backdrop-filter: blur(30px) saturate(200%); /* Stronger blur and saturation */
@@ -37,6 +38,7 @@
       width: 100%;
       border: 1px solid rgba(255, 255, 255, 0.12); /* Slightly more visible border */
       transition: all 0.5s ease-in-out; /* Smooth transition for overall container */
+      position: relative; /* Needed for positioning elements inside, but toggle moved out */
     }
 
     .container:hover {
@@ -90,7 +92,6 @@
       background: rgba(255, 255, 255, 0.15); /* More visible transparency on focus/hover */
     }
 
-
     /* Placeholder styling */
     input[type="number"]::placeholder {
       color: #666666;
@@ -119,13 +120,187 @@
       text-shadow: 0 0 12px rgba(255, 99, 71, 0.6); /* More intense red glow */
     }
 
-    /* Fee info styling */
-    .fee-box {
-      font-size: 13px;
-      text-align: right;
-      margin-top: 10px;
-      color: #707070;
-      opacity: 0.7;
+    /* Average Buy Calculator Section */
+    .average-buy-section {
+      margin-top: 30px; /* Space from main calculator */
+      padding-top: 20px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1); /* Separator line */
+      opacity: 0; /* Hidden by default */
+      max-height: 0; /* Collapsed height */
+      overflow: hidden; /* Hide overflow content */
+      transition: opacity 0.5s ease-out, max-height 0.5s ease-out; /* Smooth transition */
+    }
+
+    .average-buy-section.visible {
+      opacity: 1;
+      max-height: 1000px; /* Increased height to accommodate more lines */
+    }
+
+    .average-buy-section h3 {
+      font-size: 16px; /* Small font for heading */
+      text-align: center;
+      margin-bottom: 15px;
+      color: #ffffff;
+      font-weight: 500;
+    }
+
+    /* Styles for dynamically added input rows */
+    .buy-entry-row {
+      display: flex;
+      gap: 10px; /* Space between the two input boxes */
+      margin-bottom: 10px; /* Space between rows */
+      align-items: center; /* Vertically align items */
+    }
+
+    .buy-entry-row input[type="number"] {
+      flex: 1; /* Each input takes equal space */
+      font-size: 12px; /* Very small font for labels and inputs */
+      padding: 8px 10px; /* Smaller padding */
+      border-radius: 8px; /* Slightly less rounded corners */
+      background: rgba(255, 255, 255, 0.05); /* Lighter background for entries */
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .buy-entry-row input[type="number"]:focus,
+    .buy-entry-row input[type="number"]:hover {
+      border-color: rgba(255, 255, 255, 0.3);
+      box-shadow: 0 0 10px rgba(135, 206, 250, 0.2), inset 0 0 5px rgba(255, 255, 255, 0.05);
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    /* Style for the "Add New Buy" button */
+    .add-buy-button {
+      display: block;
+      width: fit-content;
+      margin: 15px auto 0; /* Center button and add top margin */
+      background: rgba(135, 206, 250, 0.2); /* Light blue tint for add button */
+      backdrop-filter: blur(5px);
+      -webkit-backdrop-filter: blur(5px);
+      border: 1px solid rgba(135, 206, 250, 0.3);
+      border-radius: 10px;
+      color: #b3e0ff; /* Lighter blue text */
+      padding: 8px 15px;
+      font-size: 12px;
+      cursor: pointer;
+      outline: none;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    }
+
+    .add-buy-button:hover:not(:disabled) {
+      background: rgba(135, 206, 250, 0.3);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+    }
+
+    .add-buy-button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .average-buy-section .result-box {
+      font-size: 14px; /* Small font for results */
+      font-weight: bold;
+      text-align: center;
+      margin-top: 15px;
+      padding: 8px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #f0f0f0;
+    }
+
+    .average-buy-section .result-box span {
+        display: block; /* Each result on a new line */
+        margin-top: 5px;
+    }
+
+    /* Specific styles for profit/loss colors within the small result box */
+    .average-buy-section .result-box .profit {
+      color: #32CD32; /* Lime green for profit */
+      text-shadow: none; /* Remove text-shadow for smaller font */
+    }
+
+    .average-buy-section .result-box .loss {
+      color: #FF6347; /* Tomato red for loss */
+      text-shadow: none; /* Remove text-shadow for smaller font */
+    }
+
+    /* Style for the single "Current Coin Price" input within average buy section */
+    #currentCoinPriceAvg {
+        width: 100%;
+        font-size: 12px;
+        padding: 8px 10px;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        margin-top: 10px; /* Space from previous element */
+        margin-bottom: 15px; /* Space before result box */
+    }
+
+    #currentCoinPriceAvg:focus,
+    #currentCoinPriceAvg:hover {
+        border-color: rgba(255, 255, 255, 0.3);
+        box-shadow: 0 0 10px rgba(135, 206, 250, 0.2), inset 0 0 5px rgba(255, 255, 255, 0.05);
+        background: rgba(255, 255, 255, 0.1);
+    }
+
+    /* Style for the Reset button */
+    .reset-button {
+      display: block;
+      width: fit-content;
+      margin: 10px auto 0; /* Center button and add top margin */
+      background: rgba(255, 99, 71, 0.2); /* Light red tint for reset button */
+      backdrop-filter: blur(5px);
+      -webkit-backdrop-filter: blur(5px);
+      border: 1px solid rgba(255, 99, 71, 0.3);
+      border-radius: 10px;
+      color: #ffb3b3; /* Lighter red text */
+      padding: 8px 15px;
+      font-size: 12px;
+      cursor: pointer;
+      outline: none;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    }
+
+    .reset-button:hover {
+      background: rgba(255, 99, 71, 0.3);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+    }
+
+    /* New position for the Average Buy Toggle button */
+    .average-buy-toggle-container {
+        margin-top: 20px; /* Space between calculator and toggle */
+        text-align: center; /* Center the button */
+        width: 100%;
+        max-width: 420px; /* Match calculator width for centering */
+    }
+
+    .average-buy-toggle {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      color: #f0f0f0;
+      padding: 8px 15px;
+      font-size: 12px;
+      cursor: pointer;
+      outline: none;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    }
+
+    .average-buy-toggle:hover {
+      background: rgba(255, 255, 255, 0.15);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+    }
+
+    /* Super mini font for fee display (if needed elsewhere) */
+    .super-mini-font {
+        font-size: 9px; /* Very small font size */
+        opacity: 0.6; /* Slightly faded */
+        margin-top: 2px; /* Small top margin */
     }
   </style>
 </head>
@@ -145,15 +320,44 @@
     <input type="number" id="sell" placeholder="Enter Sell Price" step="any" class="rounded-lg shadow-inner" />
 
     <div class="result" id="profitResult">+0.00$</div>
-    <div class="fee-box" id="feeInfo">Fee: 0.00$</div>
+    <!-- Fee Info div removed from main calculator -->
+
+    <!-- Average Buy Calculator Section -->
+    <div id="averageBuySection" class="average-buy-section">
+      <h3>Average Buy Calculator</h3>
+      <div id="buyEntriesContainer">
+        <!-- Dynamic buy entry lines will be added here -->
+      </div>
+      <button id="addBuyButton" class="add-buy-button">Add New Buy</button>
+      <button id="resetAverageBuyButton" class="reset-button">Reset Average Buy</button>
+
+      <label for="currentCoinPriceAvg" style="margin-top: 15px;">Current Coin Price ($):</label>
+      <input type="number" id="currentCoinPriceAvg" placeholder="e.g., 28000" step="any" />
+
+      <div class="result-box">
+        Total USDT Invested: <span id="totalUSDTInvested">0.00</span><br>
+        New Average Buy Price: <span id="newAverageBuyPrice" class="">0.00000000$</span><br>
+        Current P/L: <span id="avgPnL" class="profit">+0.00$</span>
+        <!-- "Hypothetical Sell Fee" text removed -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Average Buy Toggle button moved outside the main container -->
+  <div class="average-buy-toggle-container">
+    <button id="averageBuyToggle" class="average-buy-toggle">Average Buy</button>
   </div>
 
   <script>
+    // --- Constants for Local Storage Keys ---
+    const AVERAGE_BUY_DATA_KEY = 'averageBuyData';
+    const FEE_PERCENT_PER_SIDE = 0.00075; // 0.075% fee per side (for both buy and sell)
+
+    // --- Main Profit Calculator Logic ---
     const investmentEl = document.getElementById('investment');
     const buyEl = document.getElementById('buy');
     const sellEl = document.getElementById('sell');
     const resultEl = document.getElementById('profitResult');
-    const feeEl = document.getElementById('feeInfo');
 
     // Populate investment options (100 to 3000)
     for (let i = 100; i <= 3000; i += 100) {
@@ -166,7 +370,7 @@
 
     /**
      * Calculates the profit/loss based on investment, buy price, and sell price.
-     * Updates the UI with the calculated profit/loss and fee.
+     * Updates the UI with the calculated profit/loss. Fees are integrated into the final profit.
      */
     function calculateProfit() {
       const investment = parseFloat(investmentEl.value);
@@ -174,32 +378,23 @@
       const sell = parseFloat(sellEl.value);
 
       // Handle invalid or missing inputs
-      if (isNaN(investment) || isNaN(buy) || isNaN(sell) || buy === 0) {
+      if (isNaN(investment) || !buy || !sell || buy === 0) { // Check for non-zero buy price
         resultEl.textContent = '+0.00$';
         resultEl.className = 'result'; // Reset class
-        feeEl.textContent = 'Fee: 0.00$';
         return;
       }
 
-      // Calculate quantity of asset bought
       const quantity = investment / buy;
-      // Calculate raw sell value before fees
-      const rawSell = quantity * sell;
+      const rawSellValue = quantity * sell; // Value if sold without fees
 
-      // Define fee percentage (0.075% for buy + 0.075% for sell with BNB discount)
-      const feePercent = 0.00075 * 2;
-      // Calculate total transaction fee based on initial investment
-      const totalFee = investment * feePercent;
+      // Total fee calculation for main profit calculator: buy fee + sell fee on investment
+      // Buy fee: investment * FEE_PERCENT_PER_SIDE
+      // Sell fee: rawSellValue * FEE_PERCENT_PER_SIDE (fee based on the value at sale)
+      const totalFee = (investment * FEE_PERCENT_PER_SIDE) + (rawSellValue * FEE_PERCENT_PER_SIDE);
 
-      // Calculate net profit/loss
-      const profit = rawSell - investment - totalFee;
-
-      // Update result text and apply appropriate class for styling (profit/loss)
+      const profit = rawSellValue - investment - totalFee; // Net profit after all fees
       resultEl.textContent = `${profit >= 0 ? '+' : ''}${profit.toFixed(2)}$`;
       resultEl.className = profit >= 0 ? 'result profit' : 'result loss';
-
-      // Update fee information
-      feeEl.textContent = `Fee: ${totalFee.toFixed(2)}$`;
     }
 
     // Attach event listeners for real-time calculation
@@ -209,6 +404,234 @@
 
     // Initial calculation when the page loads
     calculateProfit();
+
+    // --- Average Buy Calculator Logic ---
+    const averageBuyToggle = document.getElementById('averageBuyToggle');
+    const averageBuySection = document.getElementById('averageBuySection');
+    const buyEntriesContainer = document.getElementById('buyEntriesContainer');
+    const addBuyButton = document.getElementById('addBuyButton');
+    const resetAverageBuyButton = document.getElementById('resetAverageBuyButton');
+    const totalUSDTInvestedEl = document.getElementById('totalUSDTInvested');
+    const newAverageBuyPriceEl = document.getElementById('newAverageBuyPrice');
+    const currentCoinPriceAvgEl = document.getElementById('currentCoinPriceAvg');
+    const avgPnLEl = document.getElementById('avgPnL');
+    // const hypotheticalSellFeeEl = document.getElementById('hypotheticalSellFee'); // Element removed
+
+    const MAX_BUY_ENTRIES = 15;
+    let buyEntryCount = 0;
+
+    /**
+     * Toggles the visibility of the average buy calculator section.
+     */
+    averageBuyToggle.addEventListener('click', () => {
+      averageBuySection.classList.toggle('visible');
+      // If the section becomes visible, load data if available, otherwise add first entry
+      if (averageBuySection.classList.contains('visible')) {
+        loadAverageBuyData(); // Attempt to load data when section is opened
+      }
+    });
+
+    /**
+     * Adds a new pair of input fields for a buy entry.
+     * @param {string} [initialAmount=''] - Optional initial value for Amount Invested.
+     * @param {string} [initialPrice=''] - Optional initial value for Coin Price.
+     */
+    function addBuyEntry(initialAmount = '', initialPrice = '') {
+      if (buyEntryCount >= MAX_BUY_ENTRIES) {
+        addBuyButton.disabled = true; // Disable button if max entries reached
+        return;
+      }
+
+      const entryRow = document.createElement('div');
+      entryRow.className = 'buy-entry-row';
+      entryRow.dataset.id = buyEntryCount;
+
+      entryRow.innerHTML = `
+        <input type="number" class="amount-invested" placeholder="Amount Invested ($)" step="any" value="${initialAmount}" />
+        <input type="number" class="coin-price" placeholder="Coin Price ($)" step="any" value="${initialPrice}" />
+      `;
+
+      buyEntriesContainer.appendChild(entryRow);
+      buyEntryCount++;
+
+      // Attach event listeners to the new inputs
+      const newAmountInput = entryRow.querySelector('.amount-invested');
+      const newCoinPriceInput = entryRow.querySelector('.coin-price');
+
+      newAmountInput.addEventListener('input', () => {
+        calculateAverageBuy();
+        saveAverageBuyData(); // Save data on input change
+      });
+      newCoinPriceInput.addEventListener('input', () => {
+        calculateAverageBuy();
+        saveAverageBuyData(); // Save data on input change
+      });
+
+      if (buyEntryCount >= MAX_BUY_ENTRIES) {
+        addBuyButton.disabled = true;
+      }
+    }
+
+    /**
+     * Calculates the overall total coins, new average buy price, and current P/L from all entries.
+     * Updates the UI with these calculated values.
+     */
+    function calculateAverageBuy() {
+      let totalGrossInvested = 0; // Sum of amounts entered into "Amount Invested"
+      let totalCoinsAcquired = 0;
+
+      const entryRows = buyEntriesContainer.querySelectorAll('.buy-entry-row');
+      entryRows.forEach(row => {
+        const amountInvestedInput = row.querySelector('.amount-invested');
+        const coinPriceInput = row.querySelector('.coin-price');
+
+        const amountInvested = parseFloat(amountInvestedInput.value) || 0;
+        const coinPrice = parseFloat(coinPriceInput.value) || 0;
+
+        if (amountInvested > 0 && coinPrice > 0) {
+          const coinsAcquired = amountInvested / coinPrice;
+          totalGrossInvested += amountInvested;
+          totalCoinsAcquired += coinsAcquired;
+        }
+      });
+
+      // Calculate total buy fees based on total gross invested amount
+      const totalBuyFee = totalGrossInvested * FEE_PERCENT_PER_SIDE;
+      // Net invested amount after deducting buy fees
+      const totalNetInvested = totalGrossInvested - totalBuyFee;
+
+
+      let newAverageBuyPrice = 0;
+      if (totalCoinsAcquired > 0) {
+        // Average buy price is calculated from total net invested (after buy fees)
+        newAverageBuyPrice = totalNetInvested / totalCoinsAcquired;
+      }
+
+      const currentCoinPrice = parseFloat(currentCoinPriceAvgEl.value) || 0;
+      let currentPnL = 0;
+
+      if (currentCoinPrice > 0 && totalCoinsAcquired > 0) {
+        const currentMarketValue = totalCoinsAcquired * currentCoinPrice;
+        const totalSellFee = currentMarketValue * FEE_PERCENT_PER_SIDE; // Sell fee based on current market value
+        // Net P/L: (Current Market Value - Total Sell Fee) - Total Net Invested (after buy fees)
+        currentPnL = (currentMarketValue - totalSellFee) - totalNetInvested;
+      }
+
+      totalUSDTInvestedEl.textContent = totalGrossInvested.toFixed(2); // Display gross invested amount
+      totalUSDTInvestedEl.className = ''; // Neutral color
+
+      newAverageBuyPriceEl.textContent = `${newAverageBuyPrice.toFixed(8)}$`;
+      if (newAverageBuyPrice > 0 && currentCoinPrice > 0) {
+          if (newAverageBuyPrice < currentCoinPrice) {
+              newAverageBuyPriceEl.className = 'profit';
+          } else if (newAverageBuyPrice > currentCoinPrice) {
+              newAverageBuyPriceEl.className = 'loss';
+          } else {
+              newAverageBuyPriceEl.className = '';
+          }
+      } else {
+          newAverageBuyPriceEl.className = '';
+      }
+
+      avgPnLEl.textContent = `${currentPnL >= 0 ? '+' : ''}${currentPnL.toFixed(2)}$`;
+      avgPnLEl.className = currentPnL >= 0 ? 'profit' : 'loss';
+
+      saveAverageBuyData(); // Save data after every calculation
+    }
+
+    /**
+     * Saves the current state of average buy inputs to local storage.
+     */
+    function saveAverageBuyData() {
+        const buyEntries = [];
+        const entryRows = buyEntriesContainer.querySelectorAll('.buy-entry-row');
+        entryRows.forEach(row => {
+            const amount = row.querySelector('.amount-invested').value;
+            const price = row.querySelector('.coin-price').value;
+            buyEntries.push({ amount: amount, price: price });
+        });
+
+        const dataToSave = {
+            entries: buyEntries,
+            currentPrice: currentCoinPriceAvgEl.value,
+            isVisible: averageBuySection.classList.contains('visible') // Save visibility state
+        };
+        localStorage.setItem(AVERAGE_BUY_DATA_KEY, JSON.stringify(dataToSave));
+    }
+
+    /**
+     * Loads the saved state of average buy inputs from local storage.
+     */
+    function loadAverageBuyData() {
+        const savedData = localStorage.getItem(AVERAGE_BUY_DATA_KEY);
+        if (savedData) {
+            const data = JSON.parse(savedData);
+
+            // Restore visibility
+            if (data.isVisible) {
+                averageBuySection.classList.add('visible');
+            } else {
+                averageBuySection.classList.remove('visible');
+            }
+
+            // Clear existing entries before loading
+            buyEntriesContainer.innerHTML = '';
+            buyEntryCount = 0;
+            addBuyButton.disabled = false; // Re-enable add button initially
+
+            // Populate entries
+            if (data.entries && data.entries.length > 0) {
+                data.entries.forEach(entry => {
+                    addBuyEntry(entry.amount, entry.price);
+                });
+            } else {
+                // If no data or empty array, add the first entry only if the section is visible
+                if (averageBuySection.classList.contains('visible')) {
+                    addBuyEntry();
+                }
+            }
+
+            // Populate current coin price
+            currentCoinPriceAvgEl.value = data.currentPrice || '';
+
+            calculateAverageBuy(); // Recalculate based on loaded data
+        } else {
+            // If no data in local storage, ensure no entries are added if section is hidden initially
+            if (averageBuySection.classList.contains('visible')) {
+                addBuyEntry();
+            }
+        }
+    }
+
+    /**
+     * Resets the average buy calculator to its initial state.
+     */
+    function resetAverageBuyCalculator() {
+        buyEntriesContainer.innerHTML = ''; // Clear all dynamic rows
+        buyEntryCount = 0;
+        addBuyButton.disabled = false; // Re-enable add button
+        currentCoinPriceAvgEl.value = ''; // Clear current coin price
+        totalUSDTInvestedEl.textContent = '0.00'; // Reset total USDT invested
+        newAverageBuyPriceEl.textContent = '0.00000000$'; // Reset with high precision
+        newAverageBuyPriceEl.className = ''; // Reset color
+        avgPnLEl.textContent = '+0.00$';
+        avgPnLEl.className = 'profit'; // Reset color to green
+        localStorage.removeItem(AVERAGE_BUY_DATA_KEY); // Clear data from local storage
+        addBuyEntry(); // Add back one initial empty row
+    }
+
+    // Attach event listeners
+    addBuyButton.addEventListener('click', addBuyEntry);
+    currentCoinPriceAvgEl.addEventListener('input', () => {
+        calculateAverageBuy();
+        saveAverageBuyData(); // Save data on current price input change
+    });
+    resetAverageBuyButton.addEventListener('click', resetAverageBuyCalculator); // Attach reset button listener
+
+    // Load data when the page initially loads
+    window.addEventListener('load', () => {
+        loadAverageBuyData(); // Load on page load
+    });
   </script>
 </body>
 </html>
