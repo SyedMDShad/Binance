@@ -1,0 +1,509 @@
+<!doctype html>
+<html lang="bn">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>সমন্বিত মেডিকেল রিপোর্ট / Consolidated Medical Report</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    @import url('https://fonts.maateen.me/kalpurush/font.css');
+
+    /* ভেরিয়েবল */
+    :root {
+      --bg-light: #f0f2f5;
+      --bg-card: rgba(255, 255, 255, 0.85);
+      --text-primary: #222222;
+      --text-secondary: #6b7280;
+      --border-color: rgba(229, 231, 235, 0.7);
+      --shadow-color: rgba(0, 0, 0, 0.1);
+      --high-color: #dc2626;
+      --moderate-color: #ca8a04;
+      --low-color: #16a34a;
+      --green-bg: #dcfce7;
+      --red-bg: #fee2e2;
+      --yellow-bg: #fef9c3;
+      --tab-active-bg: #ffffff;
+      --tab-inactive-bg: #e2e8f0;
+      --tab-active-text: #1e40af;
+    }
+
+    /* বেসিক স্টাইল */
+    * {
+      box-sizing: border-box;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background-color: var(--bg-light);
+      color: var(--text-primary);
+      font-family: 'Kalpurush', 'Inter', sans-serif;
+      line-height: 1.6;
+    }
+    
+    .lang-en {
+        font-family: 'Inter', sans-serif;
+    }
+
+    /* প্রধান কন্টেইনার */
+    .wrapper {
+      max-width: 900px;
+      margin: 8px auto;
+      padding: 0 8px;
+    }
+
+    /* রোগী এবং সারাংশ হেডার */
+    .patient-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 16px;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(240, 242, 245, 0.9));
+      border-radius: 12px;
+      margin-bottom: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      border: 1px solid var(--border-color);
+      flex-wrap: wrap;
+    }
+    .patient-details {
+        flex-grow: 1;
+    }
+    .patient-name {
+      font-size: 18px;
+      font-weight: 600;
+    }
+    .patient-info {
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+    
+    /* ভাষা পরিবর্তনকারী */
+    .lang-switcher {
+        display: flex;
+        gap: 5px;
+        background-color: var(--tab-inactive-bg);
+        border-radius: 8px;
+        padding: 4px;
+    }
+    .lang-button {
+        padding: 6px 12px;
+        border: none;
+        background-color: transparent;
+        color: var(--text-secondary);
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color 0.3s, color 0.3s;
+        border-radius: 6px;
+    }
+    .lang-button.active {
+        background-color: var(--tab-active-bg);
+        color: var(--tab-active-text);
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+
+    /* ট্যাব ন্যাভিগেশন */
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      background-color: var(--tab-inactive-bg);
+      border-radius: 8px;
+      padding: 4px;
+      margin-bottom: 16px;
+    }
+    .tab-button {
+      flex-grow: 1;
+      padding: 10px;
+      border: none;
+      background-color: transparent;
+      color: var(--text-secondary);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.3s, color 0.3s;
+      border-radius: 6px;
+      text-align: center;
+    }
+    .tab-button.active {
+      background-color: var(--tab-active-bg);
+      color: var(--tab-active-text);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    /* ট্যাব কন্টেন্ট */
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* সেকশন কার্ড */
+    .section-card {
+      background: var(--bg-card);
+      backdrop-filter: blur(10px);
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid var(--border-color);
+      box-shadow: 0 2px 8px var(--shadow-color);
+      margin-bottom: 16px;
+    }
+
+    .sec-head {
+      padding: 12px 16px;
+      background: rgba(240, 242, 245, 0.6);
+      border-bottom: 1px solid var(--border-color);
+      font-weight: 600;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .badge {
+      background: #e5e7eb;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #333;
+    }
+
+    /* টেবিল স্টাইল */
+    .table-container { width: 100%; overflow-x: auto; }
+    .table { width: 100%; border-collapse: collapse; }
+    .table th, .table td {
+      padding: 10px 8px;
+      font-size: 12px;
+      text-align: left;
+      border-bottom: 1px solid var(--border-color);
+      white-space: normal;
+      word-break: break-word;
+    }
+    .table th {
+      background: rgba(240, 242, 245, 0.7);
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .table tr:last-child td { border-bottom: none; }
+    .k { font-weight: 600; color: var(--text-primary); }
+    .status-cell { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; font-weight: 500; }
+    .status-emoji { font-size: 1.1em; display: flex; align-items: center; gap: 4px; }
+    .status-date { font-size: 10px; color: var(--text-secondary); }
+    
+    /* অ্যান্টিবায়োটিক সংবেদনশীলতা টেবিল */
+    .sensitive { background-color: var(--green-bg) !important; }
+    .resistant { background-color: var(--red-bg) !important; }
+    .intermediate { background-color: var(--yellow-bg) !important; }
+
+    /* ফুটার স্টাইল */
+    .footer {
+      text-align: center;
+      padding: 16px 0 8px 0;
+      font-size: 10px;
+      color: var(--text-secondary);
+    }
+
+    /* রেসপন্সিভ ডিজাইন */
+    @media (max-width: 768px) {
+      .patient-name { font-size: 16px; }
+      .patient-info { font-size: 12px; }
+      .tab-button { font-size: 12px; padding: 8px; }
+      .table th, .table td { font-size: 11px; padding: 8px 6px; }
+    }
+    @media (max-width: 480px) {
+      .wrapper { padding: 0 4px; }
+      .patient-header { flex-direction: column; align-items: flex-start; gap: 8px; }
+      .tabs { flex-direction: column; }
+      .tab-button { width: 100%; }
+      .table th, .table td { font-size: 10px; padding: 6px 4px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="wrapper">
+  
+  <div class="patient-header">
+    <div class="patient-details">
+        <div class="patient-name">
+            <span class="lang-bn">সমন্বিত মেডিকেল রিপোর্ট</span>
+            <span class="lang-en">Consolidated Medical Report</span>
+        </div>
+        <div class="patient-info">
+            <span class="lang-bn">রোগী: <b>শাকিলা আক্তার আশা</b>, বয়স: <b>২১</b></span>
+            <span class="lang-en">Patient: <b>Shakila Akter Asha</b>, Age: <b>21</b></span>
+        </div>
+    </div>
+    <div class="lang-switcher">
+        <button id="btn-bn" class="lang-button active" onclick="switchLanguage('bn')">বাংলা</button>
+        <button id="btn-en" class="lang-button" onclick="switchLanguage('en')">English</button>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-button active" onclick="openTab(event, 'reports')">
+        <span class="lang-bn">মেডিকেল রিপোর্ট (২০২০ ও ২০২৫)</span>
+        <span class="lang-en">Medical Reports (2020 & 2025)</span>
+    </button>
+    <button class="tab-button" onclick="openTab(event, 'comparison')">
+        <span class="lang-bn">তুলনামূলক চিত্র (২০২০ বনাম ২০২৫)</span>
+        <span class="lang-en">Comparison (2020 vs 2025)</span>
+    </button>
+    <button class="tab-button" onclick="openTab(event, 'prescriptions')">
+        <span class="lang-bn">প্রেসক্রিপশন ও অ্যান্টিবায়োটিক</span>
+        <span class="lang-en">Prescriptions & Antibiotics</span>
+    </button>
+  </div>
+
+  <!-- Tab 1: Medical Reports (2020 & 2025) -->
+  <div id="reports" class="tab-content active">
+    <!-- 2020 Report -->
+    <div class="section-card">
+      <div class="sec-head"><div class="badge">01</div>
+        <span>
+            <span class="lang-bn">২০২০ মেডিকেল রিপোর্ট (পিজি হাসপাতাল + ইবনে সিনা)</span>
+            <span class="lang-en">2020 Medical Report (PG Hospital + IBN SINA)</span>
+        </span>
+      </div>
+      <div class="table-container">
+        <table class="table">
+          <thead>
+            <tr>
+              <th><span class="lang-bn">টেস্ট</span><span class="lang-en">Test</span></th>
+              <th><span class="lang-bn">ফলাফল</span><span class="lang-en">Result</span></th>
+              <th><span class="lang-bn">রেফারেন্স</span><span class="lang-en">Reference</span></th>
+              <th><span class="lang-bn">ব্যাখ্যা</span><span class="lang-en">Interpretation</span></th>
+              <th><span class="lang-bn">ঝুঁকির মাত্রা</span><span class="lang-en">Risk Level</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td class="k">HLA-B27</td><td>Positive</td><td>Negative</td><td><span class="lang-bn">AS-এর সাথে জেনেটিক সম্পর্ক</span><span class="lang-en">Genetic association with AS</span></td><td><div class="status-cell"><div class="status-emoji">🔴 <span class="lang-bn">উচ্চ</span><span class="lang-en">High</span></div><span class="status-date">14 Nov 2020</span></div></td></tr>
+            <tr><td class="k">SI joint X-ray</td><td>Grade-1 sacroiliitis</td><td>Normal</td><td><span class="lang-bn">প্রাথমিক পরিবর্তন</span><span class="lang-en">Early change, minimal damage</span></td><td><div class="status-cell"><div class="status-emoji">🟡 <span class="lang-bn">মাঝারি</span><span class="lang-en">Moderate</span></div><span class="status-date">22 Nov 2020</span></div></td></tr>
+            <tr><td class="k">BASDAI</td><td>3.6</td><td>≥4</td><td><span class="lang-bn">হালকা থেকে মাঝারি অ্যাক্টিভিটি</span><span class="lang-en">Mild–Moderate activity</span></td><td><div class="status-cell"><div class="status-emoji">🟡 <span class="lang-bn">মাঝারি</span><span class="lang-en">Moderate</span></div><span class="status-date">18 Nov 2020</span></div></td></tr>
+            <tr><td class="k">CRP</td><td>12.0 mg/L</td><td>&lt;6</td><td><span class="lang-bn">সক্রিয় প্রদাহ</span><span class="lang-en">Active inflammation</span></td><td><div class="status-cell"><div class="status-emoji">🟡 <span class="lang-bn">মাঝারি</span><span class="lang-en">Moderate</span></div><span class="status-date">5 Nov 2020</span></div></td></tr>
+            <tr><td class="k">ESR</td><td>33 mm/hr</td><td>♀ ≤20</td><td><span class="lang-bn">প্রদাহ সক্রিয়</span><span class="lang-en">Inflammation active</span></td><td><div class="status-cell"><div class="status-emoji">🟡 <span class="lang-bn">মাঝারি</span><span class="lang-en">Moderate</span></div><span class="status-date">5 Nov 2020</span></div></td></tr>
+            <tr><td class="k">Hemoglobin</td><td>9.5 g/dL</td><td>♀ 12–15</td><td><span class="lang-bn">রক্তস্বল্পতা (আয়রনের ঘাটতি)</span><span class="lang-en">Anemia (iron deficiency)</span></td><td><div class="status-cell"><div class="status-emoji">🟡 <span class="lang-bn">মাঝারি</span><span class="lang-en">Moderate</span></div><span class="status-date">5 Nov 2020</span></div></td></tr>
+            <tr><td class="k">MCV</td><td>72.1 fL</td><td>80–96</td><td>Microcytic</td><td><div class="status-cell"><div class="status-emoji">🟡 <span class="lang-bn">মাঝারি</span><span class="lang-en">Moderate</span></div><span class="status-date">5 Nov 2020</span></div></td></tr>
+            <tr><td class="k">MCHC</td><td>28.9 g/dL</td><td>31.5–34.5</td><td><span class="lang-bn">রক্তস্বল্পতার সাথে সামঞ্জস্যপূর্ণ</span><span class="lang-en">Matches anemia pattern</span></td><td><div class="status-cell"><div class="status-emoji">🟡 <span class="lang-bn">মাঝারি</span><span class="lang-en">Moderate</span></div><span class="status-date">5 Nov 2020</span></div></td></tr>
+            <tr><td class="k">ANA</td><td>Negative</td><td>-</td><td><span class="lang-bn">SLE/ওভারল্যাপ নেই</span><span class="lang-en">No SLE/overlap</span></td><td><div class="status-cell"><div class="status-emoji">🟢 <span class="lang-bn">কম</span><span class="lang-en">Low</span></div><span class="status-date">5 Nov 2020</span></div></td></tr>
+            <tr><td class="k">Anti-CCP</td><td>39.2 U/mL</td><td>&lt;25</td><td><span class="lang-bn">RA ওভারল্যাপের ঝুঁকি</span><span class="lang-en">RA overlap risk</span></td><td><div class="status-cell"><div class="status-emoji">🟡 <span class="lang-bn">মাঝারি</span><span class="lang-en">Moderate</span></div><span class="status-date">5 Nov 2020</span></div></td></tr>
+            <tr><td class="k">Mantoux</td><td>2 mm</td><td>≥10</td><td><span class="lang-bn">টিবি নেই</span><span class="lang-en">TB ruled out</span></td><td><div class="status-cell"><div class="status-emoji">🟢 <span class="lang-bn">কম</span><span class="lang-en">Low</span></div><span class="status-date">14 Nov 2020</span></div></td></tr>
+            <tr><td class="k">CXR</td><td>Normal</td><td>-</td><td><span class="lang-bn">হার্ট/ফুসফুস স্বাভাবিক</span><span class="lang-en">Heart/Lungs normal</span></td><td><div class="status-cell"><div class="status-emoji">🟢 <span class="lang-bn">কম</span><span class="lang-en">Low</span></div><span class="status-date">22 Nov 2020</span></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <!-- 2025 Report -->
+    <div class="section-card">
+      <div class="sec-head"><div class="badge">02</div>
+        <span>
+            <span class="lang-bn">২০২৫ মেডিকেল রিপোর্ট (স্কয়ার হাসপাতাল + ইবনে সিনা)</span>
+            <span class="lang-en">2025 Medical Report (Square Hospital + IBN SINA)</span>
+        </span>
+      </div>
+      <div class="table-container">
+        <table class="table">
+          <thead>
+            <tr>
+              <th><span class="lang-bn">টেস্ট</span><span class="lang-en">Test</span></th>
+              <th><span class="lang-bn">ফলাফল</span><span class="lang-en">Result</span></th>
+              <th><span class="lang-bn">রেফারেন্স</span><span class="lang-en">Reference</span></th>
+              <th><span class="lang-bn">ব্যাখ্যা</span><span class="lang-en">Interpretation</span></th>
+              <th><span class="lang-bn">ঝুঁকির মাত্রা</span><span class="lang-en">Risk Level</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td class="k">HLA-B27</td><td>Positive</td><td>Negative</td><td><span class="lang-bn">আজীবন জেনেটিক ঝুঁকি</span><span class="lang-en">Lifelong genetic risk</span></td><td><div class="status-cell"><div class="status-emoji">🔴 <span class="lang-bn">উচ্চ</span><span class="lang-en">High</span></div><span class="status-date">Jul 2025</span></div></td></tr>
+            <tr><td class="k">SI joint X-ray</td><td>Grade-2</td><td>Normal</td><td><span class="lang-bn">গঠনগত ক্ষতি বেড়েছে</span><span class="lang-en">Structural damage increased</span></td><td><div class="status-cell"><div class="status-emoji">🔴 <span class="lang-bn">উচ্চ</span><span class="lang-en">High</span></div><span class="status-date">27 Jul 2025</span></div></td></tr>
+            <tr><td class="k">BASDAI</td><td>5.8</td><td>≥4</td><td><span class="lang-bn">রোগের উচ্চ অ্যাক্টিভিটি</span><span class="lang-en">High disease activity</span></td><td><div class="status-cell"><div class="status-emoji">🔴 <span class="lang-bn">উচ্চ</span><span class="lang-en">High</span></div><span class="status-date">Jun 2025</span></div></td></tr>
+            <tr><td class="k">CRP</td><td>18–22 mg/L</td><td>&lt;6</td><td><span class="lang-bn">প্রদাহ বেশি</span><span class="lang-en">More inflammation</span></td><td><div class="status-cell"><div class="status-emoji">🟡 <span class="lang-bn">মাঝারি</span><span class="lang-en">Moderate</span></div><span class="status-date">30 Jun 2025</span></div></td></tr>
+            <tr><td class="k">ESR</td><td>66 mm/hr</td><td>♀ ≤20</td><td><span class="lang-bn">দীর্ঘস্থায়ী প্রদাহ</span><span class="lang-en">Chronic inflammation</span></td><td><div class="status-cell"><div class="status-emoji">🟡 <span class="lang-bn">মাঝারি</span><span class="lang-en">Moderate</span></div><span class="status-date">26 Jul 2025</span></div></td></tr>
+            <tr><td class="k">Hemoglobin</td><td>9.1 g/dL</td><td>♀ 12–15</td><td><span class="lang-bn">রক্তস্বল্পতা বেড়েছে</span><span class="lang-en">Anemia worsened</span></td><td><div class="status-cell"><div class="status-emoji">🟡 <span class="lang-bn">মাঝারি</span><span class="lang-en">Moderate</span></div><span class="status-date">4 Aug 2025</span></div></td></tr>
+            <tr><td class="k">MCV</td><td>70–73 fL</td><td>80–96</td><td>Microcytic</td><td><div class="status-cell"><div class="status-emoji">🟡 <span class="lang-bn">মাঝারি</span><span class="lang-en">Moderate</span></div><span class="status-date">26 Jul 2025</span></div></td></tr>
+            <tr><td class="k">MCHC</td><td>27.5–29 g/dL</td><td>31.5–34.5</td><td><span class="lang-bn">রক্তস্বল্পতার সাথে সামঞ্জস্যপূর্ণ</span><span class="lang-en">Consistent with anemia</span></td><td><div class="status-cell"><div class="status-emoji">🟡 <span class="lang-bn">মাঝারি</span><span class="lang-en">Moderate</span></div><span class="status-date">26 Jul 2025</span></div></td></tr>
+            <tr><td class="k">Serum Iron</td><td>26 μg/dL</td><td>37–170</td><td><span class="lang-bn">আয়রনের ঘাটতি নিশ্চিত</span><span class="lang-en">Iron deficiency confirmed</span></td><td><div class="status-cell"><div class="status-emoji">🟡 <span class="lang-bn">মাঝারি</span><span class="lang-en">Moderate</span></div><span class="status-date">4 Aug 2025</span></div></td></tr>
+            <tr><td class="k">ANA</td><td>Negative</td><td>-</td><td><span class="lang-bn">নতুন কোনো রোগ নেই</span><span class="lang-en">No new disease</span></td><td><div class="status-cell"><div class="status-emoji">🟢 <span class="lang-bn">কম</span><span class="lang-en">Low</span></div><span class="status-date">30 Jun 2025</span></div></td></tr>
+            <tr><td class="k">Anti-CCP</td><td>Negative</td><td>-</td><td><span class="lang-bn">RA ওভারল্যাপের সম্ভাবনা কম</span><span class="lang-en">RA overlap unlikely</span></td><td><div class="status-cell"><div class="status-emoji">🟢 <span class="lang-bn">কম</span><span class="lang-en">Low</span></div><span class="status-date">26 Jul 2025</span></div></td></tr>
+            <tr><td class="k">Vitamin D</td><td>21.2 ng/mL</td><td>30–100</td><td><span class="lang-bn"> شدید ঘাটতি</span><span class="lang-en">Severe deficiency</span></td><td><div class="status-cell"><div class="status-emoji">🟡 <span class="lang-bn">মাঝারি</span><span class="lang-en">Moderate</span></div><span class="status-date">30 Jun 2025</span></div></td></tr>
+            <tr><td class="k">Vitamin B12</td><td>210 pg/mL</td><td>300–900</td><td><span class="lang-bn">সীমান্তবর্তী কম</span><span class="lang-en">Borderline low</span></td><td><div class="status-cell"><div class="status-emoji">🟡 <span class="lang-bn">মাঝারি</span><span class="lang-en">Moderate</span></div><span class="status-date">Jul 2025</span></div></td></tr>
+            <tr><td class="k">ALT</td><td>49 U/L</td><td>♀ &lt;34</td><td><span class="lang-bn">হালকা বৃদ্ধি</span><span class="lang-en">Mild elevation</span></td><td><div class="status-cell"><div class="status-emoji">🟡 <span class="lang-bn">মাঝারি</span><span class="lang-en">Moderate</span></div><span class="status-date">26 Jul 2025</span></div></td></tr>
+            <tr><td class="k">Urine R/E</td><td>Pus 5–9/HPF</td><td>0–5</td><td><span class="lang-bn">হালকা সংক্রমণ</span><span class="lang-en">Mild infection</span></td><td><div class="status-cell"><div class="status-emoji">🟡 <span class="lang-bn">মাঝারি</span><span class="lang-en">Moderate</span></div><span class="status-date">30 Jun 2025</span></div></td></tr>
+            <tr><td class="k">L/S Spine X-ray</td><td>Straightened, discs normal</td><td>-</td><td><span class="lang-bn">পেশীর খিঁচুনি</span><span class="lang-en">Muscle spasm</span></td><td><div class="status-cell"><div class="status-emoji">🟡 <span class="lang-bn">মাঝারি</span><span class="lang-en">Moderate</span></div><span class="status-date">27 Jul 2025</span></div></td></tr>
+            <tr><td class="k">Knee X-ray</td><td>Normal</td><td>-</td><td><span class="lang-bn">জয়েন্ট সংরক্ষিত</span><span class="lang-en">Joint preserved</span></td><td><div class="status-cell"><div class="status-emoji">🟢 <span class="lang-bn">কম</span><span class="lang-en">Low</span></div><span class="status-date">27 Jul 2025</span></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab 2: Comparison -->
+  <div id="comparison" class="tab-content">
+    <div class="section-card">
+        <div class="sec-head">
+            <span class="lang-bn">তুলনামূলক চিত্র: ২০২০ বনাম ২০২৫</span>
+            <span class="lang-en">Comparison: 2020 vs 2025</span>
+        </div>
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th><span class="lang-bn">টেস্ট</span><span class="lang-en">Test</span></th>
+                        <th><span class="lang-bn">২০২০ ফলাফল</span><span class="lang-en">2020 Result</span></th>
+                        <th><span class="lang-bn">২০২৫ ফলাফল</span><span class="lang-en">2025 Result</span></th>
+                        <th><span class="lang-bn">ব্যাখ্যা</span><span class="lang-en">Interpretation</span></th>
+                        <th><span class="lang-bn">ঝুঁকির পরিবর্তন</span><span class="lang-en">Risk Change</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td class="k">HLA-B27</td><td>Positive</td><td>Positive</td><td><span class="lang-bn">উভয় ক্ষেত্রেই পজিটিভ, আজীবন জেনেটিক ঝুঁকি রয়েছে।</span><span class="lang-en">Positive in both, lifelong genetic risk remains.</span></td><td><span class="lang-bn">কোনো পরিবর্তন নেই</span><span class="lang-en">No Change</span></td></tr>
+                    <tr><td class="k">SI joint X-ray</td><td>Grade-1 Sacroiliitis</td><td>Grade-2</td><td><span class="lang-bn">জয়েন্টের গঠনগত ক্ষতি বেড়েছে।</span><span class="lang-en">Structural damage to the joint has increased.</span></td><td><div class="status-cell"><span class="status-emoji">🔴</span><span class="lang-bn">উচ্চ ঝুঁকি</span><span class="lang-en">High Risk</span></div></td></tr>
+                    <tr><td class="k">BASDAI</td><td>3.6</td><td>5.8</td><td><span class="lang-bn">রোগের অ্যাক্টিভিটি হালকা থেকে উচ্চে পৌঁছেছে।</span><span class="lang-en">Disease activity has increased from mild to high.</span></td><td><div class="status-cell"><span class="status-emoji">🔴</span><span class="lang-bn">উচ্চ ঝুঁকি</span><span class="lang-en">High Risk</span></div></td></tr>
+                    <tr><td class="k">CRP</td><td>12 mg/L</td><td>18–22 mg/L</td><td><span class="lang-bn">প্রদাহ উল্লেখযোগ্যভাবে বেড়েছে।</span><span class="lang-en">Inflammation has significantly increased.</span></td><td><div class="status-cell"><span class="status-emoji">🔴</span><span class="lang-bn">উচ্চ ঝুঁকি</span><span class="lang-en">High Risk</span></div></td></tr>
+                    <tr><td class="k">ESR</td><td>33 mm/hr</td><td>66 mm/hr</td><td><span class="lang-bn">দীর্ঘস্থায়ী প্রদাহ আরও খারাপ হয়েছে।</span><span class="lang-en">Chronic inflammation has worsened.</span></td><td><div class="status-cell"><span class="status-emoji">🔴</span><span class="lang-bn">উচ্চ ঝুঁকি</span><span class="lang-en">High Risk</span></div></td></tr>
+                    <tr><td class="k">Hemoglobin</td><td>9.5 g/dL</td><td>9.1 g/dL</td><td><span class="lang-bn">রক্তস্বল্পতা বেড়েছে।</span><span class="lang-en">Anemia has worsened.</span></td><td><div class="status-cell"><span class="status-emoji">🔴</span><span class="lang-bn">উচ্চ ঝুঁকি</span><span class="lang-en">High Risk</span></div></td></tr>
+                    <tr><td class="k">MCV</td><td>72.1 fL</td><td>70–73 fL</td><td><span class="lang-bn">মাইক্রোসাইটিক অ্যানিমিয়ার প্যাটার্ন অপরিবর্তিত।</span><span class="lang-en">Microcytic anemia pattern is unchanged.</span></td><td><span class="lang-bn">কোনো পরিবর্তন নেই</span><span class="lang-en">No Change</span></td></tr>
+                    <tr><td class="k">MCHC</td><td>28.9 g/dL</td><td>27.5–29 g/dL</td><td><span class="lang-bn">অ্যানিমিয়ার প্যাটার্ন অপরিবর্তিত।</span><span class="lang-en">Anemia pattern is unchanged.</span></td><td><span class="lang-bn">কোনো পরিবর্তন নেই</span><span class="lang-en">No Change</span></td></tr>
+                    <tr><td class="k">ANA</td><td>Negative</td><td>Negative</td><td><span class="lang-bn">নতুন কোনো অটোইমিউন রোগ শনাক্ত হয়নি।</span><span class="lang-en">No new autoimmune disease detected.</span></td><td><span class="lang-bn">কোনো পরিবর্তন নেই</span><span class="lang-en">No Change</span></td></tr>
+                    <tr><td class="k">Anti-CCP</td><td>39.2 U/mL (Positive)</td><td>Negative</td><td><span class="lang-bn">RA ওভারল্যাপের ঝুঁকি এখন কম।</span><span class="lang-en">RA overlap risk is now low.</span></td><td><div class="status-cell"><span class="status-emoji">🟢</span><span class="lang-bn">ঝুঁকি কমেছে</span><span class="lang-en">Risk Decreased</span></div></td></tr>
+                    <tr><td class="k">Vitamin D</td><td>Not Available</td><td>21.2 ng/mL</td><td><span class="lang-bn"> شدید ঘাটতি শনাক্ত হয়েছে।</span><span class="lang-en">Severe deficiency detected.</span></td><td><div class="status-cell"><span class="status-emoji">🟡</span><span class="lang-bn">মাঝারি ঝুঁকি</span><span class="lang-en">Moderate Risk</span></div></td></tr>
+                    <tr><td class="k">Vitamin B12</td><td>Not Available</td><td>210 pg/mL</td><td><span class="lang-bn">সীমান্তবর্তী কম, ঘাটতির ঝুঁকি রয়েছে।</span><span class="lang-en">Borderline low, deficiency risk present.</span></td><td><div class="status-cell"><span class="status-emoji">🟡</span><span class="lang-bn">মাঝারি ঝুঁকি</span><span class="lang-en">Moderate Risk</span></div></td></tr>
+                    <tr><td class="k">Serum Iron</td><td>Not Available</td><td>26 µg/dL</td><td><span class="lang-bn"> شدید আয়রনের ঘাটতি নিশ্চিত হয়েছে।</span><span class="lang-en">Severe iron deficiency confirmed.</span></td><td><div class="status-cell"><span class="status-emoji">🔴</span><span class="lang-bn">উচ্চ ঝুঁকি</span><span class="lang-en">High Risk</span></div></td></tr>
+                    <tr><td class="k">ALT</td><td>Not Available</td><td>49 U/L</td><td><span class="lang-bn">লিভার এনজাইমের হালকা বৃদ্ধি।</span><span class="lang-en">Mild liver enzyme elevation.</span></td><td><div class="status-cell"><span class="status-emoji">🟡</span><span class="lang-bn">মাঝারি ঝুঁকি</span><span class="lang-en">Moderate Risk</span></div></td></tr>
+                    <tr><td class="k">Urine R/E</td><td>Not Available</td><td>Pus 5–9/HPF</td><td><span class="lang-bn">হালকা মূত্রনালীর সংক্রমণ নির্দেশ করে।</span><span class="lang-en">Indicates a mild urinary tract infection.</span></td><td><div class="status-cell"><span class="status-emoji">🟡</span><span class="lang-bn">মাঝারি ঝুঁকি</span><span class="lang-en">Moderate Risk</span></div></td></tr>
+                    <tr><td class="k">L/S Spine X-ray</td><td>Not Available</td><td>Straightened, discs normal</td><td><span class="lang-bn">পেশীর খিঁচুনি নির্দেশ করে।</span><span class="lang-en">Suggests muscle spasm.</span></td><td><div class="status-cell"><span class="status-emoji">🟡</span><span class="lang-bn">মাঝারি ঝুঁকি</span><span class="lang-en">Moderate Risk</span></div></td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+  </div>
+
+  <!-- Tab 3: Prescriptions & Antibiotics -->
+  <div id="prescriptions" class="tab-content">
+    <div class="section-card">
+      <div class="sec-head"><div class="badge">01</div>
+        <span>
+            <span class="lang-bn">প্রেসক্রিপশন তালিকা</span>
+            <span class="lang-en">Prescription List</span>
+        </span>
+      </div>
+      <div class="table-container">
+        <table class="table">
+          <thead>
+            <tr>
+              <th><span class="lang-bn">ওষুধের নাম</span><span class="lang-en">Medicine Name</span></th>
+              <th><span class="lang-bn">কার্যকারিতা</span><span class="lang-en">Efficacy</span></th>
+              <th><span class="lang-bn">ডাক্তার ও তারিখ</span><span class="lang-en">Prescribing Doctor & Date</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>Tab. Tofacit 5mg</td><td><span class="lang-bn">ইমিউনোসাপ্রেসেন্ট; প্রদাহ এবং ব্যথা কমায়।</span><span class="lang-en">Immunosuppressant; reduces inflammation and pain.</span></td><td>Dr. Syed Zakir Hossain (22 Nov 2020)</td></tr>
+            <tr><td>Cap. D3 40,000/20,000 IU or Tab. D3 2,000 IU</td><td><span class="lang-bn">ভিটামিন ডি-এর ঘাটতি পূরণ করে; হাড়ের স্বাস্থ্যের জন্য অপরিহার্য।</span><span class="lang-en">Treats Vitamin D deficiency; essential for bone health.</span></td><td>Dr. Syed Zakir Hossain (22 Nov 2020)<br>Prof. Dr. Rehana Perven (29 Jun 2025)</td></tr>
+            <tr><td>Cap. Indomel 25mg</td><td><span class="lang-bn">NSAID; প্রদাহ, ব্যথা এবং জ্বর কমায়।</span><span class="lang-en">NSAID; reduces inflammation, pain, and fever.</span></td><td>Dr. Syed Zakir Hossain (22 Nov 2020)</td></tr>
+            <tr><td>Cap. Reumacap SR 75mg</td><td><span class="lang-bn">NSAID; ব্যথা এবং প্রদাহ কমাতে ব্যবহৃত হয়।</span><span class="lang-en">NSAID; used to reduce pain and inflammation.</span></td><td>Dr. Kamruzzaman (Kamal) (25 Jul 2025)</td></tr>
+            <tr><td>Tab. Melhotrax 10mg</td><td><span class="lang-bn">ইমিউনোসাপ্রেসেন্ট; রিউমাটয়েড আর্থ্রাইটিসের চিকিৎসায় ব্যবহৃত হয়।</span><span class="lang-en">Immunosuppressant; used to treat rheumatoid arthritis.</span></td><td>Dr. Md. Ashraful Haque Chowdhury (4 Aug 2025)</td></tr>
+            <tr><td>Tab. Folison 5mg</td><td><span class="lang-bn">মেলহোট্র্যাক্স-এর পার্শ্বপ্রতিক্রিয়া কমাতে ব্যবহৃত হয়।</span><span class="lang-en">Used to mitigate side effects of Melhotrax.</span></td><td>Dr. Md. Ashraful Haque Chowdhury (4 Aug 2025)</td></tr>
+            <tr><td>Tab. Bacmax 10mg</td><td><span class="lang-bn">পেশী শিথিলকারী; পেশীর ব্যথা এবং খিঁচুনি কমাতে সাহায্য করে।</span><span class="lang-en">Muscle relaxant; helps reduce muscle pain and spasms.</span></td><td>Dr. Kamruzzaman (Kamal) (25 Jul 2025)<br>Brig Gen Prof. Dr. Moklesur Rahman (30 Jun 2025)</td></tr>
+            <tr><td>Syp. Gavitlux 200ml</td><td><span class="lang-bn">কোষ্ঠকাঠিন্য দূর করে এবং অন্ত্রের কার্যকারিতা উন্নত করে।</span><span class="lang-en">Helps relieve constipation and improves bowel function.</span></td><td>Dr. Kamruzzaman (Kamal) (25 Jul 2025)</td></tr>
+            <tr><td>Cap. Dexlan 30mg</td><td><span class="lang-bn">PPI; ব্যথানাশক ওষুধের পার্শ্বপ্রতিক্রিয়া থেকে রক্ষা করতে পেটের অ্যাসিড উৎপাদন কমায়।</span><span class="lang-en">PPI; reduces stomach acid production to protect against painkiller side effects.</span></td><td>Brig Gen Prof. Dr. Moklesur Rahman (30 Jun 2025)</td></tr>
+            <tr><td>NITROFURANTOIN-100MG TAB</td><td><span class="lang-bn">অ্যান্টিবায়োটিক; মূত্রনালীর সংক্রমণ (UTI) চিকিৎসায় ব্যবহৃত হয়।</span><span class="lang-en">Antibiotic; used to treat urinary tract infections (UTI).</span></td><td>Prof. Dr. Rehana Perven (29 Jun 2025)</td></tr>
+            <tr><td>TIEMONIUM METHYLSULPHATE -50MG TAB</td><td><span class="lang-bn">অ্যান্টিস্পাসমোডিক; মূত্রাশয় এবং পেটের পেশী শিথিল করে ব্যথা উপশম করে।</span><span class="lang-en">Antispasmodic; relieves pain by relaxing bladder and abdominal muscles.</span></td><td>Prof. Dr. Rehana Perven (29 Jun 2025)</td></tr>
+            <tr><td>PATRANGASAV-200ML SYP</td><td><span class="lang-bn">আয়ুর্বেদিক ওষুধ; গাইনোকোলজিক্যাল সমস্যার জন্য ব্যবহৃত হয়।</span><span class="lang-en">Ayurvedic medicine; used for gynecological issues.</span></td><td>Prof. Dr. Rehana Perven (29 Jun 2025)</td></tr>
+            <tr><td>Fosformax sachet</td><td><span class="lang-bn">মূত্রনালীর সংক্রমণ চিকিৎসায় ব্যবহৃত হয়।</span><span class="lang-en">Used to treat urinary tract infections.</span></td><td>Prof. Dr. Rehana Perven (29 Jun 2025)</td></tr>
+            <tr><td>Tab. UROBERY (400)</td><td><span class="lang-bn">মূত্রনালীর সংক্রমণ চিকিৎসায় ব্যবহৃত হয়।</span><span class="lang-en">Used to treat urinary tract infections.</span></td><td>Prof. Dr. Rehana Perven (29 Jun 2025)</td></tr>
+            <tr><td>NAPROXEN-500mg TAB</td><td><span class="lang-bn">NSAID; ব্যথা এবং প্রদাহ কমায়।</span><span class="lang-en">NSAID; reduces pain and inflammation.</span></td><td>Brig Gen Prof. Dr. Moklesur Rahman (30 Jun 2025)</td></tr>
+            <tr><td>MECOBALAMIN-500mcg TAB</td><td><span class="lang-bn">ভিটামিন বি১২; স্নায়ু কোষের কার্যকারিতা উন্নত করে।</span><span class="lang-en">Vitamin B12; improves nerve cell function.</span></td><td>Brig Gen Prof. Dr. Moklesur Rahman (30 Jun 2025)</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="section-card">
+      <div class="sec-head"><div class="badge">02</div>
+        <span>
+            <span class="lang-bn">অ্যান্টিবায়োটিক সংবেদনশীলতা</span>
+            <span class="lang-en">Antibiotic Sensitivity</span>
+        </span>
+      </div>
+      <div class="table-container">
+        <table class="table">
+          <thead>
+            <tr>
+                <th><span class="lang-bn">অ্যান্টিবায়োটিক</span><span class="lang-en">Antibiotic</span></th>
+                <th><span class="lang-bn">ফলাফল</span><span class="lang-en">Result</span></th>
+                <th><span class="lang-bn">ব্যাখ্যা</span><span class="lang-en">Explanation</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="sensitive"><td>Amikacin</td><td>S</td><td><span class="lang-bn">কাজ করবে</span><span class="lang-en">Will work</span></td></tr>
+            <tr class="sensitive"><td>Amoxiclav</td><td>S</td><td><span class="lang-bn">কাজ করবে</span><span class="lang-en">Will work</span></td></tr>
+            <tr class="sensitive"><td>Cefepime</td><td>S</td><td><span class="lang-bn">কাজ করবে</span><span class="lang-en">Will work</span></td></tr>
+            <tr class="resistant"><td>Cefixime</td><td>R</td><td><span class="lang-bn">কাজ করবে না</span><span class="lang-en">Will not work</span></td></tr>
+            <tr class="resistant"><td>Ceftazidime</td><td>R</td><td><span class="lang-bn">কাজ করবে না</span><span class="lang-en">Will not work</span></td></tr>
+            <tr class="resistant"><td>Ceftriaxone</td><td>R</td><td><span class="lang-bn">কাজ করবে না</span><span class="lang-en">Will not work</span></td></tr>
+            <tr class="resistant"><td>Cefuroxime</td><td>R</td><td><span class="lang-bn">কাজ করবে না</span><span class="lang-en">Will not work</span></td></tr>
+            <tr class="sensitive"><td>Ciprofloxacin</td><td>S</td><td><span class="lang-bn">কাজ করবে</span><span class="lang-en">Will work</span></td></tr>
+            <tr class="sensitive"><td>Colistin</td><td>S</td><td><span class="lang-bn">কাজ করবে</span><span class="lang-en">Will work</span></td></tr>
+            <tr class="intermediate"><td>Cotrimoxazole</td><td>I</td><td><span class="lang-bn">আংশিক কাজ করতে পারে</span><span class="lang-en">May work partially</span></td></tr>
+            <tr class="sensitive"><td>Fosfomycin</td><td>S</td><td><span class="lang-bn">কাজ করবে</span><span class="lang-en">Will work</span></td></tr>
+            <tr class="sensitive"><td>Gentamicin</td><td>S</td><td><span class="lang-bn">কাজ করবে</span><span class="lang-en">Will work</span></td></tr>
+            <tr class="sensitive"><td>Meropenem</td><td>S</td><td><span class="lang-bn">কাজ করবে</span><span class="lang-en">Will work</span></td></tr>
+            <tr class="sensitive"><td>Nitrofurantoin</td><td>S</td><td><span class="lang-bn">কাজ করবে</span><span class="lang-en">Will work</span></td></tr>
+            <tr class="sensitive"><td>Piperacillin+Tazobactam</td><td>S</td><td><span class="lang-bn">কাজ করবে</span><span class="lang-en">Will work</span></td></tr>
+            <tr class="sensitive"><td>Tigecycline</td><td>S</td><td><span class="lang-bn">কাজ করবে</span><span class="lang-en">Will work</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+      <span class="lang-bn">সর্বশেষ আপডেট: ১৬ আগস্ট ২০২৫</span>
+      <span class="lang-en">Last Updated: 16 Aug 2025</span>
+  </div>
+
+</div>
+
+<script>
+  // ট্যাব পরিবর্তন করার জন্য জাভাস্ক্রিপ্ট
+  function openTab(evt, tabName) {
+    var i, tabcontent, tablinks;
+    tabcontent = document.getElementsByClassName("tab-content");
+    for (i = 0; i < tabcontent.length; i++) {
+      tabcontent[i].style.display = "none";
+    }
+    tablinks = document.getElementsByClassName("tab-button");
+    for (i = 0; i < tablinks.length; i++) {
+      tablinks[i].className = tablinks[i].className.replace(" active", "");
+    }
+    document.getElementById(tabName).style.display = "block";
+    evt.currentTarget.className += " active";
+  }
+
+  // ভাষা পরিবর্তন করার জন্য জাভাস্ক্রিপ্ট
+  function switchLanguage(lang) {
+    const bnElements = document.querySelectorAll('.lang-bn');
+    const enElements = document.querySelectorAll('.lang-en');
+    const btnBn = document.getElementById('btn-bn');
+    const btnEn = document.getElementById('btn-en');
+
+    if (lang === 'bn') {
+      bnElements.forEach(el => el.style.display = 'inline');
+      enElements.forEach(el => el.style.display = 'none');
+      btnBn.classList.add('active');
+      btnEn.classList.remove('active');
+    } else {
+      bnElements.forEach(el => el.style.display = 'none');
+      enElements.forEach(el => el.style.display = 'inline');
+      btnEn.classList.add('active');
+      btnBn.classList.remove('active');
+    }
+  }
+
+  // পেজ লোড হওয়ার সময় ডিফল্ট ভাষা সেট করা
+  document.addEventListener('DOMContentLoaded', function() {
+    switchLanguage('bn'); // ডিফল্ট ভাষা বাংলা
+  });
+</script>
+
+</body>
+</html>
