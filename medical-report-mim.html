@@ -91,7 +91,7 @@
       margin-bottom: 16px;
       box-shadow: 0 6px 20px var(--shadow-color);
       border: 1px solid var(--border-color);
-      flex-wrap: wrap;
+      gap: 12px;
       backdrop-filter: blur(var(--blur-amount));
       -webkit-backdrop-filter: blur(var(--blur-amount));
       transition: all var(--transition-speed) cubic-bezier(0.25, 0.8, 0.25, 1);
@@ -113,6 +113,7 @@
         display: flex;
         align-items: center;
         gap: 8px;
+        flex-shrink: 0;
     }
 
     /* ভাষা পরিবর্তনকারী */
@@ -386,12 +387,7 @@
     @media (max-width: 480px) {
       .wrapper { padding: 0 4px; margin-top: 8px; }
       .patient-header { 
-        flex-direction: column; 
-        align-items: flex-start; 
-        gap: 12px; 
-      }
-      .controls-container {
-        align-self: flex-end;
+        flex-wrap: wrap;
       }
       .tabs { flex-direction: column; }
       .tab-button { width: 100%; }
