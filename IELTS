@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ultimate English Learning Hub</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #4f46e5;
+            --secondary-color: #7c3aed;
+            --background-start: hsl(218, 70%, 85%);
+            --background-end: hsl(286, 70%, 80%);
+        }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Inter', 'Hind Siliguri', sans-serif;
+            background-color: #f0f2f5;
+            background-image:
+                radial-gradient(at 47% 33%, var(--background-start) 0, transparent 59%),
+                radial-gradient(at 82% 65%, var(--background-end) 0, transparent 55%);
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+        }
+        .nav-group-title, .nav-subgroup-title {
+            font-weight: 700;
+            padding: 0.75rem 1rem;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+            margin-top: 1rem;
+        }
+        .nav-group-title {
+            color: white;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+        }
+        .nav-subgroup-title {
+            color: var(--primary-color);
+            background: rgba(255, 255, 255, 0.5);
+            margin-top: 0.5rem;
+            margin-left: 0.5rem;
+        }
+        .nav-group-title:hover, .nav-subgroup-title:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(79, 70, 229, 0.3);
+        }
+        .arrow { transition: transform 0.3s ease; }
+        .collapsed .arrow { transform: rotate(-90deg); }
+        .nav-group-content, .nav-subgroup-content {
+            max-height: 1000px;
+            transition: max-height 0.5s ease-in-out, opacity 0.3s ease, margin-top 0.3s ease;
+            overflow: hidden;
+            opacity: 1;
+        }
+        .nav-group-content.collapsed, .nav-subgroup-content.collapsed {
+            max-height: 0;
+            opacity: 0;
+            margin-top: 0 !important;
+        }
+        .nav-button {
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .nav-button:before { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.2); transition: left 0.4s ease; z-index: 1; }
+        .nav-button:hover:before { left: 0; }
+        .nav-button span { position: relative; z-index: 2; }
+        .nav-button.active { background-color: var(--primary-color); color: white; font-weight: 600; transform: scale(1.03); box-shadow: 0 4px 14px 0 rgba(79, 70, 229, 0.3); }
+        .quiz-input { border: 2px solid #d1d5db; transition: all 0.3s ease; }
+        .quiz-input:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2); }
+        .quiz-input.correct { border-color: #10b981; background-color: #ecfdf5; }
+        .quiz-input.incorrect { border-color: #ef4444; background-color: #fef2f2; }
+        .lesson-content h3 { font-size: 1.5rem; font-weight: 700; color: var(--primary-color); margin-top: 2rem; margin-bottom: 0.75rem; border-bottom: 2px solid var(--primary-color); padding-bottom: 0.5rem; }
+        .lesson-content h4 { font-size: 1.25rem; font-weight: 600; color: var(--secondary-color); margin-top: 1.5rem; margin-bottom: 0.5rem; }
+        .lesson-content p, .lesson-content li { margin-bottom: 0.75rem; line-height: 1.7; }
+        .lesson-content ul { list-style-type: disc; padding-left: 2rem; }
+        .lesson-content table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .lesson-content th, .lesson-content td { border: 1px solid #d1d5db; padding: 0.75rem 1rem; text-align: left; }
+        .lesson-content th { background-color: #f3f4f6; font-weight: 600; }
+        .lesson-content code { background-color: #e5e7eb; padding: 3px 7px; border-radius: 5px; font-weight: 500; font-family: monospace; }
+        .lesson-content .example { background-color: #f8f9fa; border-left: 4px solid var(--primary-color); padding: 1rem; margin: 1rem 0; border-radius: 5px; }
+    </style>
+</head>
+<body class="min-h-screen p-4 sm:p-6 lg:p-8">
+
+    <div class="max-w-7xl mx-auto">
+        <header class="text-center mb-8 glass-card p-6">
+            <h1 class="text-3xl sm:text-4xl font-bold text-gray-800">Ultimate English Learning Hub</h1>
+            <p class="text-gray-600 mt-2">শূন্য থেকে Advanced পর্যন্ত ইংরেজি শেখার একটি পূর্ণাঙ্গ প্ল্যাটফর্ম।</p>
+        </header>
+
+        <div class="lg:grid lg:grid-cols-12 lg:gap-8">
+            <nav class="lg:col-span-3 mb-6 lg:mb-0">
+                <div class="glass-card p-4 sticky top-8 max-h-[90vh] overflow-y-auto">
+                    <h2 class="text-xl font-semibold mb-2 text-gray-700 border-b pb-2">All Chapters</h2>
+                    <div id="chapter-nav">
+                        <!-- Grammar Lessons Group -->
+                        <div class="nav-group">
+                            <div class="nav-group-title"><span>Grammar Lessons</span><span class="arrow">&#9660;</span></div>
+                            <ul class="nav-group-content space-y-1 mt-2">
+                                <li><button data-chapter="lesson-pos" class="nav-button w-full text-left p-3 rounded-lg active"><span>Parts of Speech</span></button></li>
+                                <li><button data-chapter="lesson-sentence" class="nav-button w-full text-left p-3 rounded-lg"><span>Sentence Structure</span></button></li>
+                                <li><button data-chapter="lesson-tense" class="nav-button w-full text-left p-3 rounded-lg"><span>Tense Explained</span></button></li>
+                                <li><button data-chapter="lesson-preposition" class="nav-button w-full text-left p-3 rounded-lg"><span>Prepositions Explained</span></button></li>
+                                <li><button data-chapter="lesson-articles" class="nav-button w-full text-left p-3 rounded-lg"><span>Articles Explained</span></button></li>
+                                <li><button data-chapter="lesson-voice" class="nav-button w-full text-left p-3 rounded-lg"><span>Voice Change</span></button></li>
+                            </ul>
+                        </div>
+                        <!-- Translation Practice Group -->
+                        <div class="nav-group">
+                            <div class="nav-group-title"><span>Translation Practice</span><span class="arrow">&#9660;</span></div>
+                            <div class="nav-group-content mt-2">
+                                <div class="nav-subgroup">
+                                    <div class="nav-subgroup-title"><span>English to Bengali</span><span class="arrow">&#9660;</span></div>
+                                    <ul class="nav-subgroup-content space-y-1 mt-2 ml-2">
+                                        <li><button data-chapter="eb-1" class="nav-button w-full text-left p-3 rounded-lg"><span>Chapter 1 (1-25)</span></button></li>
+                                        <li><button data-chapter="eb-2" class="nav-button w-full text-left p-3 rounded-lg"><span>Chapter 2 (26-50)</span></button></li>
+                                        <li><button data-chapter="eb-3" class="nav-button w-full text-left p-3 rounded-lg"><span>Chapter 3 (51-75)</span></button></li>
+                                        <li><button data-chapter="eb-4" class="nav-button w-full text-left p-3 rounded-lg"><span>Chapter 4 (76-100)</span></button></li>
+                                    </ul>
+                                </div>
+                                <div class="nav-subgroup">
+                                    <div class="nav-subgroup-title"><span>Bengali to English</span><span class="arrow">&#9660;</span></div>
+                                    <ul class="nav-subgroup-content space-y-1 mt-2 ml-2">
+                                        <li><button data-chapter="be-1" class="nav-button w-full text-left p-3 rounded-lg"><span>Chapter 1 (1-25)</span></button></li>
+                                        <li><button data-chapter="be-2" class="nav-button w-full text-left p-3 rounded-lg"><span>Chapter 2 (26-50)</span></button></li>
+                                        <li><button data-chapter="be-3" class="nav-button w-full text-left p-3 rounded-lg"><span>Chapter 3 (51-75)</span></button></li>
+                                        <li><button data-chapter="be-4" class="nav-button w-full text-left p-3 rounded-lg"><span>Chapter 4 (76-100)</span></button></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Grammar Practice Group -->
+                        <div class="nav-group">
+                            <div class="nav-group-title"><span>Grammar Practice</span><span class="arrow">&#9660;</span></div>
+                            <div class="nav-group-content mt-2">
+                                <div class="nav-subgroup">
+                                    <div class="nav-subgroup-title"><span>Tense Practice</span><span class="arrow">&#9660;</span></div>
+                                    <ul class="nav-subgroup-content space-y-1 mt-2 ml-2">
+                                        <li><button data-chapter="practice-tense-1" class="nav-button w-full text-left p-3 rounded-lg"><span>Chapter 1 (1-25)</span></button></li>
+                                        <li><button data-chapter="practice-tense-2" class="nav-button w-full text-left p-3 rounded-lg"><span>Chapter 2 (26-50)</span></button></li>
+                                        <li><button data-chapter="practice-tense-3" class="nav-button w-full text-left p-3 rounded-lg"><span>Chapter 3 (51-75)</span></button></li>
+                                        <li><button data-chapter="practice-tense-4" class="nav-button w-full text-left p-3 rounded-lg"><span>Chapter 4 (76-100)</span></button></li>
+                                    </ul>
+                                </div>
+                                <div class="nav-subgroup">
+                                    <div class="nav-subgroup-title"><span>Preposition Practice</span><span class="arrow">&#9660;</span></div>
+                                    <ul class="nav-subgroup-content space-y-1 mt-2 ml-2">
+                                        <li><button data-chapter="practice-preposition-1" class="nav-button w-full text-left p-3 rounded-lg"><span>Chapter 1 (1-25)</span></button></li>
+                                        <li><button data-chapter="practice-preposition-2" class="nav-button w-full text-left p-3 rounded-lg"><span>Chapter 2 (26-50)</span></button></li>
+                                        <li><button data-chapter="practice-preposition-3" class="nav-button w-full text-left p-3 rounded-lg"><span>Chapter 3 (51-75)</span></button></li>
+                                        <li><button data-chapter="practice-preposition-4" class="nav-button w-full text-left p-3 rounded-lg"><span>Chapter 4 (76-100)</span></button></li>
+                                    </ul>
+                                </div>
+                                <div class="nav-subgroup">
+                                    <div class="nav-subgroup-title"><span>Sentence Making</span><span class="arrow">&#9660;</span></div>
+                                    <ul class="nav-subgroup-content space-y-1 mt-2 ml-2">
+                                        <li><button data-chapter="practice-sentence-1" class="nav-button w-full text-left p-3 rounded-lg"><span>Chapter 1 (1-25)</span></button></li>
+                                        <li><button data-chapter="practice-sentence-2" class="nav-button w-full text-left p-3 rounded-lg"><span>Chapter 2 (26-50)</span></button></li>
+                                        <li><button data-chapter="practice-sentence-3" class="nav-button w-full text-left p-3 rounded-lg"><span>Chapter 3 (51-75)</span></button></li>
+                                        <li><button data-chapter="practice-sentence-4" class="nav-button w-full text-left p-3 rounded-lg"><span>Chapter 4 (76-100)</span></button></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+
+            <main class="lg:col-span-9">
+                <div id="content-area">
+                    <!-- All chapter divs will be here -->
+                    <div id="lesson-pos" class="chapter-content glass-card p-6 md:p-8 lesson-content">
+                        <h2 class="text-3xl font-bold mb-4 text-indigo-700">Lesson: Parts of Speech in Detail</h2>
+                        <p>বাক্যের প্রতিটি শব্দকে Parts of Speech বলে। ইংরেজি গ্রামারে Parts of Speech মোট ৮ প্রকার। নিচে বিস্তারিত আলোচনা করা হলো:</p>
+                        <h3>1. Noun (বিশেষ্য)</h3>
+                        <p>কোনো ব্যক্তি, বস্তু, স্থান, ধারণা বা গুণের নাম বোঝায়।</p>
+                        <h4>Classification of Noun:</h4>
+                        <ul>
+                            <li><b>Proper Noun:</b> নির্দিষ্ট কোনো ব্যক্তি, বস্তু বা স্থানের নাম। যেমন: <code>Rahim</code>, <code>Dhaka</code>, <code>The Padma</code>.</li>
+                            <li><b>Common Noun:</b> এক জাতীয় ব্যক্তি বা বস্তুর সাধারণ নাম। যেমন: <code>Boy</code>, <code>City</code>, <code>River</code>.</li>
+                            <li><b>Collective Noun:</b> কোনো ব্যক্তি বা বস্তুর সমষ্টিকে বোঝায়। যেমন: <code>Team</code>, <code>Army</code>, <code>Class</code>.</li>
+                            <li><b>Material Noun:</b> পদার্থবাচক নাম যা গণনা করা যায় না, কিন্তু পরিমাপ করা যায়। যেমন: <code>Gold</code>, <code>Water</code>, <code>Rice</code>.</li>
+                            <li><b>Abstract Noun:</b> গুণ, অবস্থা বা ধারণার নাম যা স্পর্শ করা যায় না, শুধু অনুভব করা যায়। যেমন: <code>Honesty</code>, <code>Kindness</code>, <code>Childhood</code>.</li>
+                        </ul>
+                        <h3>2. Pronoun (সর্বনাম)</h3>
+                        <p>Noun-এর পরিবর্তে ব্যবহৃত হয়।</p>
+                        <h4>Types of Pronoun:</h4>
+                        <ul>
+                            <li><b>Personal Pronoun:</b> ব্যক্তির পরিবর্তে বসে। যেমন: <code>I</code>, <code>We</code>, <code>He</code>, <code>She</code>, <code>They</code>.</li>
+                            <li><b>Demonstrative Pronoun:</b> কোনো কিছুকে নির্দেশ করে। যেমন: <code>This</code>, <code>That</code>, <code>These</code>, <code>Those</code>.</li>
+                            <li><b>Interrogative Pronoun:</b> প্রশ্ন করতে ব্যবহৃত হয়। যেমন: <code>Who</code>, <code>Whom</code>, <code>What</code>, <code>Which</code>.</li>
+                            <li><b>Relative Pronoun:</b> দুটি বাক্যকে যুক্ত করে। যেমন: <code>Who</code>, <code>Which</code>, <code>That</code>.</li>
+                        </ul>
+                        <h3>3. Verb (ক্রিয়া)</h3>
+                        <p>কোনো কাজ করা, হওয়া বা থাকা বোঝায়।</p>
+                        <h4>Types of Verb:</h4>
+                        <ul>
+                            <li><b>Principal/Main Verb:</b> বাক্যে স্বাধীনভাবে অর্থ প্রকাশ করে। যেমন: He <code>plays</code> football.</li>
+                            <li><b>Auxiliary/Helping Verb:</b> Main Verb-কে Tense বা Voice গঠনে সাহায্য করে। যেমন: He <code>is</code> playing football.</li>
+                        </ul>
+                        <h3>4. Adjective (বিশেষণ)</h3>
+                        <p>Noun বা Pronoun-এর দোষ, গুণ, অবস্থা, সংখ্যা, পরিমাণ ইত্যাদি প্রকাশ করে। যেমন: <code>Good</code>, <code>Bad</code>, <code>Tall</code>, <code>Beautiful</code>, <code>Five</code>, <code>Much</code>.</p>
+                        <h3>5. Adverb (ক্রিয়া বিশেষণ)</h3>
+                        <p>Verb, Adjective বা অন্য Adverb-কে modify করে, অর্থাৎ তাদের সম্পর্কে অতিরিক্ত তথ্য দেয়। যেমন: He walks <code>slowly</code>. She is <code>very</code> beautiful.</p>
+                        <h3>6. Preposition (পদান্বয়ী অব্যয়)</h3>
+                        <p>Noun বা Pronoun-এর আগে বসে বাক্যের অন্য শব্দের সাথে তার সম্পর্ক স্থাপন করে। যেমন: <code>In</code>, <code>On</code>, <code>At</code>, <code>With</code>, <code>For</code>, <code>From</code>, <code>To</code>, <code>Into</code>.</p>
+                        <h3>7. Conjunction (সংযোজক অব্যয়)</h3>
+                        <p>দুই বা ততোধিক শব্দ (words), বাক্যাংশ (phrases) বা বাক্যকে (clauses) যুক্ত করে। যেমন: <code>And</code>, <code>But</code>, <code>Or</code>, <code>So</code>, <code>Because</code>.</p>
+                        <h3>8. Interjection (আবেগসূচক অব্যয়)</h3>
+                        <p>মনের আকস্মিক আবেগ বা অনুভূতি (আনন্দ, দুঃখ, বিস্ময়) প্রকাশ করে। যেমন: <code>Alas!</code>, <code>Hurrah!</code>, <code>Oh!</code>, <code>Bravo!</code>.</p>
+                    </div>
+                    <div id="lesson-sentence" class="chapter-content glass-card p-6 md:p-8 lesson-content hidden">
+                        <h2 class="text-3xl font-bold mb-4 text-indigo-700">Lesson: Sentence Structure in Detail</h2>
+                        <p>একাধিক শব্দ মিলে যখন একটি সম্পূর্ণ অর্থ প্রকাশ করে, তখন তাকে Sentence বা বাক্য বলে।</p>
+                        <h3>Classification by Meaning (অর্থ অনুসারে):</h3>
+                        <ol>
+                            <li><b>Assertive Sentence:</b> কোনো বিবৃতি বা বর্ণনা প্রকাশ করে। যেমন: He is a good boy.</li>
+                            <li><b>Interrogative Sentence:</b> কোনো প্রশ্ন জিজ্ঞাসা করে। যেমন: What is your name?</li>
+                            <li><b>Imperative Sentence:</b> আদেশ, উপদেশ, অনুরোধ বোঝায়। যেমন: Open the door.</li>
+                            <li><b>Optative Sentence:</b> ইচ্ছা বা প্রার্থনা প্রকাশ করে। যেমন: May you be happy.</li>
+                            <li><b>Exclamatory Sentence:</b> মনের আকস্মিক আবেগ প্রকাশ করে। যেমন: What a beautiful bird it is!</li>
+                        </ol>
+                        <h3>Classification by Structure (গঠন অনুসারে):</h3>
+                        <ol>
+                            <li><b>Simple Sentence:</b> একটি মাত্র Subject এবং একটি Finite Verb থাকে। যেমন: I eat rice.</li>
+                            <li><b>Complex Sentence:</b> একটি Principal Clause এবং এক বা একাধিক Subordinate Clause থাকে। যেমন: I know that he is honest.</li>
+                            <li><b>Compound Sentence:</b> দুই বা ততোধিক Principal Clause কোনো Co-ordinating Conjunction (and, but, or) দ্বারা যুক্ত থাকে। যেমন: He is poor but he is honest.</li>
+                        </ol>
+                    </div>
+                    <div id="lesson-tense" class="chapter-content glass-card p-6 md:p-8 lesson-content hidden">
+                        <h2 class="text-3xl font-bold mb-4 text-indigo-700">Lesson: Tense Explained in Detail</h2>
+                        <p>Tense বা কাল দিয়ে কোনো কাজ সম্পাদনের সময়কে বোঝানো হয়।</p>
+                        <h3>Present Tense</h3>
+                        <h4>1. Present Indefinite:</h4>
+                        <p><b>Structure:</b> S + V1 + O. (S third person singular হলে verb-এর সাথে s/es যোগ হয়)</p>
+                        <p><b>Use:</b> অভ্যাসগত কাজ, চিরন্তন সত্য বোঝাতে।</p>
+                        <div class="example">He reads a book. (সে বই পড়ে)</div>
+                        <h4>2. Present Continuous:</h4>
+                        <p><b>Structure:</b> S + am/is/are + V(ing) + O.</p>
+                        <p><b>Use:</b> বর্তমানে কোনো কাজ চলছে বোঝাতে।</p>
+                        <div class="example">They are playing football. (তারা ফুটবল খেলছে)</div>
+                        <h4>3. Present Perfect:</h4>
+                        <p><b>Structure:</b> S + have/has + V3 + O.</p>
+                        <p><b>Use:</b> কাজ শেষ হয়েছে কিন্তু তার ফল এখনও বর্তমান।</p>
+                        <div class="example">I have done the work. (আমি কাজটি করেছি)</div>
+                        <h4>4. Present Perfect Continuous:</h4>
+                        <p><b>Structure:</b> S + have been/has been + V(ing) + O.</p>
+                        <p><b>Use:</b> অতীতে শুরু হয়ে এখনও চলছে এমন কাজ বোঝাতে।</p>
+                        <div class="example">It has been raining for two hours. (দুই ঘণ্টা ধরে বৃষ্টি হচ্ছে)</div>
+                        <h3>Past Tense</h3>
+                        <h4>1. Past Indefinite:</h4>
+                        <p><b>Structure:</b> S + V2 + O.</p>
+                        <p><b>Use:</b> অতীতে কোনো কাজ হয়েছিল বোঝাতে।</p>
+                        <div class="example">She went to school. (সে স্কুলে গিয়েছিল)</div>
+                        <h4>2. Past Continuous:</h4>
+                        <p><b>Structure:</b> S + was/were + V(ing) + O.</p>
+                        <p><b>Use:</b> অতীতে কোনো কাজ চলছিল বোঝাতে।</p>
+                        <div class="example">I was reading a book. (আমি বই পড়ছিলাম)</div>
+                        <h4>3. Past Perfect:</h4>
+                        <p><b>Structure:</b> S + had + V3 + O.</p>
+                        <p><b>Use:</b> অতীতের দুটি কাজের মধ্যে আগেরটি বোঝাতে।</p>
+                        <div class="example">The patient had died before the doctor came. (ডাক্তার আসার আগেই রোগীটি মারা গিয়েছিল)</div>
+                        <h4>4. Past Perfect Continuous:</h4>
+                        <p><b>Structure:</b> S + had been + V(ing) + O.</p>
+                        <p><b>Use:</b> অতীতের একটি নির্দিষ্ট সময় ধরে কোনো কাজ চলছিল বোঝাতে।</p>
+                        <div class="example">He had been working there for five years. (সে সেখানে পাঁচ বছর ধরে কাজ করছিল)</div>
+                        <h3>Future Tense</h3>
+                        <h4>1. Future Indefinite:</h4>
+                        <p><b>Structure:</b> S + shall/will + V1 + O.</p>
+                        <p><b>Use:</b> ভবিষ্যতে কোনো কাজ হবে বোঝাতে।</p>
+                        <div class="example">I will go to Dhaka. (আমি ঢাকা যাব)</div>
+                        <h4>2. Future Continuous:</h4>
+                        <p><b>Structure:</b> S + shall be/will be + V(ing) + O.</p>
+                        <p><b>Use:</b> ভবিষ্যতে কোনো কাজ চলতে থাকবে বোঝাতে।</p>
+                        <div class="example">He will be sleeping then. (সে তখন ঘুমাতে থাকবে)</div>
+                        <h4>3. Future Perfect:</h4>
+                        <p><b>Structure:</b> S + shall have/will have + V3 + O.</p>
+                        <p><b>Use:</b> ভবিষ্যতের দুটি কাজের মধ্যে আগেরটি বোঝাতে।</p>
+                        <div class="example">I shall have finished the book by then. (ততক্ষণে আমি বইটি শেষ করে ফেলব)</div>
+                        <h4>4. Future Perfect Continuous:</h4>
+                        <p><b>Structure:</b> S + shall have been/will have been + V(ing) + O.</p>
+                        <p><b>Use:</b> ভবিষ্যতের একটি নির্দিষ্ট সময় ধরে কোনো কাজ চলতে থাকবে বোঝাতে।</p>
+                        <div class="example">By next year, I will have been living here for ten years. (আগামী বছর নাগাদ আমি এখানে দশ বছর ধরে বাস করতে থাকব)</div>
+                    </div>
+                    <div id="lesson-preposition" class="chapter-content glass-card p-6 md:p-8 lesson-content hidden">
+                        <h2 class="text-3xl font-bold mb-4 text-indigo-700">Lesson: Prepositions Explained in Detail</h2>
+                        <p>Preposition বাক্যের মধ্যে Noun বা Pronoun-এর সাথে অন্য শব্দের সম্পর্ক স্থাপন করে।</p>
+                        <h3>Common Prepositions & Their Uses:</h3>
+                        <ul>
+                            <li><b>In:</b> বড় স্থান (in Dhaka), মাস/سال (in January, in 2024), ভিতরে (in the room), সকালে/বিকালে (in the morning/afternoon).</li>
+                            <li><b>On:</b> উপরে লেগে থাকা (on the table), দিন/তারিখ (on Sunday, on 15th August), বিষয়ে (a book on English).</li>
+                            <li><b>At:</b> ছোট স্থান (at Farmgate), নির্দিষ্ট সময় (at 10 PM), দিকে (look at the board), রাতে (at night).</li>
+                            <li><b>To:</b> দিকে যাওয়া (going to school), পর্যন্ত (from morning to night), কাছে (to me).</li>
+                            <li><b>From:</b> থেকে (from Dhaka), উৎস (light comes from the sun).</li>
+                            <li><b>For:</b> জন্য (for you), সময় ধরে (for two hours), কারণে (punished for lying).</li>
+                            <li><b>With:</b> সাথে (with me), দ্বারা (write with a pen).</li>
+                            <li><b>By:</b> পাশে (by the river), দ্বারা (done by me), মাধ্যমে (by bus), সময়ের মধ্যে (by 5 PM).</li>
+                            <li><b>Of:</b> এর/র (the leg of the table), সম্পর্কে (aware of the fact).</li>
+                            <li><b>Into:</b> বাইরে থেকে ভিতরে গতি বোঝাতে (entered into the room).</li>
+                            <li><b>Under:</b> নিচে (under the table).</li>
+                            <li><b>Above:</b> উপরে কিন্তু স্পর্শ ছাড়া (the fan is above my head).</li>
+                            <li><b>Between:</b> দুইয়ের মধ্যে (between you and me).</li>
+                            <li><b>Among:</b> অনেকের মধ্যে (among the students).</li>
+                        </ul>
+                        <h3>Appropriate Prepositions:</h3>
+                        <p>কিছু শব্দের পরে নির্দিষ্ট Preposition বসে। এগুলোকে Appropriate Preposition বলে। যেমন:</p>
+                        <ul>
+                            <li>Abide <b>by</b> (মেনে চলা)</li>
+                            <li>Fond <b>of</b> (প্রিয়)</li>
+                            <li>Good <b>at</b> (দক্ষ)</li>
+                            <li>Suffer <b>from</b> (ভোগা)</li>
+                            <li>Agree <b>with</b> (a person), Agree <b>to</b> (a proposal)</li>
+                            <li>Angry <b>with</b> (a person), Angry <b>at</b> (something)</li>
+                        </ul>
+                    </div>
+                    <div id="lesson-articles" class="chapter-content glass-card p-6 md:p-8 lesson-content hidden">
+                        <h2 class="text-3xl font-bold mb-4 text-indigo-700">Lesson: Articles (A, An, The)</h2>
+                        <p>A, An এবং The - এই তিনটি শব্দকে English Grammar-এ Articles বলে। এগুলো মূলত Adjective-এর কাজ করে।</p>
+                        <h3>Indefinite Articles (A, An)</h3>
+                        <p>অনির্দিষ্ট কোনো ব্যক্তি বা বস্তুকে বোঝাতে A বা An ব্যবহৃত হয়।</p>
+                        <h4>Use of 'A':</h4>
+                        <p>সাধারণত শব্দের শুরুতে Consonant (a, e, i, o, u ছাড়া বাকি অক্ষর) থাকলে তার আগে 'a' বসে।</p>
+                        <div class="example">a book, a pen, a cat</div>
+                        <h4>Use of 'An':</h4>
+                        <p>সাধারণত শব্দের শুরুতে Vowel (a, e, i, o, u) থাকলে তার আগে 'an' বসে।</p>
+                        <div class="example">an apple, an egg, an umbrella</div>
+                        <p><b>ব্যতিক্রম:</b> শব্দের শুরুতে 'h' থাকলেও উচ্চারণ 'অ' বা 'আ'-এর মতো হলে 'an' বসে। যেমন: an honest man, an hour.</p>
+                        
+                        <h3>Definite Article (The)</h3>
+                        <p>নির্দিষ্ট কোনো ব্যক্তি বা বস্তুকে বোঝাতে 'The' ব্যবহৃত হয়।</p>
+                        <h4>Use of 'The':</h4>
+                        <ul>
+                            <li><b>নির্দিষ্ট করে বোঝাতে:</b> The book is on the table. (বইটি টেবিলের উপর)</li>
+                            <li><b>পৃথিবীতে একটি মাত্র আছে এমন কিছুর আগে:</b> The sun, The moon, The earth.</li>
+                            <li><b>নদী, সাগর, পর্বতমালা, ধর্মগ্রন্থের নামের আগে:</b> The Padma, The Bay of Bengal, The Himalayas, The Quran.</li>
+                            <li><b>Superlative Degree-এর আগে:</b> He is the best boy in the class.</li>
+                        </ul>
+                    </div>
+                    <div id="lesson-voice" class="chapter-content glass-card p-6 md:p-8 lesson-content hidden">
+                        <h2 class="text-3xl font-bold mb-4 text-indigo-700">Lesson: Voice Change (Active/Passive)</h2>
+                        <p>Voice বা বাচ্য হলো ক্রিয়া প্রকাশের ভঙ্গি যা দেখায় যে Subject কাজটি নিজে করছে নাকি কাজটি তার দ্বারা করা হচ্ছে।</p>
+                        <h3>Active Voice</h3>
+                        <p>যখন Subject নিজে সক্রিয়ভাবে কাজটি করে, তখন তাকে Active Voice বলে।</p>
+                        <div class="example"><b>I</b> eat rice. (আমি ভাত খাই)</div>
+                        <h3>Passive Voice</h3>
+                        <p>যখন কাজটি Subject-এর দ্বারা করা হয়, অর্থাৎ Subject নিষ্ক্রিয় থাকে, তখন তাকে Passive Voice বলে।</p>
+                        <div class="example">Rice is eaten by <b>me</b>. (ভাত আমার দ্বারা খাওয়া হয়)</div>
+                        <h3>Rules of Changing Voice:</h3>
+                        <ol>
+                            <li>Active Voice-এর Object, Passive Voice-এর Subject হয়।</li>
+                            <li>Active Voice-এর Subject, Passive Voice-এর Object হয় এবং তার আগে 'by' বসে।</li>
+                            <li>Tense অনুযায়ী Auxiliary Verb বসে এবং Main Verb-এর Past Participle (V3) form হয়।</li>
+                        </ol>
+                        <table>
+                            <thead><tr><th>Tense</th><th>Active Structure</th><th>Passive Structure</th></tr></thead>
+                            <tbody>
+                                <tr><td>Present Indefinite</td><td>S + V1 + O</td><td>O + am/is/are + V3 + by + S</td></tr>
+                                <tr><td>Past Indefinite</td><td>S + V2 + O</td><td>O + was/were + V3 + by + S</td></tr>
+                                <tr><td>Future Indefinite</td><td>S + will + V1 + O</td><td>O + will be + V3 + by + S</td></tr>
+                                <tr><td>Present Continuous</td><td>S + is + V(ing) + O</td><td>O + is being + V3 + by + S</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Practice Chapters -->
+                    <div id="eb-1" class="chapter-content glass-card p-6 hidden"><h2 class="text-2xl font-bold mb-4 text-indigo-700">English to Bengali (1-25)</h2><div class="space-y-6 quiz-container"></div></div>
+                    <div id="eb-2" class="chapter-content glass-card p-6 hidden"><h2 class="text-2xl font-bold mb-4 text-indigo-700">English to Bengali (26-50)</h2><div class="space-y-6 quiz-container"></div></div>
+                    <div id="eb-3" class="chapter-content glass-card p-6 hidden"><h2 class="text-2xl font-bold mb-4 text-indigo-700">English to Bengali (51-75)</h2><div class="space-y-6 quiz-container"></div></div>
+                    <div id="eb-4" class="chapter-content glass-card p-6 hidden"><h2 class="text-2xl font-bold mb-4 text-indigo-700">English to Bengali (76-100)</h2><div class="space-y-6 quiz-container"></div></div>
+                    <div id="be-1" class="chapter-content glass-card p-6 hidden"><h2 class="text-2xl font-bold mb-4 text-indigo-700">Bengali to English (1-25)</h2><div class="space-y-6 quiz-container"></div></div>
+                    <div id="be-2" class="chapter-content glass-card p-6 hidden"><h2 class="text-2xl font-bold mb-4 text-indigo-700">Bengali to English (26-50)</h2><div class="space-y-6 quiz-container"></div></div>
+                    <div id="be-3" class="chapter-content glass-card p-6 hidden"><h2 class="text-2xl font-bold mb-4 text-indigo-700">Bengali to English (51-75)</h2><div class="space-y-6 quiz-container"></div></div>
+                    <div id="be-4" class="chapter-content glass-card p-6 hidden"><h2 class="text-2xl font-bold mb-4 text-indigo-700">Bengali to English (76-100)</h2><div class="space-y-6 quiz-container"></div></div>
+                    <div id="practice-tense-1" class="chapter-content glass-card p-6 hidden"><h2 class="text-2xl font-bold mb-4 text-indigo-700">Tense Practice (1-25)</h2><div class="space-y-6 quiz-container"></div></div>
+                    <div id="practice-tense-2" class="chapter-content glass-card p-6 hidden"><h2 class="text-2xl font-bold mb-4 text-indigo-700">Tense Practice (26-50)</h2><div class="space-y-6 quiz-container"></div></div>
+                    <div id="practice-tense-3" class="chapter-content glass-card p-6 hidden"><h2 class="text-2xl font-bold mb-4 text-indigo-700">Tense Practice (51-75)</h2><div class="space-y-6 quiz-container"></div></div>
+                    <div id="practice-tense-4" class="chapter-content glass-card p-6 hidden"><h2 class="text-2xl font-bold mb-4 text-indigo-700">Tense Practice (76-100)</h2><div class="space-y-6 quiz-container"></div></div>
+                    <div id="practice-preposition-1" class="chapter-content glass-card p-6 hidden"><h2 class="text-2xl font-bold mb-4 text-indigo-700">Preposition Practice (1-25)</h2><div class="space-y-6 quiz-container"></div></div>
+                    <div id="practice-preposition-2" class="chapter-content glass-card p-6 hidden"><h2 class="text-2xl font-bold mb-4 text-indigo-700">Preposition Practice (26-50)</h2><div class="space-y-6 quiz-container"></div></div>
+                    <div id="practice-preposition-3" class="chapter-content glass-card p-6 hidden"><h2 class="text-2xl font-bold mb-4 text-indigo-700">Preposition Practice (51-75)</h2><div class="space-y-6 quiz-container"></div></div>
+                    <div id="practice-preposition-4" class="chapter-content glass-card p-6 hidden"><h2 class="text-2xl font-bold mb-4 text-indigo-700">Preposition Practice (76-100)</h2><div class="space-y-6 quiz-container"></div></div>
+                    <div id="practice-sentence-1" class="chapter-content glass-card p-6 hidden"><h2 class="text-2xl font-bold mb-4 text-indigo-700">Sentence Making (1-25)</h2><div class="space-y-6 quiz-container"></div></div>
+                    <div id="practice-sentence-2" class="chapter-content glass-card p-6 hidden"><h2 class="text-2xl font-bold mb-4 text-indigo-700">Sentence Making (26-50)</h2><div class="space-y-6 quiz-container"></div></div>
+                    <div id="practice-sentence-3" class="chapter-content glass-card p-6 hidden"><h2 class="text-2xl font-bold mb-4 text-indigo-700">Sentence Making (51-75)</h2><div class="space-y-6 quiz-container"></div></div>
+                    <div id="practice-sentence-4" class="chapter-content glass-card p-6 hidden"><h2 class="text-2xl font-bold mb-4 text-indigo-700">Sentence Making (76-100)</h2><div class="space-y-6 quiz-container"></div></div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        // All quiz data is stored here. It's a large object.
+        const quizData = {
+            "eb-1": [{q:"What is your name?",a:"তোমার নাম কি?"},{q:"I am a student.",a:"আমি একজন ছাত্র/ছাত্রী।"},{q:"How are you feeling today?",a:"আজ তোমার কেমন লাগছে?"},{q:"The weather is very nice.",a:"আবহাওয়া খুব সুন্দর।"},{q:"Can you help me, please?",a:"দয়া করে আমাকে সাহায্য করতে পারবে?"},{q:"I live in Dhaka.",a:"আমি ঢাকায় থাকি।"},{q:"She likes to read books.",a:"সে বই পড়তে ভালোবাসে।"},{q:"We are going to the market.",a:"আমরা বাজারে যাচ্ছি।"},{q:"My favorite color is blue.",a:"আমার প্রিয় রঙ নীল।"},{q:"He works in a bank.",a:"সে একটি ব্যাংকে কাজ করে।"},{q:"What time is it?",a:"এখন কয়টা বাজে?"},{q:"I need a glass of water.",a:"আমার এক গ্লাস পানি লাগবে।"},{q:"Let's go for a walk.",a:"চলো হাঁটতে যাই।"},{q:"This is my family.",a:"এটা আমার পরিবার।"},{q:"I wake up early in the morning.",a:"আমি সকালে তাড়াতাড়ি ঘুম থেকে উঠি।"},{q:"The sun rises in the east.",a:"সূর্য পূর্ব দিকে ওঠে।"},{q:"Please open the window.",a:"দয়া করে জানালাটি খোল।"},{q:"I love to eat fruits.",a:"আমি ফল খেতে ভালোবাসি।"},{q:"He is my best friend.",a:"সে আমার সেরা বন্ধু।"},{q:"They are playing in the field.",a:"তারা মাঠে খেলছে।"},{q:"My mother cooks delicious food.",a:"আমার মা সুস্বাদু খাবার রান্না করেন।"},{q:"What do you do?",a:"তুমি কি কর?"},{q:"I am learning English.",a:"আমি ইংরেজি শিখছি।"},{q:"It is a beautiful flower.",a:"এটি একটি সুন্দর ফুল।"},{q:"Birds fly in the sky.",a:"পাখিরা আকাশে ওড়ে।"}],
+            "eb-2": [{q:"Where are you from?",a:"তুমি কোথা থেকে এসেছ?"},{q:"I need to buy some vegetables.",a:"আমার কিছু সবজি কিনতে হবে।"},{q:"The book is on the table.",a:"বইটি টেবিলের উপরে আছে।"},{q:"She is a very talented singer.",a:"সে একজন খুব প্রতিভাবান গায়িকা।"},{q:"He drives his car carefully.",a:"সে সাবধানে তার গাড়ি চালায়।"},{q:"We should respect our elders.",a:"আমাদের বড়দের সম্মান করা উচিত।"},{q:"The moon shines at night.",a:"চাঁদ রাতে আলো দেয়।"},{q:"I have completed my homework.",a:"আমি আমার বাড়ির কাজ শেষ করেছি।"},{q:"Could you please repeat that?",a:"আপনি কি দয়া করে ওটা আবার বলবেন?"},{q:"Health is wealth.",a:"স্বাস্থ্যই সম্পদ।"},{q:"He is honest and hardworking.",a:"সে সৎ এবং পরিশ্রমী।"},{q:"I am waiting for the bus.",a:"আমি বাসের জন্য অপেক্ষা করছি।"},{q:"She speaks English fluently.",a:"সে অনর্গল ইংরেজি বলে।"},{q:"Let's start our work.",a:"চলো আমাদের কাজ শুরু করি।"},{q:"I have a question.",a:"আমার একটি প্রশ্ন আছে।"},{q:"The train is running late.",a:"ট্রেনটি দেরিতে চলছে।"},{q:"He is wearing a red shirt.",a:"সে একটি লাল শার্ট পরে আছে।"},{q:"I like to listen to music.",a:"আমি গান শুনতে পছন্দ করি।"},{q:"The earth is round.",a:"পৃথিবী গোলাকার।"},{q:"She is writing a letter.",a:"সে একটি চিঠি লিখছে।"},{q:"I will call you later.",a:"আমি তোমাকে পরে ফোন করব।"},{q:"Don't make a noise.",a:"গোলমাল করো না।"},{q:"What is your father's name?",a:"তোমার বাবার নাম কি?"},{q:"He is older than me.",a:"সে আমার চেয়ে বড়।"},{q:"We live in a small village.",a:"আমরা একটি ছোট গ্রামে বাস করি।"}],
+            "eb-3": [{q:"The sky is clear today.",a:"আজ আকাশ পরিষ্কার।"},{q:"He is a very intelligent boy.",a:"সে খুব বুদ্ধিমান ছেলে।"},{q:"I want to be a doctor.",a:"আমি একজন ডাক্তার হতে চাই।"},{q:"She can dance very well.",a:"সে খুব ভালো নাচতে পারে।"},{q:"I am going to bed now.",a:"আমি এখন ঘুমাতে যাচ্ছি।"},{q:"He returned home yesterday.",a:"সে গতকাল বাড়ি ফিরেছে।"},{q:"What is the matter?",a:"ব্যাপারটা কি?"},{q:"I don't believe it.",a:"আমি এটা বিশ্বাস করি না।"},{q:"The story is very interesting.",a:"গল্পটা খুব মজার।"},{q:"He is suffering from fever.",a:"সে জ্বরে ভুগছে।"},{q:"I have a lot of work to do.",a:"আমার অনেক কাজ করার আছে।"},{q:"She is my younger sister.",a:"সে আমার ছোট বোন।"},{q:"The flowers are beautiful.",a:"ফুলগুলো সুন্দর।"},{q:"He is looking for a job.",a:"সে একটি চাকরি খুঁজছে।"},{q:"I am proud of you.",a:"আমি তোমার জন্য গর্বিত।"},{q:"The water is very cold.",a:"পানি খুব ঠান্ডা।"},{q:"He is a famous writer.",a:"তিনি একজন বিখ্যাত লেখক।"},{q:"I will try my best.",a:"আমি আমার সেরাটা চেষ্টা করব।"},{q:"The road is very busy.",a:"রাস্তাটি খুব ব্যস্ত।"},{q:"She is afraid of the dark.",a:"সে অন্ধকারকে ভয় পায়।"},{q:"The exam was very difficult.",a:"পরীক্ষা খুব কঠিন ছিল।"},{q:"I need your help.",a:"আমার তোমার সাহায্য দরকার।"},{q:"He is a kind man.",a:"তিনি একজন দয়ালু মানুষ।"},{q:"The food is ready.",a:"খাবার তৈরি।"},{q:"I am feeling very happy.",a:"আমার খুব আনন্দ হচ্ছে।"}],
+            "eb-4": [{q:"This is a historical place.",a:"এটি একটি ঐতিহাসিক স্থান।"},{q:"He is always busy with his work.",a:"সে সবসময় তার কাজ নিয়ে ব্যস্ত থাকে।"},{q:"I have to go now.",a:"আমাকে এখন যেতে হবে।"},{q:"She is a successful woman.",a:"তিনি একজন সফল নারী।"},{q:"The movie was very exciting.",a:"সিনেমাটি খুব উত্তেজনাপূর্ণ ছিল।"},{q:"I am grateful to you.",a:"আমি আপনার কাছে কৃতজ্ঞ।"},{q:"He is a man of his word.",a:"সে তার কথার মানুষ।"},{q:"The situation is under control.",a:"পরিস্থিতি নিয়ন্ত্রণে আছে।"},{q:"I have no idea about it.",a:"এ ব্যাপারে আমার কোনো ধারণা নেই।"},{q:"She is very good at cooking.",a:"সে রান্নায় খুব পারদর্শী।"},{q:"The news is true.",a:"খবরটি সত্যি।"},{q:"He is my role model.",a:"তিনি আমার আদর্শ।"},{q:"I am looking forward to meeting you.",a:"আমি আপনার সাথে দেখা করার জন্য অপেক্ষা করছি।"},{q:"The decision is final.",a:"সিদ্ধান্তটি চূড়ান্ত।"},{q:"He is a responsible person.",a:"সে একজন দায়িত্বশীল ব্যক্তি।"},{q:"I am sorry for my mistake.",a:"আমি আমার ভুলের জন্য দুঃখিত।"},{q:"The view is amazing.",a:"দৃশ্যটি আশ্চর্যজনক।"},{q:"He is a true friend.",a:"সে একজন সত্যিকারের বন্ধু।"},{q:"I am confident about my success.",a:"আমি আমার সাফল্য সম্পর্কে আত্মবিশ্বাসী।"},{q:"The journey was long.",a:"যাত্রাটি দীর্ঘ ছিল।"},{q:"She has a sweet voice.",a:"তার কণ্ঠস্বর মিষ্টি।"},{q:"The problem is complicated.",a:"সমস্যাটি জটিল।"},{q:"He is a man of principle.",a:"তিনি একজন নীতিবান মানুষ।"},{q:"I am very tired today.",a:"আমি আজ খুব ক্লান্ত।"},{q:"The future is uncertain.",a:"ভবিষ্যৎ অনিশ্চিত।"}],
+            "be-1": [{q:"আমার একটি বিড়াল আছে।",a:"I have a cat."},{q:"তুমি কি চা খাবে?",a:"Will you have tea?"},{q:"সে খুব ভালো গান গায়।",a:"She sings very well."},{q:"আজ স্কুল বন্ধ।",a:"The school is closed today."},{q:"আমি আমার বাড়ির কাজ করছি।",a:"I am doing my homework."},{q:"বইটি টেবিলের উপরে আছে।",a:"The book is on the table."},{q:"আমরা একসাথে সিনেমা দেখব।",a:"We will watch a movie together."},{q:"আমার বাবা একজন ডাক্তার।",a:"My father is a doctor."},{q:"তোমার সাথে দেখা করে ভালো লাগলো।",a:"It was nice to meet you."},{q:"বৃষ্টি হচ্ছে।",a:"It is raining."},{q:"আমার দেরি হয়ে যাচ্ছে।",a:"I am getting late."},{q:"দরজাটা বন্ধ করো।",a:"Close the door."},{q:"আমি ইংরেজি শিখছি।",a:"I am learning English."},{q:"সে গতকাল এখানে এসেছিল।",a:"He came here yesterday."},{q:"তুমি কি আমাকে বুঝতে পারছো?",a:"Can you understand me?"},{q:"ফুলটি খুব সুন্দর।",a:"The flower is very beautiful."},{q:"আমি এখন ব্যস্ত।",a:"I am busy now."},{q:"তোমার প্রিয় খেলা কি?",a:"What is your favorite game?"},{q:"সে সত্য কথা বলে।",a:"He speaks the truth."},{q:"তারা ফুটবল খেলছে।",a:"They are playing football."},{q:"আমার একটি কলম দরকার।",a:"I need a pen."},{q:"তুমি কোথায় থাকো?",a:"Where do you live?"},{q:"আমি বই পড়তে ভালোবাসি।",a:"I love to read books."},{q:"অনুগ্রহ করে আমাকে সাহায্য করুন।",a:"Please help me."},{q:"এখন সকাল দশটা বাজে।",a:"It is 10 AM now."}],
+            "be-2": [{q:"আমি আগামীকাল বাজারে যাব।",a:"I will go to the market tomorrow."},{q:"সে একজন ভালো ছাত্র।",a:"He is a good student."},{q:"তুমি কি তোমার কাজ শেষ করেছ?",a:"Have you finished your work?"},{q:"আমার মা রান্না করছেন।",a:"My mother is cooking."},{q:"সূর্য পশ্চিম দিকে অস্ত যায়।",a:"The sun sets in the west."},{q:"আমরা একটি পরিষ্কার শহরে বাস করি।",a:"We live in a clean city."},{q:"সে তার বন্ধুদের সাথে কথা বলছে।",a:"She is talking with her friends."},{q:"আমার ভাই একজন প্রকৌশলী।",a:"My brother is an engineer."},{q:"তুমি কি সাঁতার কাটতে পারো?",a:"Can you swim?"},{q:"সৎ হওয়াই সর্বোৎকৃষ্ট পন্থা।",a:"Honesty is the best policy."},{q:"আমি একটি চিঠি লিখছি।",a:"I am writing a letter."},{q:"সে প্রতিদিন সকালে হাঁটে।",a:"He walks every morning."},{q:"আমরা আমাদের দেশকে ভালোবাসি।",a:"We love our country."},{q:"ছেলেটি খুব বুদ্ধিমান।",a:"The boy is very intelligent."},{q:"আমি তোমার জন্য অপেক্ষা করছি।",a:"I am waiting for you."},{q:"গাছ আমাদের অক্সিজেন দেয়।",a:"Trees give us oxygen."},{q:"আমার একটি নতুন গাড়ি আছে।",a:"I have a new car."},{q:"তুমি কি সিনেমাটি দেখেছ?",a:"Have you seen the movie?"},{q:"সে আমাকে একটি উপহার দিয়েছে।",a:"He gave me a gift."},{q:"আমি ক্লান্ত বোধ করছি।",a:"I am feeling tired."},{q:"দয়া করে চুপ থাকো।",a:"Please be quiet."},{q:"সে ইংরেজিতে কথা বলতে পারে।",a:"She can speak in English."},{q:"তোমার শখ কি?",a:"What is your hobby?"},{q:"পৃথিবী সূর্যের চারপাশে ঘোরে।",a:"The earth moves around the sun."},{q:"এই কাজটি খুব কঠিন।",a:"This work is very difficult."}],
+            "be-3": [{q:"আমার একটি বাগান করার শখ আছে।",a:"I have a hobby of gardening."},{q:"সে তার পিতামাতাকে খুব ভালোবাসে।",a:"He loves his parents very much."},{q:"আমাদের কঠোর পরিশ্রম করা উচিত।",a:"We should work hard."},{q:"আমি একটি নতুন ভাষা শিখতে চাই।",a:"I want to learn a new language."},{q:"তুমি কি আমাকে একটি বই দিতে পারো?",a:"Can you give me a book?"},{q:"সে একজন সৎ লোক।",a:"He is an honest man."},{q:"আমরা নদীর ধারে হাঁটছিলাম।",a:"We were walking by the river."},{q:"আমার প্রিয় ঋতু বর্ষা।",a:"My favorite season is rainy season."},{q:"সে তার ভুলের জন্য অনুতপ্ত।",a:"He is sorry for his mistake."},{q:"আমি একটি ভালো খবর শুনেছি।",a:"I have heard a good news."},{q:"তুমি কি ভ্রমণ করতে পছন্দ কর?",a:"Do you like to travel?"},{q:"সে একজন সফল ব্যবসায়ী।",a:"He is a successful businessman."},{q:"আমাদের পরিবেশ পরিষ্কার রাখা উচিত।",a:"We should keep our environment clean."},{q:"আমি তোমার সাফল্য কামনা করি।",a:"I wish you success."},{q:"সে একজন प्रतिभाशाली শিল্পী।",a:"She is a talented artist."},{q:"আমাদের সময়ের মূল্য দেওয়া উচিত।",a:"We should value our time."},{q:"আমি একটি নতুন গাড়ি কিনেছি।",a:"I have bought a new car."},{q:"তুমি কি আমাকে পথটা দেখাতে পারো?",a:"Can you show me the way?"},{q:"সে তার লক্ষ্য অর্জনে দৃঢ়প্রতিজ্ঞ।",a:"He is determined to achieve his goal."},{q:"আমাদের একে অপরকে সাহায্য করা উচিত।",a:"We should help each other."},{q:"আমি একটি সুন্দর স্বপ্ন দেখেছি।",a:"I saw a beautiful dream."},{q:"তুমি কি আমার সাথে একমত?",a:"Do you agree with me?"},{q:"সে তার স্বাস্থ্যের যত্ন নেয়।",a:"She takes care of her health."},{q:"আমাদের আইন মেনে চলা উচিত।",a:"We should obey the law."},{q:"আমি তোমার জন্য অপেক্ষা করব।",a:"I will wait for you."}],
+            "be-4": [{q:"শিক্ষা জাতির মেরুদণ্ড।",a:"Education is the backbone of a nation."},{q:"পরিশ্রম সৌভাগ্যের প্রসূতি।",a:"Hard work is the key to success."},{q:"সময়ের এক ফোঁড়, অসময়ের দশ ফোঁড়।",a:"A stitch in time saves nine."},{q:"জ্ঞানই শক্তি।",a:"Knowledge is power."},{q:"চেষ্টা করলে সবই সম্ভব।",a:"Everything is possible if you try."},{q:"ঐক্যই বল।",a:"Unity is strength."},{q:"প্রয়োজনই আবিষ্কারের জনক।",a:"Necessity is the mother of invention."},{q:"স্বাস্থ্যই সকল সুখের মূল।",a:"Health is the root of all happiness."},{q:"মানুষ অভ্যাসের দাস।",a:"Man is a slave to habit."},{q:"সৎ সঙ্গে স্বর্গবাস, অসৎ সঙ্গে সর্বনাশ।",a:"A man is known by the company he keeps."},{q:"যেমন কর্ম তেমন ফল।",a:"As you sow, so you reap."},{q:"চকচক করলেই সোনা হয় না।",a:"All that glitters is not gold."},{q:"অলস মস্তিষ্ক শয়তানের কারখানা।",a:"An idle brain is the devil's workshop."},{q:"শেষ ভালো যার, সব ভালো তার।",a:"All's well that ends well."},{q:"যত গর্জে তত বর্ষে না।",a:"Barking dogs seldom bite."},{q:"নাই মামার চেয়ে কানা মামা ভালো।",a:"Something is better than nothing."},{q:"নিজের চরকায় তেল দাও।",a:"Mind your own business."},{q:"এক হাতে তালি বাজে না।",a:"It takes two to make a quarrel."},{q:"ভাগ্যের লিখন না যায় খণ্ডন।",a:"What is lotted cannot be blotted."},{q:"গাইতে গাইতে গায়েন।",a:"Practice makes a man perfect."},{q:"অভাবে স্বভাব নষ্ট।",a:"Necessity knows no law."},{q:"আপন ভালো তো জগৎ ভালো।",a:"To the pure, all things are pure."},{q:"কর্তার ইচ্ছায় কর্ম।",a:"The master's will is law."},{q:"কষ্ট না করলে কেষ্ট মেলে না।",a:"No pain, no gain."},{q:"যেমন কুকুর তেমন মুগুর।",a:"Tit for tat."}],
+            "practice-tense-1": [{q:"He ___ (go) to school every day.",a:"goes"},{q:"They ___ (play) cricket now.",a:"are playing"},{q:"I ___ (finish) my work just now.",a:"have finished"},{q:"She ___ (sing) a song yesterday.",a:"sang"},{q:"We ___ (live) here for five years.",a:"have been living"},{q:"The sun ___ (rise) in the east.",a:"rises"},{q:"Listen! The baby ___ (cry).",a:"is crying"},{q:"He ___ (come) back tomorrow.",a:"will come"},{q:"I wish I ___ (be) a king.",a:"were"},{q:"The train ___ (leave) before I reached the station.",a:"had left"},{q:"It ___ (rain) since morning.",a:"has been raining"},{q:"She ___ (not call) me last night.",a:"did not call"},{q:"What ___ you ___ (do) at this moment?",a:"are doing"},{q:"Birds ___ (fly) in the sky.",a:"fly"},{q:"I ___ (see) him a long time ago.",a:"saw"},{q:"She usually ___ (speak) English.",a:"speaks"},{q:"While he ___ (read), the phone rang.",a:"was reading"},{q:"I ___ (be) there by 5 PM.",a:"will be"},{q:"He ___ (work) in this office since 2010.",a:"has been working"},{q:"The patient ___ (die) before the doctor came.",a:"had died"},{q:"Look! It ___ (go) to rain.",a:"is going"},{q:"I ___ (meet) him tomorrow.",a:"will meet"},{q:"The earth ___ (move) around the sun.",a:"moves"},{q:"He ___ (sleep) now.",a:"is sleeping"},{q:"I ___ (receive) the letter yesterday.",a:"received"}],
+            "practice-tense-2": [{q:"She ___ (wait) for you for two hours.",a:"has been waiting"},{q:"If you come, I ___ (go).",a:"will go"},{q:"He said that he ___ (be) busy.",a:"was"},{q:"They ___ (build) a new bridge.",a:"are building"},{q:"I ___ (never visit) Cox's Bazar before.",a:"have never visited"},{q:"The game ___ (start) at 7 PM tonight.",a:"will start"},{q:"He ___ (leave) for London last week.",a:"left"},{q:"My father ___ (read) the newspaper every morning.",a:"reads"},{q:"She ___ (learn) French for the last two years.",a:"has been learning"},{q:"___ the bus ___ (arrive) yet?",a:"Has the bus arrived"},{q:"I ___ (not see) you for ages.",a:"have not seen"},{q:"He ___ (act) as if he knew everything.",a:"acts"},{q:"By next year, I ___ (complete) my graduation.",a:"will have completed"},{q:"She ___ (cook) when I saw her.",a:"was cooking"},{q:"The stars ___ (shine) at night.",a:"shine"},{q:"He ___ (just go) out.",a:"has just gone"},{q:"I ___ (wait) here until you come back.",a:"will wait"},{q:"She told me that she ___ (help) me.",a:"would help"},{q:"Water ___ (boil) at 100 degrees Celsius.",a:"boils"},{q:"They ___ (watch) TV at 8 PM last night.",a:"were watching"},{q:"I ___ (already do) the task.",a:"have already done"},{q:"He ___ (suffer) from fever for three days.",a:"has been suffering"},{q:"The sun ___ (set) in the west.",a:"sets"},{q:"We ___ (discuss) the matter tomorrow.",a:"will discuss"},{q:"She ___ (write) a novel now.",a:"is writing"}],
+            "practice-tense-3": [{q:"The teacher ___ (teach) us English now.",a:"is teaching"},{q:"I ___ (get) up at 6 AM every day.",a:"get"},{q:"He ___ (not finish) his work yet.",a:"has not finished"},{q:"They ___ (go) to the cinema last night.",a:"went"},{q:"She ___ (sing) for an hour.",a:"has been singing"},{q:"The moon ___ (shine) at night.",a:"shines"},{q:"Don't make a noise, the baby ___ (sleep).",a:"is sleeping"},{q:"I think it ___ (rain) tomorrow.",a:"will rain"},{q:"If I were you, I ___ (not do) that.",a:"would not do"},{q:"He ___ (reach) home before it started to rain.",a:"had reached"},{q:"We ___ (play) in the garden since 4 PM.",a:"have been playing"},{q:"He ___ (visit) his grandparents last week.",a:"visited"},{q:"What ___ you ___ (read) now?",a:"are you reading"},{q:"The birds ___ (build) their nests in spring.",a:"build"},{q:"I ___ (buy) a new car last month.",a:"bought"},{q:"She usually ___ (help) her mother in the kitchen.",a:"helps"},{q:"He ___ (watch) a movie when I called him.",a:"was watching"},{q:"They ___ (finish) the project by next week.",a:"will have finished"},{q:"She ___ (live) in this city since her childhood.",a:"has been living"},{q:"The bell ___ (ring) before I entered the classroom.",a:"had rung"},{q:"Look at the dark clouds! It ___ (rain) soon.",a:"is going to rain"},{q:"We ___ (have) a party next Sunday.",a:"will have"},{q:"The shops ___ (close) at 9 PM every day.",a:"close"},{q:"He ___ (talk) on the phone at the moment.",a:"is talking"},{q:"I ___ (lose) my pen yesterday.",a:"lost"}],
+            "practice-tense-4": [{q:"They ___ (wait) for the train for a long time.",a:"have been waiting"},{q:"If you study hard, you ___ (pass) the exam.",a:"will pass"},{q:"She said that she ___ (be) happy to help.",a:"was"},{q:"We ___ (renovate) our house these days.",a:"are renovating"},{q:"He ___ (never see) a ghost.",a:"has never seen"},{q:"The flight ___ (take off) at 10 AM tomorrow.",a:"will take off"},{q:"She ___ (break) a glass last night.",a:"broke"},{q:"The Earth ___ (revolve) around the Sun.",a:"revolves"},{q:"He ___ (study) in this university for three years.",a:"has been studying"},{q:"___ you ever ___ (be) to London?",a:"Have you ever been"},{q:"I ___ (not meet) him for a long time.",a:"have not met"},{q:"It is time we ___ (start) our work.",a:"started"},{q:"By the time you arrive, I ___ (finish) my cooking.",a:"will have finished"},{q:"He ___ (drive) his car when the accident happened.",a:"was driving"},{q:"The flowers ___ (smell) sweet.",a:"smell"},{q:"She ___ (just receive) a letter.",a:"has just received"},{q:"He ___ (stay) here until you return.",a:"will stay"},{q:"I asked him what he ___ (want).",a:"wanted"},{q:"Honesty ___ (be) the best policy.",a:"is"},{q:"They ___ (play) chess when I saw them.",a:"were playing"},{q:"We ___ (already hear) the news.",a:"have already heard"},{q:"She ___ (suffer) from a headache since morning.",a:"has been suffering"},{q:"The sun ___ (give) us light and heat.",a:"gives"},{q:"I ___ (help) you if you need it.",a:"will help"},{q:"He ___ (write) a book for the last two years.",a:"has been writing"}],
+            "practice-preposition-1": [{q:"The book is ___ the table.",a:"on"},{q:"He lives ___ Dhaka.",a:"in"},{q:"The meeting is ___ 10 AM.",a:"at"},{q:"I am going ___ school.",a:"to"},{q:"She is afraid ___ dogs.",a:"of"},{q:"He is good ___ English.",a:"at"},{q:"I bought this pen ___ you.",a:"for"},{q:"The cat is hiding ___ the bed.",a:"under"},{q:"We are waiting ___ the bus.",a:"for"},{q:"He came here ___ train.",a:"by"},{q:"Distribute the sweets ___ the children.",a:"among"},{q:"I agree ___ you.",a:"with"},{q:"He is suffering ___ fever.",a:"from"},{q:"The cup is full ___ tea.",a:"of"},{q:"She is proud ___ her son.",a:"of"},{q:"He jumped ___ the river.",a:"into"},{q:"The work was done ___ him.",a:"by"},{q:"I am fond ___ music.",a:"of"},{q:"He is senior ___ me.",a:"to"},{q:"The sky is ___ our heads.",a:"above"},{q:"He divided the property ___ his two sons.",a:"between"},{q:"I have no interest ___ politics.",a:"in"},{q:"She is looking ___ a job.",a:"for"},{q:"He is known ___ me.",a:"to"},{q:"I prefer tea ___ coffee.",a:"to"}],
+            "practice-preposition-2": [{q:"The dog ran ___ the cat.",a:"after"},{q:"He is responsible ___ this.",a:"for"},{q:"She is married ___ a doctor.",a:"to"},{q:"I am tired ___ this work.",a:"of"},{q:"He is blind ___ one eye.",a:"in"},{q:"The train is bound ___ Chittagong.",a:"for"},{q:"He abstains ___ smoking.",a:"from"},{q:"I am confident ___ my success.",a:"of"},{q:"She has no control ___ her son.",a:"over"},{q:"He is an expert ___ mathematics.",a:"in"},{q:"I am grateful ___ you for your help.",a:"to"},{q:"He is loyal ___ his master.",a:"to"},{q:"I object ___ your proposal.",a:"to"},{q:"He is satisfied ___ his result.",a:"with"},{q:"She takes pride ___ her beauty.",a:"in"},{q:"I rely ___ you.",a:"on"},{q:"He is sorry ___ his mistake.",a:"for"},{q:"I am sure ___ my success.",a:"of"},{q:"He is true ___ his word.",a:"to"},{q:"I am worried ___ his health.",a:"about"},{q:"The house is made ___ brick.",a:"of"},{q:"He died ___ overeating.",a:"from"},{q:"I am looking forward ___ seeing you.",a:"to"},{q:"He is accused ___ theft.",a:"of"},{q:"I differ ___ you on this point.",a:"with"}],
+            "practice-preposition-3": [{q:"He has a taste ___ music.",a:"for"},{q:"She is weak ___ mathematics.",a:"in"},{q:"I am not aware ___ the fact.",a:"of"},{q:"He is busy ___ his studies.",a:"with"},{q:"The boy was charged ___ theft.",a:"with"},{q:"I congratulate you ___ your success.",a:"on"},{q:"He is dependent ___ his parents.",a:"on"},{q:"She is eligible ___ the post.",a:"for"},{q:"He is faithful ___ his master.",a:"to"},{q:"I am familiar ___ this place.",a:"with"},{q:"He is free ___ all worries.",a:"from"},{q:"I am hopeful ___ his recovery.",a:"of"},{q:"She is ignorant ___ her faults.",a:"of"},{q:"He is jealous ___ my success.",a:"of"},{q:"I am kind ___ the poor.",a:"to"},{q:"He is liable ___ the damage.",a:"for"},{q:"She is obedient ___ her parents.",a:"to"},{q:"I am pleased ___ your work.",a:"with"},{q:"He is qualified ___ the job.",a:"for"},{q:"I am related ___ him.",a:"to"},{q:"She is respectful ___ her elders.",a:"to"},{q:"He is superior ___ me in knowledge.",a:"to"},{q:"I am thankful ___ you for your help.",a:"to"},{q:"He is worthy ___ praise.",a:"of"},{q:"I am anxious ___ the result.",a:"about"}],
+            "practice-preposition-4": [{q:"He is ashamed ___ his conduct.",a:"of"},{q:"I believe ___ God.",a:"in"},{q:"She is careful ___ her health.",a:"about"},{q:"He deals ___ rice.",a:"in"},{q:"I am delighted ___ your success.",a:"at"},{q:"She is engaged ___ a rich man.",a:"to"},{q:"He is famous ___ his honesty.",a:"for"},{q:"I am guilty ___ the crime.",a:"of"},{q:"She has an interest ___ painting.",a:"in"},{q:"He is junior ___ me by two years.",a:"to"},{q:"I am known ___ my honesty.",a:"for"},{q:"He is lost ___ thought.",a:"in"},{q:"She is popular ___ her students.",a:"with"},{q:"I am quick ___ understanding.",a:"at"},{q:"He is related ___ me by marriage.",a:"to"},{q:"She is shocked ___ the news.",a:"at"},{q:"I am surprised ___ his behavior.",a:"at"},{q:"He is tired ___ walking.",a:"of"},{q:"I am used ___ hard work.",a:"to"},{q:"She is vexed ___ me.",a:"with"},{q:"He is wanting ___ common sense.",a:"in"},{q:"I yield ___ your request.",a:"to"},{q:"He is zealous ___ his duties.",a:"for"},{q:"I am absorbed ___ my studies.",a:"in"},{q:"She is blessed ___ a son.",a:"with"}],
+            "practice-sentence-1": [{q:"is / my / this / book",a:"This is my book."},{q:"name / is / what / your",a:"What is your name?"},{q:"a / student / I / am",a:"I am a student."},{q:"reading / she / a / is / book",a:"She is reading a book."},{q:"live / in / we / Bangladesh",a:"We live in Bangladesh."},{q:"is / the / blue / sky",a:"The sky is blue."},{q:"to / school / he / goes",a:"He goes to school."},{q:"play / they / football",a:"They play football."},{q:"my / is / father / a / doctor",a:"My father is a doctor."},{q:"like / I / to / travel",a:"I like to travel."},{q:"a / day / beautiful / it / is",a:"It is a beautiful day."},{q:"are / you / how / today",a:"How are you today?"},{q:"can / you / me / help",a:"Can you help me?"},{q:"is / favorite / my / color / green",a:"My favorite color is green."},{q:"learning / are / we / English",a:"We are learning English."},{q:"rises / in / the / sun / the / east",a:"The sun rises in the east."},{q:"is / honesty / best / the / policy",a:"Honesty is the best policy."},{q:"mother / my / food / cooks / delicious",a:"My mother cooks delicious food."},{q:"playing / are / the / children / the / in / park",a:"The children are playing in the park."},{q:"a / letter / writing / I / am",a:"I am writing a letter."},{q:"to / music / I / listen / like",a:"I like to listen to music."},{q:"is / a / he / good / boy",a:"He is a good boy."},{q:"my / is / this / school",a:"This is my school."},{q:"are / they / friends / my",a:"They are my friends."},{q:"a / have / I / pet / cat",a:"I have a pet cat."}],
+            "practice-sentence-2": [{q:"round / is / the / earth",a:"The earth is round."},{q:"country / our / we / love",a:"We love our country."},{q:"a / teacher / is / she",a:"She is a teacher."},{q:"is / very / hot / today / it",a:"It is very hot today."},{q:"the / door / open / please",a:"Please open the door."},{q:"do / what / you / want",a:"What do you want?"},{q:"is / your / where / house",a:"Where is your house?"},{q:"is / he / an / honest / man",a:"He is an honest man."},{q:"a / story / he / told / me",a:"He told me a story."},{q:"to / I / want / be / a / doctor",a:"I want to be a doctor."},{q:"is / a / big / Dhaka / city",a:"Dhaka is a big city."},{q:"is / health / wealth",a:"Health is wealth."},{q:"a / long / she / has / hair",a:"She has long hair."},{q:"the / in / fish / live / water",a:"Fish live in the water."},{q:"is / time / precious / very",a:"Time is very precious."},{q:"a / song / is / she / singing",a:"She is singing a song."},{q:"hard / he / works / very",a:"He works very hard."},{q:"is / my / hobby / gardening",a:"Gardening is my hobby."},{q:"should / we / our / respect / elders",a:"We should respect our elders."},{q:"is / a / useful / cow / the / animal",a:"The cow is a useful animal."},{q:"is / flying / a / bird / the / in / sky",a:"A bird is flying in the sky."},{q:"me / give / a / please / glass / of / water",a:"Please give me a glass of water."},{q:"is / reading / my / brother / a / book",a:"My brother is reading a book."},{q:"the / at / look / moon",a:"Look at the moon."},{q:"is / a / rose / the / beautiful / flower",a:"The rose is a beautiful flower."}],
+            "practice-sentence-3": [{q:"a / student / good / he / is",a:"He is a good student."},{q:"to / go / I / school / every / day",a:"I go to school every day."},{q:"is / my / reading / father / a / newspaper",a:"My father is reading a newspaper."},{q:"the / in / stars / shine / at / night / sky / the",a:"The stars shine in the sky at night."},{q:"is / the / capital / Dhaka / of / Bangladesh",a:"Dhaka is the capital of Bangladesh."},{q:"a / new / have / bought / I / car",a:"I have bought a new car."},{q:"is / she / a / famous / singer",a:"She is a famous singer."},{q:"to / I / want / learn / English",a:"I want to learn English."},{q:"is / a / very / he / kind / man",a:"He is a very kind man."},{q:"the / is / on / cat / the / table",a:"The cat is on the table."},{q:"are / playing / they / in / the / garden",a:"They are playing in the garden."},{q:"is / my / sister / a / teacher",a:"My sister is a teacher."},{q:"to / I / like / listen / music / to",a:"I like to listen to music."},{q:"is / a / very / it / interesting / story",a:"It is a very interesting story."},{q:"is / my / favorite / blue / color",a:"Blue is my favorite color."},{q:"is / a / he / hardworking / person",a:"He is a hardworking person."},{q:"is / a / she / beautiful / girl",a:"She is a beautiful girl."},{q:"to / I / want / visit / Cox's / Bazar",a:"I want to visit Cox's Bazar."},{q:"is / a / he / talented / player",a:"He is a talented player."},{q:"is / a / she / successful / doctor",a:"She is a successful doctor."},{q:"to / I / want / help / the / poor",a:"I want to help the poor."},{q:"is / a / he / responsible / officer",a:"He is a responsible officer."},{q:"is / a / she / caring / mother",a:"She is a caring mother."},{q:"to / I / want / be / an / engineer",a:"I want to be an engineer."},{q:"is / a / he / brave / soldier",a:"He is a brave soldier."}],
+            "practice-sentence-4": [{q:"is / a / she / dedicated / teacher",a:"She is a dedicated teacher."},{q:"to / I / want / travel / around / the / world",a:"I want to travel around the world."},{q:"is / a / he / respected / person / in / our / society",a:"He is a respected person in our society."},{q:"is / a / she / creative / artist",a:"She is a creative artist."},{q:"to / I / want / achieve / my / goal",a:"I want to achieve my goal."},{q:"is / a / he / visionary / leader",a:"He is a visionary leader."},{q:"is / a / she / passionate / dancer",a:"She is a passionate dancer."},{q:"to / I / want / make / my / parents / proud",a:"I want to make my parents proud."},{q:"is / a / he / generous / man",a:"He is a generous man."},{q:"is / a / she / confident / speaker",a:"She is a confident speaker."},{q:"to / I / want / contribute / to / my / country",a:"I want to contribute to my country."},{q:"is / a / he / brilliant / student",a:"He is a brilliant student."},{q:"is / a / she / graceful / lady",a:"She is a graceful lady."},{q:"to / I / want / live / a / happy / life",a:"I want to live a happy life."},{q:"is / a / he / humble / person",a:"He is a humble person."},{q:"is / a / she / inspiring / woman",a:"She is an inspiring woman."},{q:"to / I / want / overcome / my / fears",a:"I want to overcome my fears."},{q:"is / a / he / knowledgeable / man",a:"He is a knowledgeable man."},{q:"is / a / she / loving / daughter",a:"She is a loving daughter."},{q:"to / I / want / explore / new / things",a:"I want to explore new things."},{q:"is / a / he / motivational / speaker",a:"He is a motivational speaker."},{q:"is / a / she / optimistic / person",a:"She is an optimistic person."},{q:"to / I / want / reach / the / top",a:"I want to reach the top."},{q:"is / a / he / patient / listener",a:"He is a patient listener."},{q:"is / a / she / reliable / friend",a:"She is a reliable friend."}]
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const chapterNav = document.getElementById('chapter-nav');
+            const contentArea = document.getElementById('content-area');
+            const chapters = contentArea.querySelectorAll('.chapter-content');
+
+            function createQuizItem(item, index) {
+                return `
+                    <div class="quiz-item p-4 border rounded-lg bg-white/50 shadow-sm">
+                        <p class="text-gray-800 font-medium mb-2">${index + 1}. ${item.q}</p>
+                        <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+                            <input type="text" class="quiz-input w-full p-2 rounded-md" placeholder="আপনার উত্তর লিখুন...">
+                            <div class="flex items-center gap-2 flex-shrink-0">
+                                <button class="check-btn bg-indigo-500 text-white px-4 py-2 rounded-md hover:bg-indigo-600 transition-colors">Check</button>
+                                <button class="show-answer-btn bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 transition-colors">Answer</button>
+                            </div>
+                        </div>
+                        <p class="feedback mt-2 text-sm font-medium"></p>
+                        <p class="correct-answer hidden mt-2 text-sm text-green-700 bg-green-100 p-2 rounded-md">সঠিক উত্তর: <span class="font-bold">${item.a}</span></p>
+                    </div>
+                `;
+            }
+            
+            for (const chapterId in quizData) {
+                const container = document.querySelector(`#${chapterId} .quiz-container`);
+                if (container) {
+                    container.innerHTML = quizData[chapterId].map(createQuizItem).join('');
+                }
+            }
+
+            // Navigation logic
+            chapterNav.addEventListener('click', (e) => {
+                const button = e.target.closest('button');
+                const title = e.target.closest('.nav-group-title, .nav-subgroup-title');
+
+                if (button && button.dataset.chapter) {
+                    const targetChapterId = button.dataset.chapter;
+                    chapterNav.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+                    chapters.forEach(chapter => {
+                        chapter.classList.toggle('hidden', chapter.id !== targetChapterId);
+                    });
+                }
+
+                if (title) {
+                    title.classList.toggle('collapsed');
+                    const content = title.nextElementSibling;
+                    content.classList.toggle('collapsed');
+                }
+            });
+
+            // Quiz logic
+            contentArea.addEventListener('click', (e) => {
+                const quizItem = e.target.closest('.quiz-item');
+                if (!quizItem) return;
+
+                const input = quizItem.querySelector('.quiz-input');
+                const feedback = quizItem.querySelector('.feedback');
+                const correctAnswerEl = quizItem.querySelector('.correct-answer');
+                const correctAnswer = correctAnswerEl.querySelector('span').textContent.trim();
+                
+                if (e.target.classList.contains('check-btn')) {
+                    const userAnswer = input.value.trim();
+                    const normalizedUserAnswer = userAnswer.replace(/[.,?।]/g, '').toLowerCase();
+                    const normalizedCorrectAnswer = correctAnswer.replace(/[.,?।]/g, '').toLowerCase();
+                    
+                    input.classList.remove('correct', 'incorrect');
+                    feedback.classList.remove('text-green-600', 'text-red-600', 'text-yellow-600');
+
+                    if (userAnswer === "") {
+                        feedback.textContent = "অনুগ্রহ করে আপনার উত্তর লিখুন।";
+                        feedback.className = "feedback mt-2 text-sm font-medium text-yellow-600";
+                        return;
+                    }
+
+                    if (normalizedUserAnswer === normalizedCorrectAnswer) {
+                        feedback.textContent = "সঠিক হয়েছে! 🎉";
+                        feedback.className = "feedback mt-2 text-sm font-medium text-green-600";
+                        input.classList.add('correct');
+                    } else {
+                        feedback.textContent = "আবার চেষ্টা করুন।";
+                        feedback.className = "feedback mt-2 text-sm font-medium text-red-600";
+                        input.classList.add('incorrect');
+                    }
+                }
+
+                if (e.target.classList.contains('show-answer-btn')) {
+                    correctAnswerEl.classList.toggle('hidden');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
