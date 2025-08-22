@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Posting Schedule</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Custom styles for the light glassy theme */
+        body {
+            font-family: 'Inter', sans-serif;
+            /* A light and clean gradient background */
+            background: linear-gradient(120deg, #fdfbfb 0%, #ebedee 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .glass-card {
+            /* The core of the light glassmorphism effect */
+            background: rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px); /* For Safari */
+            border-radius: 1.5rem; /* 24px */
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            width: 100%;
+        }
+        
+        /* Glassy style for the clock widgets */
+        .clock-widget {
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            padding: 0.75rem 1.5rem;
+            box-shadow: 0 4px 15px 0 rgba(0, 0, 0, 0.08);
+        }
+
+        /* Custom styled date picker */
+        .date-picker {
+            background-color: rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.1);
+            border-radius: 0.5rem;
+            padding: 0.5rem 0.75rem;
+            color: #374151; /* gray-700 */
+            cursor: pointer;
+            width: 100%;
+        }
+
+        /* Custom styled checkbox */
+        .task-checkbox {
+            appearance: none;
+            -webkit-appearance: none;
+            height: 1.25rem; /* 20px */
+            width: 1.25rem; /* 20px */
+            background-color: rgba(0, 0, 0, 0.1);
+            border-radius: 0.375rem; /* 6px */
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            outline: none;
+            transition: background-color 0.2s ease;
+        }
+
+        .task-checkbox:checked {
+            background-color: #34d399; /* emerald-400 */
+        }
+
+        .task-checkbox:checked::before {
+            content: '✔';
+            color: white;
+            font-size: 0.875rem; /* 14px */
+        }
+        
+        /* Style for a completed task item */
+        .task-item.completed {
+            opacity: 0.5;
+        }
+        
+        .task-item.completed .task-text {
+            text-decoration: line-through;
+        }
+        
+        /* Animation for individual task items */
+        .task-item {
+            transition: transform 0.2s ease-out, box-shadow 0.2s ease-out, background-color 0.2s ease-out;
+        }
+
+        .task-item:hover {
+            transform: translateX(5px) scale(1.03);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            background-color: rgba(0, 0, 0, 0.07);
+        }
+        
+        /* Color styles */
+        .bd-time-color {
+            color: #10b981; /* green-500 */
+        }
+        .usa-time-color {
+            color: #f87171; /* red-400 */
+        }
+
+    </style>
+</head>
+<body class="text-gray-800">
+
+    <div class="container mx-auto px-4 w-full max-w-6xl">
+        
+        <!-- Live Clocks -->
+        <div class="text-center my-8 flex justify-center items-center gap-4 md:gap-8 flex-wrap">
+            <div class="clock-widget">
+                <h3 class="font-semibold text-sm bd-time-color">Bangladesh Time</h3>
+                <p id="bd-clock" class="text-xl md:text-2xl font-bold text-gray-900 tabular-nums"></p>
+            </div>
+            <div class="clock-widget">
+                <h3 class="font-semibold text-sm usa-time-color">USA Time (NY)</h3>
+                <p id="usa-clock" class="text-xl md:text-2xl font-bold text-gray-900 tabular-nums"></p>
+            </div>
+        </div>
+
+        <!-- Flex container for the schedule cards for better responsiveness -->
+        <main class="flex flex-col lg:flex-row items-start justify-center gap-6">
+            
+            <!-- ARTS Card -->
+            <div class="glass-card p-5 md:p-6 flex-1">
+                <div class="text-center mb-4">
+                    <h2 class="text-xl font-bold">ARTS</h2>
+                    <input type="date" id="arts-date" class="date-picker mt-2 text-sm">
+                </div>
+                <div id="arts-tasks" class="space-y-3">
+                    <!-- Schedule items will be dynamically inserted here by JavaScript -->
+                </div>
+            </div>
+
+            <!-- BOOM Card -->
+            <div class="glass-card p-5 md:p-6 flex-1">
+                <div class="text-center mb-4">
+                    <h2 class="text-xl font-bold">BOOM</h2>
+                    <input type="date" id="boom-date" class="date-picker mt-2 text-sm">
+                </div>
+                <div id="boom-tasks" class="space-y-3">
+                     <!-- Schedule items will be dynamically inserted here by JavaScript -->
+                </div>
+            </div>
+
+            <!-- SHOP Card -->
+            <div class="glass-card p-5 md:p-6 flex-1">
+                <div class="text-center mb-4">
+                    <h2 class="text-xl font-bold">SHOP</h2>
+                    <input type="date" id="shop-date" class="date-picker mt-2 text-sm">
+                </div>
+                <div id="shop-tasks" class="space-y-3">
+                     <!-- Schedule items will be dynamically inserted here by JavaScript -->
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script>
+        // Data for the schedules, based on your image
+        let scheduleData = {
+            arts: [
+                { slot: 1, bd: '7:00 PM', usa: '9:00 AM' }, { slot: 2, bd: '10:00 PM', usa: '12:00 PM' },
+                { slot: 3, bd: '1:00 AM', usa: '3:00 PM' }, { slot: 4, bd: '4:00 AM', usa: '6:00 PM' },
+                { slot: 5, bd: '7:00 AM', usa: '9:00 PM' }, { slot: 6, bd: '10:00 AM', usa: '12:00 AM' },
+            ],
+            boom: [
+                { slot: 1, bd: '8:00 PM', usa: '10:00 AM' }, { slot: 2, bd: '11:00 PM', usa: '1:00 PM' },
+                { slot: 3, bd: '2:00 AM', usa: '4:00 PM' }, { slot: 4, bd: '5:00 AM', usa: '7:00 PM' },
+                { slot: 5, bd: '8:00 AM', usa: '10:00 PM' }, { slot: 6, bd: '11:00 AM', usa: '1:00 AM' },
+            ],
+            shop: [
+                { slot: 1, bd: '9:00 PM', usa: '11:00 AM' }, { slot: 2, bd: '12:00 AM', usa: '2:00 PM' },
+                { slot: 3, bd: '3:00 AM', usa: '5:00 PM' }, { slot: 4, bd: '6:00 AM', usa: '8:00 PM' },
+                { slot: 5, bd: '9:00 AM', usa: '11:00 PM' }, { slot: 6, bd: '12:00 PM', usa: '2:00 AM' },
+            ]
+        };
+        
+        // --- CLOCK FUNCTIONALITY ---
+        function updateClocks() {
+            const now = new Date();
+            
+            // Bangladesh Time (UTC+6)
+            const bdTime = now.toLocaleTimeString('en-US', { timeZone: 'Asia/Dhaka', hour12: true, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            document.getElementById('bd-clock').textContent = bdTime;
+
+            // USA Time (New York - EST/EDT)
+            const usaTime = now.toLocaleTimeString('en-US', { timeZone: 'America/New_York', hour12: true, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            document.getElementById('usa-clock').textContent = usaTime;
+        }
+
+        // --- CORE APP LOGIC ---
+        function getTodayDateString() {
+            const today = new Date();
+            return today.toISOString().split('T')[0];
+        }
+
+        function createTaskItem(item, cardId, index) {
+            return `
+                <div class="task-item flex items-center justify-between bg-black/5 p-3 rounded-lg">
+                    <div class="flex items-center gap-3">
+                        <div class="flex-shrink-0 w-7 h-7 bg-black/10 rounded-md flex items-center justify-center font-bold text-xs">
+                            ${item.slot}
+                        </div>
+                        <div class="task-text text-sm">
+                            <p class="font-bold bd-time-color">${item.bd} <span class="text-gray-500 text-xs">(BD)</span></p>
+                            <p class="font-normal usa-time-color">${item.usa} <span class="text-gray-500 text-xs">(USA)</span></p>
+                        </div>
+                    </div>
+                    <input type="checkbox" class="task-checkbox flex-shrink-0" data-card="${cardId}" data-index="${index}">
+                </div>
+            `;
+        }
+
+        function renderSchedule(cardId) {
+            const container = document.getElementById(`${cardId}-tasks`);
+            container.innerHTML = ''; 
+            scheduleData[cardId].forEach((item, index) => {
+                container.innerHTML += createTaskItem(item, cardId, index);
+            });
+        }
+        
+        function saveState(cardId) {
+            const date = document.getElementById(`${cardId}-date`).value;
+            const checkboxes = document.querySelectorAll(`#${cardId}-tasks .task-checkbox`);
+            const state = Array.from(checkboxes).map(cb => cb.checked);
+            localStorage.setItem(`schedule-${cardId}-${date}`, JSON.stringify(state));
+        }
+
+        function loadState(cardId) {
+            const date = document.getElementById(`${cardId}-date`).value;
+            const state = JSON.parse(localStorage.getItem(`schedule-${cardId}-${date}`));
+            const checkboxes = document.querySelectorAll(`#${cardId}-tasks .task-checkbox`);
+            
+            checkboxes.forEach((checkbox, index) => {
+                checkbox.checked = state ? state[index] : false;
+                const taskItem = checkbox.closest('.task-item');
+                if (checkbox.checked) {
+                    taskItem.classList.add('completed');
+                } else {
+                    taskItem.classList.remove('completed');
+                }
+            });
+        }
+
+        // Initial setup when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            // Start the clocks
+            updateClocks();
+            setInterval(updateClocks, 1000);
+
+            const cardIds = ['arts', 'boom', 'shop'];
+            
+            cardIds.forEach(cardId => {
+                renderSchedule(cardId);
+                const datePicker = document.getElementById(`${cardId}-date`);
+                datePicker.value = getTodayDateString();
+                loadState(cardId);
+                
+                datePicker.addEventListener('change', () => {
+                    loadState(cardId);
+                });
+            });
+            
+            document.querySelector('.container').addEventListener('change', (e) => {
+                if (e.target.classList.contains('task-checkbox')) {
+                    const cardId = e.target.dataset.card;
+                    const taskItem = e.target.closest('.task-item');
+                    
+                    taskItem.classList.toggle('completed', e.target.checked);
+                    saveState(cardId);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
