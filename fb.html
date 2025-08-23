@@ -5,9 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Daily Posting Schedule</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@500&display=swap" rel="stylesheet">
     <style>
         /* Custom styles for the light glassy theme */
         body {
@@ -22,33 +24,34 @@
         }
         
         /* True Black Dark mode styles */
-        .dark body {
-            background: #000000; /* Pure black background */
-        }
-        .dark .glass-card {
-            background: rgba(28, 28, 30, 0.5); /* Dark, neutral gray with opacity */
+        .dark body { background: #000000; }
+        .dark .glass-card, .dark .modal-content {
+            background: rgba(28, 28, 30, 0.7);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(58, 58, 60, 0.7); /* Darker gray border */
+            border: 1px solid rgba(58, 58, 60, 0.7);
             box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
         }
-        .dark .clock-widget {
-            background: rgba(44, 44, 46, 0.5); /* Slightly lighter neutral gray */
+        .dark .clock-widget, .dark .progress-bar-container, .dark #idea-box-container {
+            background: rgba(44, 44, 46, 0.5);
             border: 1px solid rgba(58, 58, 60, 0.7);
         }
-        .dark .date-picker {
+        .dark .date-picker, .dark #idea-box {
             background-color: rgba(44, 44, 46, 0.5);
             border-color: rgba(58, 58, 60, 0.7);
-            color: #d1d5db; /* gray-300 */
+            color: #d1d5db;
         }
-        .dark .text-gray-800 { color: #f9fafb; /* gray-50 */ }
+        .dark .text-gray-800 { color: #f9fafb; }
         .dark .text-gray-900 { color: #ffffff; }
         .dark .task-item { background-color: rgba(44, 44, 46, 0.3); }
         .dark .task-item:hover { background-color: rgba(58, 58, 60, 0.6); }
         .dark .task-checkbox { background-color: rgba(58, 58, 60, 0.5); }
         .dark .bg-black\/10 { background-color: rgba(255,255,255,0.1); }
-        .dark .pm-time-color { color: #c4b5fd; } /* Lighter purple for dark mode */
-
+        .dark .pm-time-color { color: #c4b5fd; }
+        .dark .export-btn { background-color: #374151; color: #f9fafb; }
+        .dark .export-btn:hover { background-color: #4b5563; }
+        .dark .progress-bar-inner { background-color: #10b981; }
+        .dark .progress-bar-bg { background-color: #374151; }
 
         .glass-card {
             background: rgba(255, 255, 255, 0.5);
@@ -71,46 +74,48 @@
         }
 
         .date-picker {
-            background-color: rgba(0,0,0,0.05);
-            border: 1px solid rgba(0,0,0,0.1);
-            border-radius: 0.5rem;
-            padding: 0.5rem 0.75rem;
-            color: #374151;
-            cursor: pointer;
-            width: 100%;
+            background-color: rgba(0,0,0,0.05); border: 1px solid rgba(0,0,0,0.1);
+            border-radius: 0.5rem; padding: 0.5rem 0.75rem; color: #374151;
+            cursor: pointer; width: 100%;
         }
 
         .task-checkbox {
-            appearance: none; -webkit-appearance: none;
-            height: 1.25rem; width: 1.25rem;
-            background-color: rgba(0, 0, 0, 0.1);
-            border-radius: 0.375rem; cursor: pointer;
+            appearance: none; -webkit-appearance: none; height: 1.25rem; width: 1.25rem;
+            background-color: rgba(0, 0, 0, 0.1); border-radius: 0.375rem; cursor: pointer;
             display: flex; align-items: center; justify-content: center;
             outline: none; transition: background-color 0.2s ease;
         }
         .task-checkbox:checked { background-color: #34d399; }
         .task-checkbox:checked::before { content: '✔'; color: white; font-size: 0.875rem; }
         
-        .task-item.completed { opacity: 0.5; }
-        .task-item.completed .task-text { text-decoration: line-through; }
+        .task-item.completed { opacity: 0.5; text-decoration: line-through; }
         
-        .task-item { transition: transform 0.2s ease-out, box-shadow 0.2s ease-out, background-color 0.2s ease-out; }
-        .task-item:hover {
-            transform: translateX(5px) scale(1.03);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
-        }
+        .task-item { transition: transform 0.2s ease-out, box-shadow 0.2s ease-out, background-color 0.2s ease-out; cursor: pointer; }
+        .task-item:hover { transform: translateX(5px) scale(1.03); box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08); }
         
         .bd-time-color { color: #10b981; }
         .usa-time-color { color: #f87171; }
+        .pm-time-color { color: #8b5cf6; }
+        .special-font { font-family: 'Playfair Display', serif; font-size: 1.05em; }
+
+        .countdown-warn { color: #f59e0b; } /* amber-500 */
+        .countdown-urgent { color: #ef4444; } /* red-500 */
         
-        .pm-time-color {
-            color: #8b5cf6; /* A nice purple color (violet-500) */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            display: none; align-items: center; justify-content: center; z-index: 50;
+            perspective: 1000px;
+        }
+        
+        #focus-mode-content {
+            transition: transform 0.1s ease-out;
         }
     </style>
 </head>
 <body class="text-gray-800">
 
-    <div class="container mx-auto px-2 sm:px-4 w-full max-w-6xl">
+    <div class="container mx-auto px-2 sm:px-4 w-full">
         
         <!-- Header with Theme Toggle -->
         <div class="flex justify-center items-center my-8 gap-4 flex-wrap">
@@ -122,50 +127,75 @@
                 <h3 class="font-semibold text-sm usa-time-color">USA Time (NY)</h3>
                 <p id="usa-clock" class="text-xl md:text-2xl font-bold text-gray-900 tabular-nums"></p>
             </div>
-            <button id="theme-toggle" class="p-2 rounded-full bg-gray-200 dark:bg-gray-800">
-                <!-- Sun Icon -->
-                <svg id="theme-toggle-light-icon" class="w-6 h-6 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-                <!-- Moon Icon -->
-                <svg id="theme-toggle-dark-icon" class="w-6 h-6 text-gray-400 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+            <button id="theme-toggle" title="Toggle Theme" class="p-2 rounded-full bg-gray-200 dark:bg-gray-800">
+                <svg id="theme-toggle-light-icon" class="w-6 h-6 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                <svg id="theme-toggle-dark-icon" class="w-6 h-6 text-gray-400 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
             </button>
+            <button id="focus-mode-btn" title="Focus Mode" class="p-2 rounded-full bg-gray-200 dark:bg-gray-800">
+                <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+            </button>
+            <button id="sync-btn" title="Sync with QR Code" class="p-2 rounded-full bg-gray-200 dark:bg-gray-800">
+                <svg class="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4h16M4 12h16M4 20h16"></path></svg>
+            </button>
+        </div>
+        
+        <!-- Weekly Progress Bars -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <div id="current-week-progress" class="progress-bar-container glass-card p-4"></div>
+            <div id="previous-week-progress" class="progress-bar-container glass-card p-4"></div>
         </div>
 
         <!-- Schedule Cards -->
-        <main class="flex flex-col lg:flex-row items-start justify-center gap-6">
-            <div class="glass-card p-5 md:p-6 flex-1">
-                <div class="text-center mb-4"><h2 class="text-xl font-bold">ARTS</h2><input type="date" id="arts-date" class="date-picker mt-2 text-sm"></div>
-                <div id="arts-tasks" class="space-y-3"></div>
-            </div>
-            <div class="glass-card p-5 md:p-6 flex-1">
-                <div class="text-center mb-4"><h2 class="text-xl font-bold">BOOM</h2><input type="date" id="boom-date" class="date-picker mt-2 text-sm"></div>
-                <div id="boom-tasks" class="space-y-3"></div>
-            </div>
-            <div class="glass-card p-5 md:p-6 flex-1">
-                <div class="text-center mb-4"><h2 class="text-xl font-bold">SHOP</h2><input type="date" id="shop-date" class="date-picker mt-2 text-sm"></div>
-                <div id="shop-tasks" class="space-y-3"></div>
-            </div>
+        <main class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Cards will be dynamically inserted here -->
         </main>
+        
+        <!-- Future Ideas Box -->
+        <div id="idea-box-container" class="glass-card p-4 mt-8">
+            <h3 class="font-bold text-center mb-2">Future Ideas</h3>
+            <textarea id="idea-box" class="w-full h-20 p-2 border border-gray-300 rounded-lg text-sm" placeholder="Write down your content ideas..."></textarea>
+            <div class="flex justify-center gap-4 mt-2">
+                <button id="save-ideas-btn" class="export-btn text-xs">Save Ideas</button>
+                <button id="reset-ideas-btn" class="export-btn text-xs">Reset</button>
+            </div>
+        </div>
+        
+        <!-- Export Buttons -->
+        <div class="text-center mt-8 space-x-4">
+            <button id="export-csv-btn" class="export-btn">Export CSV</button>
+            <button id="export-png-btn" class="export-btn">Export PNG</button>
+        </div>
+
+        <!-- Modals -->
+        <div id="focus-mode-overlay" class="modal-overlay">
+            <div id="focus-mode-content" class="modal-content glass-card text-white text-center p-8 rounded-2xl"></div>
+        </div>
+        <div id="qr-code-overlay" class="modal-overlay">
+            <div id="qr-code-content" class="modal-content glass-card p-8 text-center text-gray-800">
+                <h2 class="text-xl font-bold mb-4">Sync to another device</h2>
+                <p class="text-sm mb-4">Scan this QR code with your phone to sync all your data.</p>
+                <div id="qrcode" class="flex justify-center"></div>
+            </div>
+        </div>
+         <div id="clash-warning-overlay" class="modal-overlay">
+            <div id="clash-warning-content" class="modal-content glass-card p-8 text-center text-gray-800 max-w-md"></div>
+        </div>
+
     </div>
 
     <script>
-        // Data for the schedules, re-ordered as requested
+        // Data for the schedules
         let scheduleData = {
-            arts: [
-                { slot: 1, bd: '1:00 AM', usa: '3:00 PM' }, { slot: 2, bd: '4:00 AM', usa: '6:00 PM' },
-                { slot: 3, bd: '7:00 AM', usa: '9:00 PM' }, { slot: 4, bd: '10:00 AM', usa: '12:00 AM' },
-                { slot: 5, bd: '7:00 PM', usa: '9:00 AM' }, { slot: 6, bd: '10:00 PM', usa: '12:00 PM' }
-            ],
-            boom: [
-                { slot: 1, bd: '2:00 AM', usa: '4:00 PM' }, { slot: 2, bd: '5:00 AM', usa: '7:00 PM' },
-                { slot: 3, bd: '8:00 AM', usa: '10:00 PM' }, { slot: 4, bd: '11:00 AM', usa: '1:00 AM' },
-                { slot: 5, bd: '8:00 PM', usa: '10:00 AM' }, { slot: 6, bd: '11:00 PM', usa: '1:00 PM' }
-            ],
-            shop: [
-                { slot: 1, bd: '12:00 AM', usa: '2:00 PM' }, { slot: 2, bd: '3:00 AM', usa: '5:00 PM' },
-                { slot: 3, bd: '6:00 AM', usa: '8:00 PM' }, { slot: 4, bd: '9:00 AM', usa: '11:00 PM' },
-                { slot: 5, bd: '12:00 PM', usa: '2:00 AM' }, { slot: 6, bd: '9:00 PM', usa: '11:00 AM' }
-            ]
+            ARTS: [ { slot: 1, bd: '1:00 AM', usa: '3:00 PM' }, { slot: 2, bd: '4:00 AM', usa: '6:00 PM' }, { slot: 3, bd: '7:00 AM', usa: '9:00 PM' }, { slot: 4, bd: '10:00 AM', usa: '12:00 AM' }, { slot: 5, bd: '7:00 PM', usa: '9:00 AM' }, { slot: 6, bd: '10:00 PM', usa: '12:00 PM' } ],
+            BOOM: [ { slot: 1, bd: '2:00 AM', usa: '4:00 PM' }, { slot: 2, bd: '5:00 AM', usa: '7:00 PM' }, { slot: 3, bd: '8:00 AM', usa: '10:00 PM' }, { slot: 4, bd: '11:00 AM', usa: '1:00 AM' }, { slot: 5, bd: '8:00 PM', usa: '10:00 AM' }, { slot: 6, bd: '11:00 PM', usa: '1:00 PM' } ],
+            SHOP: [ { slot: 1, bd: '12:00 AM', usa: '2:00 PM' }, { slot: 2, bd: '3:00 AM', usa: '5:00 PM' }, { slot: 3, bd: '6:00 AM', usa: '8:00 PM' }, { slot: 4, bd: '9:00 AM', usa: '11:00 PM' }, { slot: 5, bd: '12:00 PM', usa: '2:00 AM' }, { slot: 6, bd: '9:00 PM', usa: '11:00 AM' } ],
+            BRUSHART: [ { slot: 1, bd: '6:11 AM', usa: '8:11 PM' }, { slot: 2, bd: '9:11 AM', usa: '11:11 PM' }, { slot: 3, bd: '6:11 PM', usa: '8:11 AM' }, { slot: 4, bd: '9:11 PM', usa: '11:11 AM' }, { slot: 5, bd: '3:11 AM', usa: '5:11 PM' }, { slot: 6, bd: '3:11 PM', usa: '5:11 AM' } ],
+            PERADISE: [ { slot: 1, bd: '6:33 AM', usa: '8:33 PM' }, { slot: 2, bd: '9:33 AM', usa: '11:33 PM' }, { slot: 3, bd: '6:33 PM', usa: '8:33 AM' }, { slot: 4, bd: '9:38 PM', usa: '11:38 AM' }, { slot: 5, bd: '3:33 AM', usa: '5:33 PM' }, { slot: 6, bd: '3:33 PM', usa: '5:33 AM' } ],
+            VALERIO: [ { slot: 1, bd: '1:33 AM', usa: '3:33 PM' }, { slot: 2, bd: '4:33 AM', usa: '6:33 PM' }, { slot: 3, bd: '7:33 AM', usa: '9:33 PM' }, { slot: 4, bd: '10:33 AM', usa: '12:33 AM' }, { slot: 5, bd: '7:33 PM', usa: '9:33 AM' }, { slot: 6, bd: '10:33 PM', usa: '12:33 PM' } ]
         };
+        
+        const cardIds = Object.keys(scheduleData);
+        let focusCountdownInterval;
         
         // --- THEME TOGGLE LOGIC ---
         const themeToggleBtn = document.getElementById('theme-toggle');
@@ -174,113 +204,385 @@
         const htmlEl = document.documentElement;
 
         if (localStorage.getItem('theme') === 'dark') {
-            htmlEl.classList.add('dark');
-            lightIcon.classList.add('hidden');
-            darkIcon.classList.remove('hidden');
+            htmlEl.classList.add('dark'); lightIcon.classList.add('hidden'); darkIcon.classList.remove('hidden');
         }
-
         themeToggleBtn.addEventListener('click', () => {
-            htmlEl.classList.toggle('dark');
-            lightIcon.classList.toggle('hidden');
-            darkIcon.classList.toggle('hidden');
-            if (htmlEl.classList.contains('dark')) {
-                localStorage.setItem('theme', 'dark');
-            } else {
-                localStorage.setItem('theme', 'light');
-            }
+            htmlEl.classList.toggle('dark'); lightIcon.classList.toggle('hidden'); darkIcon.classList.toggle('hidden');
+            localStorage.setItem('theme', htmlEl.classList.contains('dark') ? 'dark' : 'light');
         });
 
-        // --- CLOCK FUNCTIONALITY ---
+        // --- CLOCK & NOTIFICATIONS ---
         function updateClocks() {
             const now = new Date();
-            const bdTime = now.toLocaleTimeString('en-US', { timeZone: 'Asia/Dhaka', hour12: true, hour: '2-digit', minute: '2-digit', second: '2-digit' });
-            document.getElementById('bd-clock').textContent = bdTime;
-            const usaTime = now.toLocaleTimeString('en-US', { timeZone: 'America/New_York', hour12: true, hour: '2-digit', minute: '2-digit', second: '2-digit' });
-            document.getElementById('usa-clock').textContent = usaTime;
+            document.getElementById('bd-clock').textContent = now.toLocaleTimeString('en-US', { timeZone: 'Asia/Dhaka', hour12: true, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            document.getElementById('usa-clock').textContent = now.toLocaleTimeString('en-US', { timeZone: 'America/New_York', hour12: true, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        }
+
+        function requestNotificationPermission() {
+            if ('Notification' in window && Notification.permission !== 'granted') {
+                Notification.requestPermission();
+            }
+        }
+
+        function sendNotification(cardId, task) {
+            if (!('Notification' in window) || Notification.permission !== 'granted') return;
+            const notification = new Notification(`Time to post for ${cardId}!`, {
+                body: `Post now at ${task.bd} (BD)`,
+                icon: 'https://img.icons8.com/color/48/000000/appointment-reminders.png',
+                tag: `${cardId}-${task.slot}`,
+                renotify: true,
+                actions: [{ action: 'snooze', title: 'Snooze 10 min' }]
+            });
+        }
+
+        function checkAndSendNotifications() {
+            const nowInBD = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Dhaka" }));
+            const todayDateStr = getTodayDateStringBD();
+            const notifiedKey = `notified-${todayDateStr}`;
+            let notifiedToday = JSON.parse(localStorage.getItem(notifiedKey)) || [];
+            let snoozed = JSON.parse(localStorage.getItem('snoozedNotifications')) || {};
+
+            Object.keys(scheduleData).forEach(cardId => {
+                scheduleData[cardId].forEach(task => {
+                    const notificationId = `${cardId}-${task.slot}`;
+                    if (notifiedToday.includes(notificationId)) return;
+                    const [time, modifier] = task.bd.split(' ');
+                    let [hours, minutes] = time.split(':').map(Number);
+                    if (modifier === 'PM' && hours !== 12) hours += 12;
+                    if (modifier === 'AM' && hours === 12) hours = 0;
+                    const isTime = nowInBD.getHours() === hours && nowInBD.getMinutes() === minutes;
+                    const isSnoozed = snoozed[notificationId] && new Date(snoozed[notificationId]) > nowInBD;
+                    if (isTime && !isSnoozed) {
+                        sendNotification(cardId, task);
+                        notifiedToday.push(notificationId);
+                    }
+                });
+            });
+            localStorage.setItem(notifiedKey, JSON.stringify(notifiedToday));
         }
 
         // --- CORE APP LOGIC ---
         function getTodayDateStringBD() {
             const today = new Date();
             const options = { timeZone: 'Asia/Dhaka', year: 'numeric', month: '2-digit', day: '2-digit' };
-            const formatter = new Intl.DateTimeFormat('en-CA', options); // 'en-CA' locale gives YYYY-MM-DD format
-            return formatter.format(today);
+            return new Intl.DateTimeFormat('en-CA', options).format(today);
         }
 
         function createTaskItem(item, cardId, index) {
-            const bdTimeClass = (item.slot >= 5) ? "font-bold pm-time-color" : "font-bold bd-time-color";
-            return `
-                <div class="task-item flex items-center justify-between p-3 rounded-lg">
-                    <div class="flex items-center gap-3">
-                        <div class="flex-shrink-0 w-7 h-7 bg-black/10 rounded-md flex items-center justify-center font-bold text-xs">
-                            ${item.slot}
-                        </div>
-                        <div class="task-text text-sm">
-                            <p class="${bdTimeClass}">${item.bd} <span class="text-gray-500 text-xs">(BD)</span></p>
-                            <p class="font-normal usa-time-color">${item.usa} <span class="text-gray-500 text-xs">(USA)</span></p>
-                        </div>
-                    </div>
-                    <input type="checkbox" class="task-checkbox flex-shrink-0" data-card="${cardId}" data-index="${index}">
-                </div>
-            `;
+            let bdTimeClass = "font-bold bd-time-color";
+            let specialFontClass = "";
+            if (['ARTS', 'BOOM', 'SHOP', 'VALERIO'].includes(cardId.toUpperCase()) && item.slot >= 5) bdTimeClass = "font-bold pm-time-color";
+            if (['BRUSHART', 'PERADISE'].includes(cardId.toUpperCase()) && item.slot >= 5) {
+                specialFontClass = "special-font"; bdTimeClass = "font-bold pm-time-color";
+            }
+            return `<div class="task-item flex items-center justify-between p-3 rounded-lg"><div class="flex items-center gap-3"><div class="flex-shrink-0 w-7 h-7 bg-black/10 rounded-md flex items-center justify-center font-bold text-xs">${item.slot}</div><div class="task-text text-sm"><p class="${bdTimeClass} ${specialFontClass}">${item.bd} <span class="text-gray-500 text-xs">(BD)</span></p><p class="font-normal usa-time-color ${specialFontClass}">${item.usa} <span class="text-gray-500 text-xs">(USA)</span></p></div></div><input type="checkbox" class="task-checkbox flex-shrink-0" data-card="${cardId}" data-index="${index}"></div>`;
+        }
+        
+        function renderAllCards() {
+            const mainContainer = document.querySelector('main');
+            mainContainer.innerHTML = '';
+            cardIds.forEach(cardId => {
+                mainContainer.innerHTML += `<div class="glass-card p-5 md:p-6 flex flex-col"><div class="text-center mb-4"><h2 class="text-xl font-bold">${cardId}</h2><div id="${cardId.toLowerCase()}-countdown" class="text-xs text-gray-500 h-4 mt-1 font-semibold"></div><input type="date" id="${cardId.toLowerCase()}-date" class="date-picker mt-2 text-sm"></div><div id="${cardId.toLowerCase()}-tasks" class="space-y-3"></div><div id="${cardId.toLowerCase()}-summary" class="mt-4 text-sm text-center"></div><div id="${cardId.toLowerCase()}-weekly" class="mt-4"></div></div>`;
+            });
         }
 
         function renderSchedule(cardId) {
-            const container = document.getElementById(`${cardId}-tasks`);
+            const container = document.getElementById(`${cardId.toLowerCase()}-tasks`);
             container.innerHTML = ''; 
             scheduleData[cardId].forEach((item, index) => {
                 container.innerHTML += createTaskItem(item, cardId, index);
-                if (index === 3) {
-                    container.innerHTML += `<div class="my-1 border-t border-dashed border-black/20 dark:border-white/20"></div>`;
-                }
+                if (index === 3) container.innerHTML += `<div class="my-1 border-t border-dashed border-black/20 dark:border-white/20"></div>`;
             });
         }
         
+        function updateSummary(cardId) {
+            const date = document.getElementById(`${cardId.toLowerCase()}-date`).value;
+            const state = JSON.parse(localStorage.getItem(`schedule-${cardId}-${date}`)) || [];
+            const total = scheduleData[cardId].length;
+            const done = state.filter(Boolean).length;
+            const skipped = total - done;
+            const summaryEl = document.getElementById(`${cardId.toLowerCase()}-summary`);
+            summaryEl.innerHTML = `<p>Total: <strong>${total}</strong> | Done: <strong class="text-green-500">${done}</strong> | Skipped: <strong class="text-red-500">${skipped}</strong></p>`;
+        }
+
+        function renderWeeklyOverview(cardId) {
+            const container = document.getElementById(`${cardId.toLowerCase()}-weekly`);
+            let overviewHTML = '<h4 class="text-xs font-bold text-center mb-2">Next 7 Days</h4><div class="flex justify-between gap-1">';
+            const startDate = new Date(document.getElementById(`${cardId.toLowerCase()}-date`).value + 'T00:00:00');
+            for (let i = 0; i < 7; i++) {
+                const day = new Date(startDate); day.setDate(startDate.getDate() + i);
+                const dateString = new Intl.DateTimeFormat('en-CA').format(day);
+                const state = JSON.parse(localStorage.getItem(`schedule-${cardId}-${dateString}`)) || [];
+                const doneCount = state.filter(Boolean).length;
+                const totalCount = scheduleData[cardId].length;
+                const dayName = day.toLocaleDateString('en-US', { weekday: 'short' });
+                const dayOfMonth = day.getDate();
+                overviewHTML += `<div class="text-center text-xs p-1 rounded-md flex-1 ${i === 0 ? 'bg-violet-200 dark:bg-violet-900/50' : ''}"><div>${dayName}</div><div class="font-bold text-sm">${dayOfMonth}</div><div class="mt-1">${doneCount}/${totalCount}</div></div>`;
+            }
+            overviewHTML += '</div>'; container.innerHTML = overviewHTML;
+        }
+
         function saveState(cardId) {
-            const date = document.getElementById(`${cardId}-date`).value;
-            const checkboxes = document.querySelectorAll(`#${cardId}-tasks .task-checkbox`);
+            const date = document.getElementById(`${cardId.toLowerCase()}-date`).value;
+            const checkboxes = document.querySelectorAll(`#${cardId.toLowerCase()}-tasks .task-checkbox`);
             const state = Array.from(checkboxes).map(cb => cb.checked);
             localStorage.setItem(`schedule-${cardId}-${date}`, JSON.stringify(state));
+            updateSummary(cardId); renderWeeklyOverview(cardId); updateWeeklyProgressBar();
         }
 
         function loadState(cardId) {
-            const date = document.getElementById(`${cardId}-date`).value;
+            const date = document.getElementById(`${cardId.toLowerCase()}-date`).value;
             const state = JSON.parse(localStorage.getItem(`schedule-${cardId}-${date}`));
-            const checkboxes = document.querySelectorAll(`#${cardId}-tasks .task-checkbox`);
-            
+            const checkboxes = document.querySelectorAll(`#${cardId.toLowerCase()}-tasks .task-checkbox`);
             checkboxes.forEach((checkbox, index) => {
-                checkbox.checked = state ? state[index] : false;
-                const taskItem = checkbox.closest('.task-item');
-                taskItem.classList.toggle('completed', checkbox.checked);
+                checkbox.checked = !!(state && state[index]);
+                checkbox.closest('.task-item').classList.toggle('completed', checkbox.checked);
+            });
+            updateSummary(cardId); renderWeeklyOverview(cardId);
+        }
+
+        function updateAllCountdowns() {
+            const nowInBD = new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Dhaka"}));
+            cardIds.forEach(cardId => {
+                const todayDateStr = getTodayDateStringBD();
+                const selectedDateStr = document.getElementById(`${cardId.toLowerCase()}-date`).value;
+                const countdownEl = document.getElementById(`${cardId.toLowerCase()}-countdown`);
+                if (todayDateStr !== selectedDateStr) { countdownEl.textContent = ''; return; }
+                let nextPostTime = null;
+                for (const task of scheduleData[cardId]) {
+                    const [time, modifier] = task.bd.split(' ');
+                    let [hours, minutes] = time.split(':').map(Number);
+                    if (modifier === 'PM' && hours !== 12) hours += 12;
+                    if (modifier === 'AM' && hours === 12) hours = 0;
+                    const taskTime = new Date(nowInBD);
+                    taskTime.setHours(hours, minutes, 0, 0);
+                    if (taskTime > nowInBD) { nextPostTime = taskTime; break; }
+                }
+                countdownEl.className = 'text-xs text-gray-500 h-4 mt-1 font-semibold';
+                if (nextPostTime) {
+                    const diff = nextPostTime - nowInBD;
+                    const hours = Math.floor(diff / 3600000);
+                    const minutes = Math.floor((diff % 3600000) / 60000);
+                    countdownEl.textContent = `Next post in: ${hours}h ${minutes}m`;
+                    if (diff < 1800000) countdownEl.classList.add('countdown-urgent');
+                    else if (diff < 3600000) countdownEl.classList.add('countdown-warn');
+                } else { countdownEl.textContent = 'All posts for today are done.'; }
             });
         }
 
-        // Initial setup when the page loads
-        document.addEventListener('DOMContentLoaded', () => {
-            updateClocks();
-            setInterval(updateClocks, 1000);
+        function calculateWeeklyStats(startDate) {
+            let totalPlanned = 0, totalDone = 0;
+            cardIds.forEach(cardId => {
+                totalPlanned += scheduleData[cardId].length * 7;
+                for (let i = 0; i < 7; i++) {
+                    const day = new Date(startDate); day.setDate(startDate.getDate() + i);
+                    const dateString = new Intl.DateTimeFormat('en-CA').format(day);
+                    const state = JSON.parse(localStorage.getItem(`schedule-${cardId}-${dateString}`)) || [];
+                    totalDone += state.filter(Boolean).length;
+                }
+            });
+            const successRate = totalPlanned > 0 ? (totalDone / totalPlanned * 100).toFixed(0) : 0;
+            return { totalPlanned, totalDone, successRate };
+        }
 
-            const cardIds = ['arts', 'boom', 'shop'];
+        function updateWeeklyProgressBar() {
+            const today = new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Dhaka"}));
+            const dayOfWeek = today.getDay();
+            const currentWeekStart = new Date(today); currentWeekStart.setDate(today.getDate() - dayOfWeek);
+            const currentWeekStats = calculateWeeklyStats(currentWeekStart);
+            const prevWeekStart = new Date(currentWeekStart); prevWeekStart.setDate(currentWeekStart.getDate() - 7);
+            const prevWeekStats = calculateWeeklyStats(prevWeekStart);
+            const currentWeekEl = document.getElementById('current-week-progress');
+            currentWeekEl.innerHTML = `<div class="text-sm text-center font-semibold mb-2">This Week</div><div class="text-xs text-center mb-2">Planned: ${currentWeekStats.totalPlanned} | Posted: ${currentWeekStats.totalDone} | Success: ${currentWeekStats.successRate}% ✅</div><div class="progress-bar-bg w-full bg-gray-200 rounded-full h-2.5"><div class="progress-bar-inner bg-green-500 h-2.5 rounded-full" style="width: ${currentWeekStats.successRate}%"></div></div>`;
+            const prevWeekEl = document.getElementById('previous-week-progress');
+            prevWeekEl.innerHTML = `<div class="text-sm text-center font-semibold mb-2">Previous Week</div><div class="text-xs text-center mb-2">Planned: ${prevWeekStats.totalPlanned} | Posted: ${prevWeekStats.totalDone} | Success: ${prevWeekStats.successRate}% ✅</div><div class="progress-bar-bg w-full bg-gray-200 rounded-full h-2.5"><div class="progress-bar-inner bg-blue-500 h-2.5 rounded-full" style="width: ${prevWeekStats.successRate}%"></div></div>`;
+        }
+        
+        function exportTodaySummary() {
+            let csvContent = "data:text/csv;charset=utf-8,Page,Date,Slot,BD Time,USA Time,Status\n";
+            const todayBD = getTodayDateStringBD();
+            cardIds.forEach(cardId => {
+                const state = JSON.parse(localStorage.getItem(`schedule-${cardId}-${todayBD}`)) || [];
+                scheduleData[cardId].forEach((task, index) => {
+                    const status = state[index] ? "Done" : "Skipped";
+                    const row = [cardId, todayBD, task.slot, `"${task.bd}"`, `"${task.usa}"`, status].join(",");
+                    csvContent += row + "\n";
+                });
+            });
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri); link.setAttribute("download", `posting_summary_${todayBD}.csv`);
+            document.body.appendChild(link); link.click(); document.body.removeChild(link);
+        }
+
+        function exportAsPNG() {
+            const mainElement = document.querySelector('main');
+            html2canvas(mainElement, { backgroundColor: document.body.classList.contains('dark') ? '#000000' : '#ebedee' }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = `schedule_${getTodayDateStringBD()}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            });
+        }
+
+        function showFocusMode() {
+            const overlay = document.getElementById('focus-mode-overlay');
+            const content = document.getElementById('focus-mode-content');
+            const nowInBD = new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Dhaka"}));
+            let upcomingPosts = [];
+
+            cardIds.forEach(cardId => {
+                 scheduleData[cardId].forEach(task => {
+                    const [time, modifier] = task.bd.split(' ');
+                    let [hours, minutes] = time.split(':').map(Number);
+                    if (modifier === 'PM' && hours !== 12) hours += 12;
+                    if (modifier === 'AM' && hours === 12) hours = 0;
+                    const taskTime = new Date(nowInBD);
+                    taskTime.setHours(hours, minutes, 0, 0);
+                    const diff = taskTime - nowInBD;
+                    if (diff > 0 && diff <= 3600000) { // Within next 1 hour
+                        upcomingPosts.push({ time: taskTime, card: cardId, task: task });
+                    }
+                 });
+            });
             
+            upcomingPosts.sort((a, b) => a.time - b.time);
+
+            if (upcomingPosts.length > 0) {
+                let contentHTML = '<div class="space-y-6">';
+                upcomingPosts.forEach(post => {
+                    const diff = post.time - nowInBD;
+                    const h = Math.floor(diff / 3600000);
+                    const m = Math.floor((diff % 3600000) / 60000);
+                    const s = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
+                    contentHTML += `<div><h2 class="text-4xl font-bold">${post.card}</h2><p class="text-2xl">${post.task.bd}</p><p class="text-3xl mt-2tabular-nums">${h}h ${m}m ${s}s</p></div>`;
+                });
+                contentHTML += '</div>';
+                content.innerHTML = contentHTML;
+            } else {
+                content.innerHTML = `<h2 class="text-4xl font-bold">No posts in the next hour.</h2>`;
+            }
+            overlay.style.display = 'flex';
+            if(focusCountdownInterval) clearInterval(focusCountdownInterval);
+            focusCountdownInterval = setInterval(showFocusMode, 1000);
+        }
+        
+        function checkForClashes() {
+            const timeMap = {};
+            let clashes = [];
+            cardIds.forEach(cardId => {
+                scheduleData[cardId].forEach(task => {
+                    if (!timeMap[task.bd]) timeMap[task.bd] = [];
+                    timeMap[task.bd].push(cardId);
+                });
+            });
+            for (const time in timeMap) {
+                if (timeMap[time].length > 1) {
+                    clashes.push(`"${timeMap[time].join(' & ')}" both at ${time}.`);
+                }
+            }
+            if (clashes.length > 0) {
+                const warningEl = document.getElementById('clash-warning-content');
+                warningEl.innerHTML = `<h2 class="text-xl font-bold mb-2">Clash Warning!</h2><p class="text-sm">${clashes.join('<br>')}</p><button onclick="document.getElementById('clash-warning-overlay').style.display='none'" class="mt-4 px-4 py-2 bg-red-500 text-white rounded-lg">OK</button>`;
+                document.getElementById('clash-warning-overlay').style.display = 'flex';
+            }
+        }
+
+        // --- INITIALIZATION ---
+        document.addEventListener('DOMContentLoaded', () => {
+            renderAllCards(); updateClocks(); setInterval(updateClocks, 1000);
             cardIds.forEach(cardId => {
                 renderSchedule(cardId);
-                const datePicker = document.getElementById(`${cardId}-date`);
-                datePicker.value = getTodayDateStringBD(); // Use BD date
+                const datePicker = document.getElementById(`${cardId.toLowerCase()}-date`);
+                datePicker.value = getTodayDateStringBD();
                 loadState(cardId);
-                
                 datePicker.addEventListener('change', () => loadState(cardId));
             });
             
+            document.querySelector('.container').addEventListener('click', (e) => {
+                const taskItem = e.target.closest('.task-item');
+                if (taskItem && e.target.type !== 'checkbox') {
+                    const checkbox = taskItem.querySelector('.task-checkbox');
+                    checkbox.checked = !checkbox.checked;
+                    checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+            });
+
             document.querySelector('.container').addEventListener('change', (e) => {
                 if (e.target.classList.contains('task-checkbox')) {
                     const cardId = e.target.dataset.card;
-                    const taskItem = e.target.closest('.task-item');
-                    taskItem.classList.toggle('completed', e.target.checked);
+                    e.target.closest('.task-item').classList.toggle('completed', e.target.checked);
                     saveState(cardId);
                 }
             });
+            
+            document.getElementById('export-csv-btn').addEventListener('click', exportTodaySummary);
+            document.getElementById('export-png-btn').addEventListener('click', exportAsPNG);
+            
+            const focusOverlay = document.getElementById('focus-mode-overlay');
+            document.getElementById('focus-mode-btn').addEventListener('click', showFocusMode);
+            focusOverlay.addEventListener('click', () => {
+                focusOverlay.style.display = 'none';
+                clearInterval(focusCountdownInterval);
+            });
+            focusOverlay.addEventListener('mousemove', (e) => {
+                const content = document.getElementById('focus-mode-content');
+                const { clientX, clientY } = e;
+                const { innerWidth, innerHeight } = window;
+                const rotateX = (clientY / innerHeight - 0.5) * -30;
+                const rotateY = (clientX / innerWidth - 0.5) * 30;
+                content.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+            });
+            
+            const ideaBox = document.getElementById('idea-box');
+            ideaBox.value = localStorage.getItem('contentIdeas') || '';
+            document.getElementById('save-ideas-btn').addEventListener('click', () => {
+                localStorage.setItem('contentIdeas', ideaBox.value)
+                alert('Ideas Saved!');
+            });
+            document.getElementById('reset-ideas-btn').addEventListener('click', () => {
+                if(confirm('Are you sure you want to reset all ideas?')) {
+                    ideaBox.value = '';
+                    localStorage.removeItem('contentIdeas');
+                }
+            });
+            
+            document.getElementById('sync-btn').addEventListener('click', () => {
+                const dataToSync = {};
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    dataToSync[key] = localStorage.getItem(key);
+                }
+                const dataString = encodeURIComponent(JSON.stringify(dataToSync));
+                const url = `${window.location.href.split('?')[0]}?data=${dataString}`;
+                const qrEl = document.getElementById('qrcode');
+                qrEl.innerHTML = '';
+                new QRCode(qrEl, { text: url, width: 256, height: 256 });
+                document.getElementById('qr-code-overlay').style.display = 'flex';
+            });
+            
+            document.getElementById('qr-code-overlay').addEventListener('click', () => {
+                 document.getElementById('qr-code-overlay').style.display = 'none';
+            });
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const syncData = urlParams.get('data');
+            if (syncData) {
+                if (confirm("Sync data from another device? This will overwrite current data.")) {
+                    const data = JSON.parse(decodeURIComponent(syncData));
+                    localStorage.clear();
+                    for (const key in data) {
+                        localStorage.setItem(key, data[key]);
+                    }
+                    window.location.href = window.location.href.split('?')[0]; // Reload without params
+                }
+            }
+
+            updateWeeklyProgressBar(); updateAllCountdowns();
+            setInterval(updateAllCountdowns, 30000);
+            requestNotificationPermission(); setInterval(checkAndSendNotifications, 60000);
+            checkForClashes();
         });
     </script>
 </body>
 </html>
-
