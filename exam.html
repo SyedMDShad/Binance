@@ -513,11 +513,39 @@
             let totalCorrect = 0;
 
             Object.values(categoryProgress.completedChapters).forEach(chapter => {
-                totalAnswered += Object.keys(chapter.answers).length;
+                // Ensure we count each question only once, even if chapter is retaken
+                totalAnswered += Object.keys(chapter.answers).length; 
                 totalCorrect += chapter.score;
             });
 
-            const totalIncorrect = totalAnswered - totalCorrect;
+             // To avoid double counting on retakes, let's recount unique answers
+            let uniqueAnsweredQuestions = new Set();
+            let uniqueCorrectAnswers = 0;
+            
+            Object.values(categoryProgress.completedChapters).forEach(chapter => {
+                Object.keys(chapter.answers).forEach(questionIdentifier => { // Assuming answers object keys are unique identifiers
+                    if (!uniqueAnsweredQuestions.has(questionIdentifier)) {
+                        uniqueAnsweredQuestions.add(questionIdentifier);
+                        if (chapter.answers[questionIdentifier].isCorrect) {
+                            uniqueCorrectAnswers++;
+                        }
+                    }
+                });
+            });
+
+            let completedQuestions = 0;
+            let correctAnswers = 0;
+            const allCompletedAnswers = {};
+            Object.values(categoryProgress.completedChapters).forEach(chapterData => {
+                Object.assign(allCompletedAnswers, chapterData.answers);
+            });
+
+            completedQuestions = Object.keys(allCompletedAnswers).length;
+            correctAnswers = Object.values(allCompletedAnswers).filter(ans => ans.isCorrect).length;
+
+
+            const incorrectAnswers = completedQuestions - correctAnswers;
+
 
             progressStatsContainer.innerHTML = `
                 <div class="glass-card p-4 rounded-xl text-center">
@@ -528,15 +556,15 @@
                             <p class="text-gray-300">মোট প্রশ্ন</p>
                         </div>
                         <div>
-                            <p class="font-semibold text-yellow-400">${totalAnswered}</p>
+                            <p class="font-semibold text-yellow-400">${completedQuestions}</p>
                             <p class="text-gray-300">উত্তর দিয়েছেন</p>
                         </div>
                         <div>
-                            <p class="font-semibold text-green-400">${totalCorrect}</p>
+                            <p class="font-semibold text-green-400">${correctAnswers}</p>
                             <p class="text-gray-300">সঠিক উত্তর</p>
                         </div>
                          <div>
-                            <p class="font-semibold text-red-400">${totalIncorrect}</p>
+                            <p class="font-semibold text-red-400">${incorrectAnswers}</p>
                             <p class="text-gray-300">ভুল উত্তর</p>
                         </div>
                     </div>
@@ -544,17 +572,17 @@
             `;
         }
 
-
         function startQuiz(category, chapterIndex) {
             currentCategory = category;
             currentChapterIndex = chapterIndex;
             
-            loadAttemptProgress(); 
+            const savedQuiz = loadAttemptProgress(); 
             
-            currentQuiz = [...chapteredWordGroups[category][chapterIndex]];
-             // Shuffle quiz only on first attempt of a chapter
-            if (Object.keys(userAnswers).length === 0) {
-                 shuffleArray(currentQuiz);
+            if (savedQuiz) {
+                currentQuiz = savedQuiz;
+            } else {
+                currentQuiz = [...chapteredWordGroups[category][chapterIndex]];
+                shuffleArray(currentQuiz);
             }
             
             quizTitle.textContent = `${categoryTitles[category]} - Chapter ${chapterIndex + 1}`;
@@ -578,8 +606,6 @@
         function displayCurrentPage() {
             questionList.innerHTML = '';
             currentQuiz.forEach((question, index) => {
-                const originalIndex = rawWordGroups[currentCategory].findIndex(q => q.q === question.q);
-
                 const item = document.createElement('div');
                 item.className = 'question-row grid grid-cols-1 md:grid-cols-3 gap-2 md:gap-4 items-center p-3 rounded-lg';
                 item.innerHTML = `
@@ -598,14 +624,14 @@
                     }
                 });
 
-                if (userAnswers[index]) {
-                    input.value = userAnswers[index].userAnswer;
+                if (userAnswers[question.q]) {
+                    input.value = userAnswers[question.q].userAnswer;
                     input.disabled = true;
                     const resultDiv = document.getElementById(`result-${index}`);
-                    if(userAnswers[index].isCorrect) {
+                    if(userAnswers[question.q].isCorrect) {
                          resultDiv.innerHTML = `<span class="text-2xl mr-2 text-green-500">✅</span> <span class="text-green-400">সঠিক!</span>`;
                     } else {
-                         resultDiv.innerHTML = `<span class="text-2xl mr-2 text-red-500">❌</span> <span class="text-red-400">সঠিক: ${currentQuiz[index].a}</span>`;
+                         resultDiv.innerHTML = `<span class="text-2xl mr-2 text-red-500">❌</span> <span class="text-red-400">সঠিক উত্তর: ${currentQuiz[index].a}</span>`;
                     }
                 }
             });
@@ -614,22 +640,24 @@
         function checkSingleAnswer(questionIndex, inputElement) {
             const resultDiv = document.getElementById(`result-${questionIndex}`);
             const userAnswer = inputElement.value.trim();
-            const correctAnswer = currentQuiz[questionIndex].a;
+            const questionObj = currentQuiz[questionIndex];
+            const correctAnswer = questionObj.a;
+            const questionKey = questionObj.q; // Use the question itself as a unique key
             
-            answerTries[questionIndex] = (answerTries[questionIndex] || 0) + 1;
+            answerTries[questionKey] = (answerTries[questionKey] || 0) + 1;
 
             if (userAnswer.toLowerCase() === correctAnswer.toLowerCase()) {
-                userAnswers[questionIndex] = { userAnswer, isCorrect: true };
+                userAnswers[questionKey] = { userAnswer, isCorrect: true };
                 inputElement.disabled = true;
                 resultDiv.innerHTML = `<span class="text-2xl mr-2 text-green-500">✅</span> <span class="text-green-400">সঠিক!</span>`;
             } else {
-                if (answerTries[questionIndex] >= 3) {
-                    userAnswers[questionIndex] = { userAnswer, isCorrect: false };
+                if (answerTries[questionKey] >= 3) {
+                    userAnswers[questionKey] = { userAnswer, isCorrect: false };
                     inputElement.disabled = true;
-                    resultDiv.innerHTML = `<span class="text-2xl mr-2 text-red-500">❌</span> <span class="text-red-400">সঠিক: ${correctAnswer}</span>`;
+                    resultDiv.innerHTML = `<span class="text-2xl mr-2 text-red-500">❌</span> <span class="text-red-400">সঠিক উত্তর: ${correctAnswer}</span>`;
                 } else {
-                    const triesLeft = 3 - answerTries[questionIndex];
-                    resultDiv.innerHTML = `<span class="text-2xl mr-2 text-yellow-500">🤔</span> <span class="text-yellow-400">আবার চেষ্টা করুন (${triesLeft} চেষ্টা বাকি)</span>`;
+                    const triesLeft = 3 - answerTries[questionKey];
+                    resultDiv.innerHTML = `<span class="text-2xl mr-2 text-yellow-500">🤔</span> <span class="text-yellow-400">ভুল হয়েছে। আবার চেষ্টা করুন (${triesLeft} টি সুযোগ বাকি)</span>`;
                     inputElement.select();
                 }
             }
@@ -652,11 +680,12 @@
 
         function calculateCurrentScore() {
             score = 0;
-            for(let i=0; i < currentQuiz.length; i++) {
-                if(userAnswers[i] && userAnswers[i].isCorrect) {
+            currentQuiz.forEach(question => {
+                const questionKey = question.q;
+                 if(userAnswers[questionKey] && userAnswers[questionKey].isCorrect) {
                     score++;
                 }
-            }
+            });
         }
 
         function showResults() {
@@ -687,8 +716,7 @@
             const category = currentCategory;
             const chapterIndex = currentChapterIndex;
             localStorage.removeItem(getAttemptProgressKey());
-            userAnswers = {};
-            answerTries = {};
+            // No need to reset globals, loadAttemptProgress will handle it
             startQuiz(category, chapterIndex);
         }
 
@@ -720,12 +748,12 @@
                 const progress = JSON.parse(savedProgress);
                 userAnswers = progress.answers || {};
                 answerTries = progress.tries || {};
-                // Restore shuffled quiz order for consistency within an attempt
-                chapteredWordGroups[currentCategory][currentChapterIndex] = progress.quiz;
-            } else {
-                userAnswers = {};
-                answerTries = {};
-            }
+                return progress.quiz; // Return saved quiz order
+            } 
+            // If no progress, reset state for new attempt
+            userAnswers = {};
+            answerTries = {};
+            return null;
         }
         
         function loadOverallProgress() {
@@ -741,12 +769,22 @@
             if (!overallProgress[currentCategory]) {
                 overallProgress[currentCategory] = { completedChapters: {} };
             }
+            
+            // To prevent issues with shuffled order, create a map of answers using question as key
+            const finalAnswers = {};
+            currentQuiz.forEach(q => {
+                if (userAnswers[q.q]) {
+                    finalAnswers[q.q] = userAnswers[q.q];
+                }
+            });
+
             overallProgress[currentCategory].completedChapters[currentChapterIndex] = {
-                answers: userAnswers,
+                answers: finalAnswers,
                 score: score,
             };
             saveOverallProgress();
         }
+
 
         // --- INIT & CLOCK ---
         document.addEventListener('DOMContentLoaded', () => {
