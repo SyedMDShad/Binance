@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="bn" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>English Learning Hub</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', 'Hind Siliguri', sans-serif;
+            background: linear-gradient(135deg, #111827 0%, #000000 100%);
+            color: #e2e8f0; /* slate-200 */
+        }
+        .glass-card {
+            background: rgba(26, 32, 44, 0.55);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+        .glass-button {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            transition: all 0.3s ease-in-out;
+        }
+        .glass-button:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+        }
+        .glass-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        .progress-bar-inner {
+            transition: width 0.5s ease-in-out;
+        }
+        .page-answer-input {
+             background-color: rgba(45, 55, 72, 0.7);
+             color: #e2e8f0; /* slate-200 */
+        }
+        .page-answer-input::placeholder {
+            color: #94a3b8; /* slate-400 */
+        }
+        .page-answer-input:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px #3b82f6; /* Ring color */
+        }
+        .question-row:hover {
+             background-color: rgba(255, 255, 255, 0.03);
+             transition: background-color 0.2s ease-in-out;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="min-h-screen w-full p-4 flex flex-col items-center justify-center">
+        <!-- Top Bar -->
+        <div class="w-full max-w-5xl absolute top-0 left-1/2 -translate-x-1/2 p-4 flex justify-between items-center z-50">
+            <div id="liveClock" class="glass-card text-sm md:text-base font-semibold py-2 px-4 rounded-full">--:--:--</div>
+            <div class="text-xl font-bold text-gray-300">English Learning Hub</div>
+        </div>
+
+        <main id="appContainer" class="w-full max-w-5xl p-6 md:p-8 rounded-3xl glass-card shadow-2xl mt-16">
+            
+            <!-- Main Menu -->
+            <div id="mainMenu">
+                <h1 class="text-3xl md:text-4xl font-bold text-center mb-2 text-white">Welcome!</h1>
+                <p class="text-center text-gray-300 mb-8">আপনার পছন্দের সেকশনটি বেছে নিন।</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <button onclick="selectCategory('bnToEn')" class="glass-button p-6 rounded-2xl text-xl font-semibold">Bangla to English Words</button>
+                    <button onclick="selectCategory('enToBn')" class="glass-button p-6 rounded-2xl text-xl font-semibold">English to Bangla Words</button>
+                    <button onclick="selectCategory('bnToEnSentence')" class="glass-button p-6 rounded-2xl text-xl font-semibold">Bangla to English Sentences</button>
+                    <button onclick="selectCategory('enToBnSentence')" class="glass-button p-6 rounded-2xl text-xl font-semibold">English to Bangla Sentences</button>
+                </div>
+            </div>
+
+            <!-- Chapter Menu -->
+            <div id="chapterMenu" class="hidden">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 id="chapterTitle" class="text-2xl md:text-3xl font-bold"></h2>
+                    <button onclick="backToMainMenu()" class="glass-button py-2 px-4 text-sm rounded-lg">মূল মেনু</button>
+                </div>
+                <!-- Progress Stats -->
+                <div id="progressStatsContainer" class="mb-6"></div>
+
+                <div id="chapterList" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                    <!-- Chapters will be dynamically inserted here -->
+                </div>
+            </div>
+
+            <!-- Quiz View -->
+            <div id="quizContainer" class="hidden">
+                 <div class="flex justify-between items-start mb-4">
+                    <div>
+                        <h2 id="quizTitle" class="text-2xl font-bold"></h2>
+                        <p class="text-gray-300">মোট প্রশ্ন: <span id="totalQuestions">0</span></p>
+                    </div>
+                    <button onclick="backToChapterMenu()" class="glass-button py-2 px-4 text-sm rounded-lg">চ্যাপ্টার মেনু</button>
+                </div>
+                <div class="w-full bg-gray-700/50 rounded-full h-2.5 mb-6">
+                    <div id="progressBar" class="bg-blue-500 h-2.5 rounded-full progress-bar-inner" style="width: 0%"></div>
+                </div>
+
+                <div id="questionList" class="space-y-3 mb-6">
+                    <!-- Questions will be dynamically inserted here -->
+                </div>
+            </div>
+
+            <!-- Results View -->
+            <div id="resultsContainer" class="hidden text-center">
+                <h2 class="text-3xl font-bold mb-4">চমৎকার! চ্যাপ্টার শেষ করেছেন।</h2>
+                <p class="text-xl mb-6">আপনার এই চ্যাপ্টারের স্কোর:</p>
+                <div class="relative w-48 h-48 mx-auto flex items-center justify-center mb-8">
+                    <svg class="w-full h-full" viewBox="0 0 100 100">
+                        <circle class="text-gray-700/50" stroke-width="10" stroke="currentColor" fill="transparent" r="45" cx="50" cy="50" />
+                        <circle id="resultCircle" class="text-green-500" stroke-width="10" stroke-linecap="round" stroke="currentColor" fill="transparent" r="45" cx="50" cy="50" style="transition: stroke-dashoffset 1.5s ease-out; transform: rotate(-90deg); transform-origin: 50% 50%;" />
+                    </svg>
+                    <span id="scorePercentage" class="absolute text-4xl font-bold">0%</span>
+                </div>
+                <p id="finalMessage" class="text-lg mb-8"></p>
+                <div class="flex justify-center gap-4">
+                    <button onclick="restartChapter()" class="glass-button py-3 px-6 rounded-xl text-lg font-semibold">আবার চেষ্টা করুন</button>
+                    <button onclick="backToChapterMenu()" class="glass-button py-3 px-6 rounded-xl text-lg font-semibold">অন্য চ্যাপ্টার</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // --- DATA ---
+        const rawWordGroups = {
+            bnToEn: [
+                // Chapter 1 (1-25)
+                { q: "বিড়াল", a: "Cat" }, { q: "কুকুর", a: "Dog" }, { q: "বই", a: "Book" }, { q: "পানি", a: "Water" },
+                { q: "খাওয়া", a: "Eat" }, { q: "যাওয়া", a: "Go" }, { q: "দেখা", a: "See" }, { q: "ঘর", a: "House" },
+                { q: "বাবা", a: "Father" }, { q: "মা", a: "Mother" }, { q: "ছেলে", a: "Boy" }, { q: "মেয়ে", a: "Girl" },
+                { q: "লাল", a: "Red" }, { q: "নীল", a: "Blue" }, { q: "বড়", a: "Big" }, { q: "ছোট", a: "Small" },
+                { q: "সূর্য", a: "Sun" }, { q: "চাঁদ", a: "Moon" }, { q: "গাছ", a: "Tree" }, { q: "ফুল", a: "Flower" },
+                { q: "বন্ধু", a: "Friend" }, { q: "সুন্দর", a: "Beautiful" }, { q: "শিক্ষা", a: "Education" },
+                { q: "চিন্তা করা", a: "Think" }, { q: "কাজ করা", a: "Work" },
+                // Chapter 2 (26-50)
+                { q: "ভালোবাসা", a: "Love" }, { q: "পরিবার", a: "Family" },
+                { q: "দেশ", a: "Country" }, { q: "শহর", a: "City" }, { q: "সকাল", a: "Morning" }, { q: "রাত", a: "Night" },
+                { q: "সময়", a: "Time" }, { q: "সাহায্য", a: "Help" }, { q: "প্রশ্ন", a: "Question" }, { q: "উত্তর", a: "Answer" },
+                { q: "সুযোগ", a: "Opportunity" }, { q: "ভবিষ্যৎ", a: "Future" }, { q: "অতীত", a: "Past" }, { q: "বর্তমান", a: "Present" },
+                { q: "জ্ঞান", a: "Knowledge" }, { q: "স্বাস্থ্য", a: "Health" }, { q: "শান্তি", a: "Peace" }, { q: "যুদ্ধ", a: "War" },
+                { q: "স্বাধীনতা", a: "Freedom" }, { q: "সমাজ", a: "Society" }, { q: "সরকার", a: "Government" },
+                { q: "ভাষা", a: "Language" }, { q: "বিশ্ব", a: "World" }, { q: "মানুষ", a: "People" }, { q: "জীবন", a: "Life" },
+                // Chapter 3 (51-75)
+                { q: "দ্ব্যর্থক", a: "Ambiguous" }, { q: "দীর্ঘসূত্রিতা", a: "Procrastination" }, { q: "বাগ্মী", a: "Eloquent" },
+                { q: "সর্বব্যাপী", a: "Ubiquitous" }, { q: "ক্ষণস্থায়ী", a: "Ephemeral" }, { q: "সম্প্রীতি", a: "Harmony" },
+                { q: "উদ্যোক্তা", a: "Entrepreneur" }, { q: "উদ্ভাবন", a: "Innovation" }, { q: "স্থিতিস্থাপকতা", a: "Resilience" },
+                { q: "দায়িত্ব", a: "Responsibility" }, { q: "স্বচ্ছতা", a: "Transparency" }, { q: "জবাবদিহিতা", a: "Accountability" },
+                { q: "সার্বভৌমত্ব", a: "Sovereignty" }, { q: "গণতন্ত্র", a: "Democracy" }, { q: "সংবিধান", a: "Constitution" },
+                { q: "আনন্দ", a: "Joy" }, { q: "দুঃখ", a: "Sorrow" }, { q: "সাফল্য", a: "Success" },
+                { q: "ব্যর্থতা", a: "Failure" }, { q: "বিশ্বাস", a: "Faith" }, { q: "স্বপ্ন", a: "Dream" },
+                { q: "আশা", a: "Hope" }, { q: "ভয়", a: "Fear" }, { q: "শক্তি", a: "Strength" }, { q: "দুর্বলতা", a: "Weakness" },
+                // Chapter 4 (76-100)
+                { q: "সাহস", a: "Courage" }, { q: "ধৈর্য", a: "Patience" }, { q: "প্রজ্ঞা", a: "Wisdom" },
+                { q: "সততা", a: "Honesty" }, { q: "দয়া", a: "Kindness" }, { q: "হাসি", a: "Laughter" },
+                { q: "কান্না", a: "Tears" }, { q: "গর্ব", a: "Pride" }, { q: "লজ্জা", a: "Shame" },
+                { q: "অনুগ্রহ", a: "Gratitude" }, { q: "ঈর্ষা", a: "Jealousy" }, { q: "কল্পনা", a: "Imagination" },
+                { q: "বাস্তবতা", a: "Reality" }, { q: "স্বাধীনতা", a: "Liberty" }, { q: "ন্যায়বিচার", a: "Justice" },
+                { q: "সমতা", a: "Equality" }, { q: "ঐক্য", a: "Unity" }, { q: "বৈচিত্র্য", a: "Diversity" },
+                { q: "অগ্রগতি", a: "Progress" }, { q: "পরিবর্তন", a: "Change" }, { q: "বৃদ্ধি", a: "Growth" },
+                { q: "ধ্বংস", a: "Destruction" }, { q: "সৃষ্টি", a: "Creation" }, { q: "স্মৃতি", a: "Memory" },
+                { q: "অভিজ্ঞতা", a: "Experience" },
+                // Chapter 5 (101-125)
+                { q: "গন্তব্য", a: "Destination" }, { q: "যাত্রা", a: "Journey" }, { q: "সম্প্রদায়", a: "Community" },
+                { q: "সংস্কৃতি", a: "Culture" }, { q: "ঐতিহ্য", a: "Tradition" }, { q: "অর্থনীতি", a: "Economy" },
+                { q: "রাজনীতি", a: "Politics" }, { q: "পরিবেশ", a: "Environment" }, { q: "প্রযুক্তি", a: "Technology" },
+                { q: "বিজ্ঞান", a: "Science" }, { q: "ইতিহাস", a: "History" }, { q: "ভূগোল", a: "Geography" },
+                { q: "সাহিত্য", a: "Literature" }, { q: "শিল্প", a: "Art" }, { q: "সঙ্গীত", a: "Music" },
+                { q: "চলচ্চিত্র", a: "Movie" }, { q: "খেলা", a: "Game" }, { q: "খাদ্য", a: "Food" },
+                { q: "পোশাক", a: "Cloth" }, { q: "পরিবহন", a: "Transport" }, { q: "যোগাযোগ", a: "Communication" },
+                { q: "সম্পর্ক", a: "Relationship" }, { q: "অনুভূতি", a: "Feeling" }, { q: "আবেগ", a: "Emotion" }, { q: "চরিত্র", a: "Character" },
+                // Chapter 6 (126-150)
+                { q: "আচরণ", a: "Behavior" }, { q: "অভ্যাস", a: "Habit" }, { q: "সিদ্ধান্ত", a: "Decision" },
+                { q: "সমস্যা", a: "Problem" }, { q: "সমাধান", a: "Solution" }, { q: "লক্ষ্য", a: "Goal" },
+                { q: "চ্যালেঞ্জ", a: "Challenge" }, { q: "ঝুঁকি", a: "Risk" }, { q: "পুরস্কার", a: "Reward" },
+                { q: "শাস্তি", a: "Punishment" }, { q: "নিয়ম", a: "Rule" }, { q: "আইন", a: "Law" },
+                { q: "অধিকার", a: "Right" }, { q: "কর্তব্য", a: "Duty" }, { q: "বিশ্বস্ততা", a: "Loyalty" },
+                { q: "সম্মান", a: "Respect" }, { q: "সহানুভূতি", a: "Sympathy" }, { q: "সমবেদনা", a: "Empathy" },
+                { q: "ক্ষমা", a: "Forgiveness" }, { q: "অজ্ঞতা", a: "Ignorance" }, { q: "সন্দেহ", a: "Doubt" },
+                { q: "রাগ", a: "Anger" }, { q: "ঘৃণা", a: "Hate" }, { q: "একাকীত্ব", a: "Loneliness" }, { q: "বন্ধুত্ব", a: "Friendship" },
+                // Chapter 7 (151-175)
+                { q: "শত্রুতা", a: "Enmity" }, { q: "বিশৃঙ্খলা", a: "Chaos" }, { q: "শৃঙ্খলা", a: "Order" },
+                { q: "সৌন্দর্য", a: "Beauty" }, { q: "কুৎসিত", a: "Ugliness" }, { q: "সত্য", a: "Truth" },
+                { q: "মিথ্যা", a: "Lie" }, { q: "আলো", a: "Light" }, { q: "অন্ধকার", a: "Darkness" },
+                { q: "গরম", a: "Hot" }, { q: "ঠান্ডা", a: "Cold" }, { q: "কঠিন", a: "Hard" },
+                { q: "নরম", a: "Soft" }, { q: "দ্রুত", a: "Fast" }, { q: "ধীর", a: "Slow" },
+                { q: "নতুন", a: "New" }, { q: "পুরাতন", a: "Old" }, { q: "তরুণ", a: "Young" },
+                { q: "বৃদ্ধ", a: "Old" }, { q: "ধনী", a: "Rich" }, { q: "গরীব", a: "Poor" },
+                { q: "সুখী", a: "Happy" }, { q: "অসুখী", a: "Unhappy" }, { q: "স্বাস্থ্যবান", a: "Healthy" }, { q: "অসুস্থ", a: "Sick" },
+                // Chapter 8 (176-200)
+                { q: "শক্তিশালী", a: "Strong" }, { q: "দুর্বল", a: "Weak" }, { q: "জ্ঞানী", a: "Wise" },
+                { q: "বোকা", a: "Foolish" }, { q: "সাহসী", a: "Brave" }, { q: "ভীরু", a: "Coward" },
+                { q: "উদার", a: "Generous" }, { q: "কৃপণ", a: "Miser" }, { q: "বিনয়ী", a: "Humble" },
+                { q: "অহংকারী", a: "Arrogant" }, { q: "পরিশ্রমী", a: "Hardworking" }, { q: "অলস", a: "Lazy" },
+                { q: "আশাবাদী", a: "Optimist" }, { q: "হতাশাবাদী", a: "Pessimist" }, { q: "অন্তর্মুখী", a: "Introvert" },
+                { q: "বহির্মুখী", a: "Extrovert" }, { q: "বিস্মৃতি", a: "Oblivion" }, { q: "শুরু", a: "Beginning" },
+                { q: "শেষ", a: "End" }, { q: "জন্ম", a: "Birth" }, { q: "মৃত্যু", a: "Death" },
+                { q: "কারণ", a: "Reason" }, { q: "ফলাফল", a: "Result" }, { q: "প্রভাব", a: "Effect" }, { q: "প্রক্রিয়া", a: "Process" },
+                // Chapter 9 (201-225)
+                { q: "পদ্ধতি", a: "Method" }, { q: "ব্যবস্থা", a: "System" }, { q: "সংগঠন", a: "Organization" },
+                { q: "প্রতিষ্ঠান", a: "Institution" }, { q: "প্রকল্প", a: "Project" }, { q: "পরিকল্পনা", a: "Plan" },
+                { q: "কৌশল", a: "Strategy" }, { q: "আলোচনা", a: "Discussion" }, { q: "বিতর্ক", a: "Debate" },
+                { q: "চুক্তি", a: "Agreement" }, { q: "বিরোধ", a: "Conflict" }, { q: "সহযোগিতা", a: "Cooperation" },
+                { q: "প্রতিযোগিতা", a: "Competition" }, { q: "আকাশ", a: "Sky" }, { q: "পৃথিবী", a: "Earth" },
+                { q: "বাতাস", a: "Wind" }, { q: "আগুন", a: "Fire" }, { q: "নদী", a: "River" },
+                { q: "সাগর", a: "Sea" }, { q: "পাহাড়", a: "Mountain" }, { q: "বন", a: "Forest" },
+                { q: "প্রাণী", a: "Animal" }, { q: "পাখি", a: "Bird" }, { q: "মাছ", a: "Fish" }, { q: "ফল", a: "Fruit" },
+                // Chapter 10 (226-250)
+                { q: "সবজি", a: "Vegetable" }, { q: "গ্রাম", a: "Village" }, { q: "রাস্তা", a: "Road" },
+                { q: "দোকান", a: "Shop" }, { q: "বাজার", a: "Market" }, { q: "হাসপাতাল", a: "Hospital" },
+                { q: "বিদ্যালয়", a: "School" }, { q: "বিশ্ববিদ্যালয়", a: "University" }, { q: "মন্দির", a: "Temple" },
+                { q: "মসজিদ", a: "Mosque" }, { q: "গির্জা", a: "Church" }, { q: "দরজা", a: "Door" },
+                { q: "জানালা", a: "Window" }, { q: "ছাদ", a: "Roof" }, { q: "মেঝে", a: "Floor" },
+                { q: "চেয়ার", a: "Chair" }, { q: "টেবিল", a: "Table" }, { q: "কলম", a: "Pen" },
+                { q: "কাগজ", a: "Paper" }, { q: "কম্পিউটার", a: "Computer" }, { q: "মোবাইল", a: "Mobile" },
+                { q: "ঘড়ি", a: "Watch" }, { q: "চশমা", a: "Glasses" }, { q: "জুতা", a: "Shoe" }, { q: "টাকা", a: "Money" }
+            ],
+            enToBn: [
+                 // Chapter 1 (1-25)
+                { q: "Apple", a: "আপেল" }, { q: "Ball", a: "বল" }, { q: "Table", a: "টেবিল" }, { q: "Chair", a: "চেয়ার" },
+                { q: "Read", a: "পড়া" }, { q: "Write", a: "লেখা" }, { q: "Sleep", a: "ঘুমানো" }, { q: "Run", a: "দৌড়ানো" },
+                { q: "Happy", a: "সুখী" }, { q: "Sad", a: "দুঃখিত" }, { q: "Good", a: "ভাল" }, { q: "Bad", a: "খারাপ" },
+                { q: "School", a: "স্কুল" }, { q: "College", a: "কলেজ" }, { q: "Sky", a: "আকাশ" }, { q: "Road", a: "রাস্তা" },
+                { q: "Brother", a: "ভাই" }, { q: "Sister", a: "বোন" }, { q: "Car", a: "গাড়ি" }, { q: "Bus", a: "বাস" },
+                { q: "Computer", a: "কম্পিউটার" }, { q: "Mobile", a: "মোবাইল" }, { q: "Information", a: "তথ্য" },
+                { q: "Technology", a: "প্রযুক্তি" }, { q: "Science", a: "বিজ্ঞান" },
+                 // Chapter 2 (26-50)
+                { q: "History", a: "ইতিহাস" }, { q: "Geography", a: "ভূগোল" }, { q: "Music", a: "সংগীত" }, { q: "Movie", a: "চলচ্চিত্র" },
+                { q: "Journey", a: "যাত্রা" }, { q: "Decision", a: "সিদ্ধান্ত" }, { q: "Problem", a: "সমস্যা" },
+                { q: "Solution", a: "সমাধান" }, { q: "Difficult", a: "কঠিন" }, { q: "Easy", a: "সহজ" },
+                { q: "Important", a: "গুরুত্বপূর্ণ" }, { q: "Possible", a: "সম্ভব" }, { q: "Impossible", a: "অসম্ভব" },
+                { q: "Patience", a: "ধৈর্য" }, { q: "Courage", a: "সাহস" }, { q: "Honesty", a: "সততা" },
+                { q: "Development", a: "উন্নয়ন" }, { q: "Challenge", a: "চ্যালেঞ্জ" }, { q: "Achievement", a: "অর্জন" },
+                { q: "Communication", a: "যোগাযোগ" }, { q: "Relationship", a: "সম্পর্ক" }, { q: "Behavior", a: "আচরণ" },
+                { q: "Imagination", a: "কল্পনা" }, { q: "Creativity", a: "সৃজনশীলতা" }, { q: "Character", a: "চরিত্র" },
+                 // Chapter 3 (51-75)
+                { q: "Consequence", a: "পরিণাম" }, { q: "Simultaneously", a: "একযোগে" }, { q: "Exaggerate", a: "অতিরঞ্জিত করা" },
+                { q: "Vulnerable", a: "অরক্ষিত" }, { q: "Meticulous", a: "খুঁতখুঁতে" }, { q: "Ominous", a: "অশুভ" },
+                { q: "Philanthropist", a: "মানবপ্রেমিক" }, { q: "Paradigm", a: "দৃষ্টান্ত" }, { q: "Synergy", a: "সমন্বয়" },
+                { q: "Infrastructure", a: "অবকাঠামো" }, { q: "Bureaucracy", a: "আমলাতন্ত্র" }, { q: "Jurisdiction", a: "এখতিয়ার" },
+                { q: "Victory", a: "বিজয়" }, { q: "Defeat", a: "পরাজয়" }, { q: "Knowledge", a: "জ্ঞান" },
+                { q: "Wisdom", a: "প্রজ্ঞা" }, { q: "Justice", a: "ন্যায়বিচার" }, { q: "Equality", a: "সমতা" },
+                { q: "Respect", a: "সম্মান" }, { q: "Memory", a: "স্মৃতি" }, { q: "Future", a: "ভবিষ্যৎ" },
+                { q: "Past", a: "অতীত" }, { q: "Ambition", a: "উচ্চাকাঙ্ক্ষা" }, { q: "Compassion", a: "সহানুভূতি" }, { q: "Confidence", a: "আত্মবিশ্বাস" },
+                 // Chapter 4 (76-100)
+                { q: "Curiosity", a: "কৌতূহল" }, { q: "Dedication", a: "নিষ্ঠা" }, { q: "Discipline", a: "শৃঙ্খলা" },
+                { q: "Elegance", a: " কমনীয়তা" }, { q: "Enthusiasm", a: "উৎসাহ" }, { q: "Generosity", a: "উদারতা" },
+                { q: "Gratitude", a: "কৃতজ্ঞতা" }, { q: "Humility", a: "নম্রতা" }, { q: "Innovation", a: "উদ্ভাবন" },
+                { q: "Integrity", a: "সততা" }, { q: "Optimism", a: "আশাবাদ" }, { q: "Perseverance", a: "অধ্যবসায়" },
+                { q: "Resilience", a: "স্থিতিস্থাপকতা" }, { q: "Responsibility", a: "দায়িত্ব" }, { q: "Sincerity", a: "আন্তরিকতা" },
+                { q: "Sophistication", a: "অভিজ্ঞতা" }, { q: "Tranquility", a: "প্রশান্তি" }, { q: "Zeal", a: "প্রবল আগ্রহ" },
+                { q: "Abstract", a: "বিমূর্ত" }, { q: "Benevolent", a: "দয়ালু" }, { q: "Candor", a: " অকপটতা" },
+                { q: "Diligent", a: "পরিশ্রমী" }, { q: "Ephemeral", a: "ক্ষণস্থায়ী" }, { q: "Community", a: "সম্প্রদায়" }, { q: "Culture", a: "সংস্কৃতি" },
+                // Chapter 5 (101-125)
+                { q: "Tradition", a: "ঐতিহ্য" }, { q: "Economy", a: "অর্থনীতি" }, { q: "Politics", a: "রাজনীতি" },
+                { q: "Environment", a: "পরিবেশ" }, { q: "Strength", a: "শক্তি" }, { q: "Weakness", a: "দুর্বলতা" },
+                { q: "Belief", a: "বিশ্বাস" }, { q: "Doubt", a: "সন্দেহ" }, { q: "Hope", a: "আশা" },
+                { q: "Joy", a: "আনন্দ" }, { q: "Sorrow", a: "দুঃখ" }, { q: "Anger", a: "রাগ" },
+                { q: "Hate", a: "ঘৃণা" }, { q: "Jealousy", a: "ঈর্ষা" }, { q: "Pride", a: "গর্ব" },
+                { q: "Shame", a: "লজ্জা" }, { q: "Loneliness", a: "একাকীত্ব" }, { q: "Friendship", a: "বন্ধুত্ব" },
+                { q: "Enmity", a: "শত্রুতা" }, { q: "Peace", a: "শান্তি" }, { q: "War", a: "যুদ্ধ" },
+                { q: "Chaos", a: "বিশৃঙ্খলা" }, { q: "Order", a: "শৃঙ্খলা" }, { q: "Beauty", a: "সৌন্দর্য" }, { q: "Ugliness", a: "কুৎসিত" },
+                // Chapter 6 (126-150)
+                { q: "Truth", a: "সত্য" }, { q: "Lie", a: "মিথ্যা" }, { q: "Light", a: "আলো" },
+                { q: "Darkness", a: "অন্ধকার" }, { q: "Hot", a: "গরম" }, { q: "Cold", a: "ঠান্ডা" },
+                { q: "Hard", a: "কঠিন" }, { q: "Soft", a: "নরম" }, { q: "Fast", a: "দ্রুত" },
+                { q: "Slow", a: "ধীর" }, { q: "New", a: "নতুন" }, { q: "Old", a: "পুরাতন" },
+                { q: "Young", a: "তরুণ" }, { q: "Rich", a: "ধনী" }, { q: "Poor", a: "গরীব" },
+                { q: "Healthy", a: "স্বাস্থ্যবান" }, { q: "Sick", a: "অসুস্থ" }, { q: "Strong", a: "শক্তিশালী" },
+                { q: "Weak", a: "দুর্বল" }, { q: "Wise", a: "জ্ঞানী" }, { q: "Foolish", a: "বোকা" },
+                { q: "Brave", a: "সাহসী" }, { q: "Coward", a: "ভীরু" }, { q: "Generous", a: "উদার" }, { q: "Miser", a: "কৃপণ" },
+                // Chapter 7 (151-175)
+                { q: "Humble", a: "বিনয়ী" }, { q: "Arrogant", a: "অহংকারী" }, { q: "Hardworking", a: "পরিশ্রমী" },
+                { q: "Lazy", a: "অলস" }, { q: "Optimist", a: "আশাবাদী" }, { q: "Pessimist", a: "হতাশাবাদী" },
+                { q: "Introvert", a: "অন্তর্মুখী" }, { q: "Extrovert", a: "বহির্মুখী" }, { q: "Reality", a: "বাস্তবতা" },
+                { q: "Oblivion", a: "বিস্মৃতি" }, { q: "Creation", a: "সৃষ্টি" }, { q: "Destruction", a: "ধ্বংস" },
+                { q: "Beginning", a: "শুরু" }, { q: "End", a: "শেষ" }, { q: "Birth", a: "জন্ম" },
+                { q: "Death", a: "মৃত্যু" }, { q: "Reason", a: "কারণ" }, { q: "Result", a: "ফলাফল" },
+                { q: "Effect", a: "প্রভাব" }, { q: "Process", a: "প্রক্রিয়া" }, { q: "Method", a: "পদ্ধতি" },
+                { q: "System", a: "ব্যবস্থা" }, { q: "Organization", a: "সংগঠন" }, { q: "Institution", a: "প্রতিষ্ঠান" }, { q: "Project", a: "প্রকল্প" },
+                // Chapter 8 (176-200)
+                { q: "Plan", a: "পরিকল্পনা" }, { q: "Strategy", a: "কৌশল" }, { q: "Discussion", a: "আলোচনা" },
+                { q: "Debate", a: "বিতর্ক" }, { q: "Agreement", a: "চুক্তি" }, { q: "Conflict", a: "বিরোধ" },
+                { q: "Cooperation", a: "সহযোগিতা" }, { q: "Competition", a: "প্রতিযোগিতা" }, { q: "Earth", a: "পৃথিবী" },
+                { q: "Wind", a: "বাতাস" }, { q: "Fire", a: "আগুন" }, { q: "River", a: "নদী" },
+                { q: "Sea", a: "সাগর" }, { q: "Mountain", a: "পাহাড়" }, { q: "Forest", a: "বন" },
+                { q: "Animal", a: "প্রাণী" }, { q: "Bird", a: "পাখি" }, { q: "Fish", a: "মাছ" },
+                { q: "Fruit", a: "ফল" }, { q: "Vegetable", a: "সবজি" }, { q: "Village", a: "গ্রাম" },
+                { q: "Shop", a: "দোকান" }, { q: "Market", a: "বাজার" }, { q: "Hospital", a: "হাসপাতাল" }, { q: "University", a: "বিশ্ববিদ্যালয়" },
+                // Chapter 9 (201-225)
+                { q: "Temple", a: "মন্দির" }, { q: "Mosque", a: "মসজিদ" }, { q: "Church", a: "গির্জা" },
+                { q: "Door", a: "দরজা" }, { q: "Window", a: "জানালা" }, { q: "Roof", a: "ছাদ" },
+                { q: "Floor", a: "মেঝে" }, { q: "Pen", a: "কলম" }, { q: "Paper", a: "কাগজ" },
+                { q: "Watch", a: "ঘড়ি" }, { q: "Glasses", a: "চশমা" }, { q: "Shoe", a: "জুতা" },
+                { q: "Money", a: "টাকা" }, { q: "Time", a: "সময়" }, { q: "Work", a: "কাজ" },
+                { q: "Love", a: "ভালোবাসা" }, { q: "Family", a: "পরিবার" }, { q: "Country", a: "দেশ" },
+                { q: "City", a: "শহর" }, { q: "Morning", a: "সকাল" }, { q: "Night", a: "রাত" },
+                { q: "Help", a: "সাহায্য" }, { q: "Opportunity", a: "সুযোগ" }, { q: "Freedom", a: "স্বাধীনতা" }, { q: "Society", a: "সমাজ" },
+                // Chapter 10 (226-250)
+                { q: "Government", a: "সরকার" }, { q: "Language", a: "ভাষা" }, { q: "World", a: "বিশ্ব" },
+                { q: "People", a: "মানুষ" }, { q: "Life", a: "জীবন" }, { q: "Harmony", a: "সম্প্রীতি" },
+                { q: "Accountability", a: "জবাবদিহিতা" }, { q: "Democracy", a: "গণতন্ত্র" }, { q: "Constitution", a: "সংবিধান" },
+                { q: "Tears", a: "কান্না" }, { q: "Liberty", a: "স্বাধীনতা" }, { q: "Unity", a: "ঐক্য" },
+                { q: "Diversity", a: "বৈচিত্র্য" }, { q: "Progress", a: "অগ্রগতি" }, { q: "Change", a: "পরিবর্তন" },
+                { q: "Growth", a: "বৃদ্ধি" }, { q: "Experience", a: "অভিজ্ঞতা" }, { q: "Destination", a: "গন্তব্য" },
+                { q: "House", a: "ঘর" }, { q: "Father", a: "বাবা" }, { q: "Mother", a: "মা" },
+                { q: "Boy", a: "ছেলে" }, { q: "Girl", a: "মেয়ে" }, { q: "Red", a: "লাল" }, { q: "Blue", a: "নীল" }
+            ],
+            bnToEnSentence: [
+                // Chapter 1 (1-25)
+                { q: "তুমি কেমন আছো?", a: "How are you?" }, { q: "তোমার নাম কি?", a: "What is your name?" },
+                { q: "আমি তোমাকে ভালোবাসি।", a: "I love you." }, { q: "শুভ সকাল।", a: "Good morning." },
+                { q: "আমি এখন ব্যস্ত।", a: "I am busy now." }, { q: "এটা খুবই সুন্দর।", a: "It is very beautiful." },
+                { q: "তুমি কি আমাকে সাহায্য করতে পারো?", a: "Can you help me?" }, { q: "আমি বুঝতে পারছি না।", a: "I don't understand." },
+                { q: "আমি একটি বই পড়ছি।", a: "I am reading a book." }, { q: "সে স্কুলে যাচ্ছে।", a: "He is going to school." },
+                { q: "তোমার দিনটি শুভ হোক।", a: "Have a nice day." }, { q: "আমি ক্লান্ত।", a: "I am tired." },
+                { q: "এটা আমার জন্য অনেক বড় ব্যাপার।", a: "It means a lot to me." }, { q: "তুমি কোথা থেকে আসছ?", a: "Where are you from?" },
+                { q: "আমি ক্ষুধার্থ।", a: "I am hungry." }, { q: "দয়া করে বসুন।", a: "Please sit down." },
+                { q: "আমি দুঃখিত।", a: "I am sorry." }, { q: "শুভ রাত্রি।", a: "Good night." },
+                { q: "এটা কোন ব্যাপার না।", a: "It doesn't matter." }, { q: "পরে দেখা হবে।", a: "See you later." },
+                { q: "আপনার সাথে দেখা করে ভালো লাগলো।", a: "Nice to meet you." }, { q: "আমি একমত।", a: "I agree." },
+                { q: "আমি জানি না।", a: "I don't know." }, { q: "সাবধানে থেকো।", a: "Take care." }, { q: "আমাকে একা থাকতে দাও।", a: "Leave me alone." },
+                // Chapter 2 (26-50)
+                { q: "তোমার প্রিয় রঙ কি?", a: "What is your favorite color?" }, { q: "আমার একটু সাহায্য দরকার।", a: "I need a little help." },
+                { q: "এটার দাম কত?", a: "How much is this?" }, { q: "আমি কি এটা চেষ্টা করে দেখতে পারি?", a: "Can I try this on?" },
+                { q: "সবচেয়ে কাছের ব্যাংক কোথায়?", a: "Where is the nearest bank?" }, { q: "আমি পথ হারিয়ে ফেলেছি।", a: "I am lost." },
+                { q: "তুমি কি ইংরেজি বলতে পারো?", a: "Do you speak English?" }, { q: "আমি ক্লান্ত বোধ করছি।", a: "I am feeling tired." },
+                { q: "আমার একটি রিজার্ভেশন আছে।", a: "I have a reservation." }, { q: "তুমি কি আমাকে একটি ভালো রেস্টুরেন্টের ঠিকানা দিতে পারো?", a: "Can you recommend a good restaurant?" },
+                { q: "আমি কি বিলটি পেতে পারি?", a: "Can I have the bill, please?" }, { q: "আজকের আবহাওয়া কেমন?", a: "What's the weather like today?" },
+                { q: "বাইরে বৃষ্টি হচ্ছে।", a: "It is raining outside." }, { q: "আমি ভ্রমণ করতে ভালোবাসি।", a: "I love to travel." },
+                { q: "তোমার শখ কি?", a: "What are your hobbies?" }, { q: "আমার প্রিয় শখ বই পড়া।", a: "My favorite hobby is reading books." },
+                { q: "আমি তোমার সাথে একমত নই।", a: "I don't agree with you." }, { q: "তুমি কি এটা আবার বলতে পারবে?", a: "Can you repeat that, please?" },
+                { q: "দয়া করে আস্তে কথা বলুন।", a: "Please speak slowly." }, { q: "আমি কিছু মনে করিনি।", a: "I don't mind." },
+                { q: "এটা অসাধারণ ছিল।", a: "It was amazing." }, { q: "তোমার সাথে কথা বলে ভালো লাগলো।", a: "It was nice talking to you." },
+                { q: "আমাকে একটি কল করো।", a: "Give me a call." }, { q: "আমি তোমার জন্য অপেক্ষা করছি।", a: "I am waiting for you." }, { q: "চলো শুরু করা যাক।", a: "Let's get started." },
+                // Chapter 3 (51-75)
+                { q: "এটা আমার দোষ ছিল।", a: "It was my fault." }, { q: "তুমি ঠিক আছো তো?", a: "Are you okay?" },
+                { q: "আমার মাথা ব্যাথা করছে।", a: "I have a headache." }, { q: "আমি কিছু খেতে চাই।", a: "I want to eat something." },
+                { q: "আমার ঘুমানো দরকার।", a: "I need to sleep." }, { q: "তুমি খুবই দয়ালু।", a: "You are very kind." },
+                { q: "আমি এটা বিশ্বাস করতে পারছি না।", a: "I can't believe it." }, { q: "এটা শুনে আমি খুব খুশি হলাম।", a: "I am very happy to hear that." },
+                { q: "তোমার ভবিষ্যৎ পরিকল্পনা কি?", a: "What are your future plans?" }, { q: "আমাকে বিরক্ত করো না।", a: "Don't disturb me." },
+                { q: "শান্ত হও।", a: "Calm down." }, { q: "মন খারাপ করো না।", a: "Don't be sad." },
+                { q: "আমি তোমাকে সমর্থন করি।", a: "I support you." }, { q: "এটা একটা ভালো ধারণা।", a: "That's a good idea." },
+                { q: "আমার হাতে সময় নেই।", a: "I don't have time." }, { q: "যত তাড়াতাড়ি সম্ভব।", a: "As soon as possible." },
+                { q: "আমার কিছু বলার নেই।", a: "I have nothing to say." }, { q: "তুমি কি নিশ্চিত?", a: "Are you sure?" },
+                { q: "এটা নির্ভর করে।", a: "It depends." }, { q: "আমার মনে হয় তাই।", a: "I think so." },
+                { q: "আমি আশা করি তুমি বুঝতে পেরেছ।", a: "I hope you understand." }, { q: "তুমি কি আমার সাথে মজা করছো?", a: "Are you kidding me?" },
+                { q: "আমি তোমার জন্য গর্বিত।", a: "I am proud of you." }, { q: "তোমার যাত্রা শুভ হোক।", a: "Have a good trip." }, { q: "শুভ জন্মদিন।", a: "Happy birthday." },
+                // Chapter 4 (76-100)
+                { q: "শুভ বিবাহবার্ষিকী।", a: "Happy anniversary." }, { q: "অভিনন্দন!", a: "Congratulations!" },
+                { q: "তোমার জন্য শুভকামনা।", a: "Good luck to you." }, { q: "আমার কিছু করার নেই।", a: "I have no choice." },
+                { q: "আমি তোমার কাছে ঋণী থাকব।", a: "I will be indebted to you." }, { q: "ঈশ্বর তোমার মঙ্গল করুন।", a: "God bless you." },
+                { q: "আমি তোমাকে অনেক মিস করি।", a: "I miss you a lot." }, { q: "নিজেকে সামলে রাখো।", a: "Control yourself." },
+                { q: "এটা ন্যায্য নয়।", a: "It's not fair." }, { q: "আমি একটি ভুল করেছি।", a: "I made a mistake." },
+                { q: "আমাকে ক্ষমা করে দাও।", a: "Please forgive me." }, { q: "আমি তোমাকে কথা দিচ্ছি।", a: "I promise you." },
+                { q: "আমি তোমাকে কখনো ভুলব না।", a: "I will never forget you." }, { q: "তোমার কি কোন প্রশ্ন আছে?", a: "Do you have any questions?" },
+                { q: "আমার একটি প্রশ্ন আছে।", a: "I have a question." }, { q: "আমি তোমাকে সাহায্য করতে এখানে এসেছি।", a: "I'm here to help you." },
+                { q: "তুমি একা নও।", a: "You are not alone." }, { q: "জীবন সুন্দর।", a: "Life is beautiful." },
+                { q: "সবকিছু ঠিক হয়ে যাবে।", a: "Everything will be alright." }, { q: "নিজের উপর বিশ্বাস রাখো।", a: "Believe in yourself." },
+                { q: "কখনো হাল ছেড়ো না।", a: "Never give up." }, { q: "চেষ্টা করতে থাকো।", a: "Keep trying." },
+                { q: "এটা কিভাবে কাজ করে?", a: "How does it work?" }, { q: "আমার এটা পছন্দ হয়েছে।", a: "I like it." }, { q: "এটা আমার প্রিয়।", a: "This is my favorite." }
+            ],
+            enToBnSentence: [
+                // Chapter 1 (1-25)
+                { q: "Where are you from?", a: "আপনি কোথা থেকে এসেছেন?" }, { q: "I am learning English.", a: "আমি ইংরেজি শিখছি।" },
+                { q: "This is my family.", a: "এটা আমার পরিবার।" }, { q: "The weather is nice today.", a: "আজ আবহাওয়া চমৎকার।" },
+                { q: "What time is it?", a: "এখন কয়টা বাজে?" }, { q: "See you later.", a: "পরে দেখা হবে।" },
+                { q: "Thank you very much.", a: "আপনাকে অনেক ধন্যবাদ।" }, { q: "I need some water.", a: "আমার কিছু পানি লাগবে।" },
+                { q: "She is a doctor.", a: "তিনি একজন ডাক্তার।" }, { q: "They are playing football.", a: "তারা ফুটবল খেলছে।" },
+                { q: "Can you speak slowly?", a: "আপনি কি ধীরে কথা বলতে পারেন?" }, { q: "I am looking for a job.", a: "আমি একটি চাকরি খুঁজছি।" },
+                { q: "What are your hobbies?", a: "আপনার শখ কি?" }, { q: "It's a beautiful day.", a: "আজ একটি সুন্দর দিন।" },
+                { q: "Don't worry about it.", a: "এটা নিয়ে চিন্তা করবেন না।" }, { q: "I am proud of you.", a: "আমি তোমার জন্য গর্বিত।" },
+                { q: "Let's go for a walk.", a: "চলো হাঁটতে যাই।" }, { q: "This is delicious.", a: "এটা খুবই সুস্বাদু।" },
+                { q: "I have a question.", a: "আমার একটি প্রশ্ন আছে।" }, { q: "Long time no see.", a: "অনেকদিন দেখা নেই।" },
+                { q: "What's wrong?", a: "কি হয়েছে?" }, { q: "I feel much better.", a: "আমি এখন অনেক ভালো বোধ করছি।" },
+                { q: "Could you repeat that, please?", a: "আপনি কি দয়া করে আবার বলতে পারেন?" }, { q: "Practice makes perfect.", a: "অনুশীলনই মানুষকে নিখুঁত করে তোলে।" }, { q: "Believe in yourself.", a: "নিজের উপর বিশ্বাস রাখো।" },
+                // Chapter 2 (26-50)
+                { q: "What is your favorite color?", a: "তোমার প্রিয় রঙ কি?" }, { q: "I need a little help.", a: "আমার একটু সাহায্য দরকার।" },
+                { q: "How much is this?", a: "এটার দাম কত?" }, { q: "Can I try this on?", a: "আমি কি এটা চেষ্টা করে দেখতে পারি?" },
+                { q: "Where is the nearest bank?", a: "সবচেয়ে কাছের ব্যাংক কোথায়?" }, { q: "I am lost.", a: "আমি পথ হারিয়ে ফেলেছি।" },
+                { q: "Do you speak English?", a: "তুমি কি ইংরেজি বলতে পারো?" }, { q: "I am feeling tired.", a: "আমি ক্লান্ত বোধ করছি।" },
+                { q: "I have a reservation.", a: "আমার একটি রিজার্ভেশন আছে।" }, { q: "Can you recommend a good restaurant?", a: "তুমি কি আমাকে একটি ভালো রেস্টুরেন্টের ঠিকানা দিতে পারো?" },
+                { q: "Can I have the bill, please?", a: "আমি কি বিলটি পেতে পারি?" }, { q: "I love to travel.", a: "আমি ভ্রমণ করতে ভালোবাসি।" },
+                { q: "My favorite hobby is reading books.", a: "আমার প্রিয় শখ বই পড়া।" }, { q: "I don't agree with you.", a: "আমি তোমার সাথে একমত নই।" },
+                { q: "I don't mind.", a: "আমি কিছু মনে করিনি।" }, { q: "It was amazing.", a: "এটা অসাধারণ ছিল।" },
+                { q: "It was nice talking to you.", a: "তোমার সাথে কথা বলে ভালো লাগলো।" }, { q: "Give me a call.", a: "আমাকে একটি কল করো।" },
+                { q: "I am waiting for you.", a: "আমি তোমার জন্য অপেক্ষা করছি।" }, { q: "Let's get started.", a: "চলো শুরু করা যাক।" },
+                { q: "It was my fault.", a: "এটা আমার দোষ ছিল।" }, { q: "Are you okay?", a: "তুমি ঠিক আছো তো?" },
+                { q: "I have a headache.", a: "আমার মাথা ব্যাথা করছে।" }, { q: "I want to eat something.", a: "আমি কিছু খেতে চাই।" }, { q: "I need to sleep.", a: "আমার ঘুমানো দরকার।" },
+                // Chapter 3 (51-75)
+                { q: "You are very kind.", a: "তুমি খুবই দয়ালু।" }, { q: "I can't believe it.", a: "আমি এটা বিশ্বাস করতে পারছি না।" },
+                { q: "I am very happy to hear that.", a: "এটা শুনে আমি খুব খুশি হলাম।" }, { q: "What are your future plans?", a: "তোমার ভবিষ্যৎ পরিকল্পনা কি?" },
+                { q: "Don't disturb me.", a: "আমাকে বিরক্ত করো না।" }, { q: "Calm down.", a: "শান্ত হও।" },
+                { q: "Don't be sad.", a: "মন খারাপ করো না।" }, { q: "I support you.", a: "আমি তোমাকে সমর্থন করি।" },
+                { q: "That's a good idea.", a: "এটা একটা ভালো ধারণা।" }, { q: "I don't have time.", a: "আমার হাতে সময় নেই।" },
+                { q: "As soon as possible.", a: "যত তাড়াতাড়ি সম্ভব।" }, { q: "I have nothing to say.", a: "আমার কিছু বলার নেই।" },
+                { q: "Are you sure?", a: "তুমি কি নিশ্চিত?" }, { q: "It depends.", a: "এটা নির্ভর করে।" },
+                { q: "I think so.", a: "আমার মনে হয় তাই।" }, { q: "I hope you understand.", a: "আমি আশা করি তুমি বুঝতে পেরেছ।" },
+                { q: "Are you kidding me?", a: "তুমি কি আমার সাথে মজা করছো?" }, { q: "Have a good trip.", a: "তোমার যাত্রা শুভ হোক।" },
+                { q: "Happy birthday.", a: "শুভ জন্মদিন।" }, { q: "Happy anniversary.", a: "শুভ বিবাহবার্ষিকী।" },
+                { q: "Congratulations!", a: "অভিনন্দন!" }, { q: "Good luck to you.", a: "তোমার জন্য শুভকামনা।" },
+                { q: "It doesn't matter.", a: "এটা কোন ব্যাপার না।" }, { q: "I have no choice.", a: "আমার কিছু করার নেই।" }, { q: "I will be indebted to you.", a: "আমি তোমার কাছে ঋণী থাকব।" },
+                // Chapter 4 (76-100)
+                { q: "God bless you.", a: "ঈশ্বর তোমার মঙ্গল করুন।" }, { q: "I miss you a lot.", a: "আমি তোমাকে অনেক মিস করি।" },
+                { q: "Control yourself.", a: "নিজেকে সামলে রাখো।" }, { q: "It's not fair.", a: "এটা ন্যায্য নয়।" },
+                { q: "I made a mistake.", a: "আমি একটি ভুল করেছি।" }, { q: "Please forgive me.", a: "আমাকে ক্ষমা করে দাও।" },
+                { q: "I promise you.", a: "আমি তোমাকে কথা দিচ্ছি।" }, { q: "I will never forget you.", a: "আমি তোমাকে কখনো ভুলব না।" },
+                { q: "Do you have any questions?", a: "তোমার কি কোন প্রশ্ন আছে?" }, { q: "I'm here to help you.", a: "আমি তোমাকে সাহায্য করতে এখানে এসেছি।" },
+                { q: "You are not alone.", a: "তুমি একা নও।" }, { q: "Life is beautiful.", a: "জীবন সুন্দর।" },
+                { q: "Everything will be alright.", a: "সবকিছু ঠিক হয়ে যাবে।" }, { q: "Never give up.", a: "কখনো হাল ছেড়ো না।" },
+                { q: "Keep trying.", a: "চেষ্টা করতে থাকো।" }, { q: "How are you?", a: "তুমি কেমন আছো?" },
+                { q: "What is your name?", a: "তোমার নাম কি?" }, { q: "I love you.", a: "আমি তোমাকে ভালোবাসি।" },
+                { q: "Good morning.", a: "শুভ সকাল।" }, { q: "I am busy now.", a: "আমি এখন ব্যস্ত।" },
+                { q: "It is very beautiful.", a: "এটা খুবই সুন্দর।" }, { q: "Can you help me?", a: "তুমি কি আমাকে সাহায্য করতে পারো?" },
+                { q: "I don't understand.", a: "আমি বুঝতে পারছি না।" }, { q: "I am reading a book.", a: "আমি একটি বই পড়ছি।" }, { q: "He is going to school.", a: "সে স্কুলে যাচ্ছে।" }
+            ]
+        };
+
+        const chapterSize = 25;
+        const chapteredWordGroups = {};
+        let overallProgress = {};
+
+        // --- STATE ---
+        let currentCategory = '';
+        let currentChapterIndex = 0;
+        let currentQuiz = [];
+        let userAnswers = {}; // For current attempt
+        let answerTries = {}; // For current attempt
+        let score = 0;
+        
+        // --- DOM ELEMENTS ---
+        const mainMenu = document.getElementById('mainMenu');
+        const chapterMenu = document.getElementById('chapterMenu');
+        const quizContainer = document.getElementById('quizContainer');
+        const resultsContainer = document.getElementById('resultsContainer');
+        const quizTitle = document.getElementById('quizTitle');
+        const chapterTitle = document.getElementById('chapterTitle');
+        const chapterList = document.getElementById('chapterList');
+        const progressStatsContainer = document.getElementById('progressStatsContainer');
+        const totalQuestionsEl = document.getElementById('totalQuestions');
+        const progressBar = document.getElementById('progressBar');
+        const questionList = document.getElementById('questionList');
+        const scorePercentage = document.getElementById('scorePercentage');
+        const finalMessage = document.getElementById('finalMessage');
+        const resultCircle = document.getElementById('resultCircle');
+        const categoryTitles = {
+            bnToEn: 'Bangla to English Words', enToBn: 'English to Bangla Words',
+            bnToEnSentence: 'Bangla to English Sentences', enToBnSentence: 'English to Bangla Sentences'
+        };
+
+        // --- FUNCTIONS ---
+        function chunkArray(array, size) {
+            const chunkedArr = [];
+            for (let i = 0; i < array.length; i += size) {
+                chunkedArr.push(array.slice(i, i + size));
+            }
+            return chunkedArr;
+        }
+
+        function setupChapters() {
+            for (const key in rawWordGroups) {
+                chapteredWordGroups[key] = chunkArray(rawWordGroups[key], chapterSize);
+            }
+        }
+
+        function selectCategory(category) {
+            currentCategory = category;
+            chapterTitle.textContent = categoryTitles[category];
+            
+            displayProgressStats(category);
+            
+            chapterList.innerHTML = '';
+            const chapters = chapteredWordGroups[category];
+            const categoryProgress = overallProgress[category] || { completedChapters: {} };
+
+            chapters.forEach((chapter, index) => {
+                const chapterResult = categoryProgress.completedChapters[index];
+                let scoreText = '';
+                if(chapterResult) {
+                    const chapterScore = Math.round((chapterResult.score / chapter.length) * 100);
+                    scoreText = `<span class="block text-sm font-normal text-cyan-400 mt-1">স্কোর: ${chapterScore}%</span>`;
+                }
+
+                const button = document.createElement('button');
+                button.className = 'glass-button p-4 rounded-xl text-lg font-semibold';
+                button.innerHTML = `Chapter ${index + 1} ${scoreText}`;
+                button.onclick = () => startQuiz(category, index);
+                chapterList.appendChild(button);
+            });
+
+            mainMenu.classList.add('hidden');
+            quizContainer.classList.add('hidden');
+            resultsContainer.classList.add('hidden');
+            chapterMenu.classList.remove('hidden');
+        }
+
+        function displayProgressStats(category) {
+            const totalQuestionsInCategory = rawWordGroups[category].length;
+            const categoryProgress = overallProgress[category] || { completedChapters: {} };
+            
+            let totalAnswered = 0;
+            let totalCorrect = 0;
+
+            Object.values(categoryProgress.completedChapters).forEach(chapter => {
+                totalAnswered += Object.keys(chapter.answers).length;
+                totalCorrect += chapter.score;
+            });
+
+            const totalIncorrect = totalAnswered - totalCorrect;
+
+            progressStatsContainer.innerHTML = `
+                <div class="glass-card p-4 rounded-xl text-center">
+                    <h3 class="text-xl font-bold mb-3 text-white">Overall Progress</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                        <div>
+                            <p class="font-semibold text-cyan-400">${totalQuestionsInCategory}</p>
+                            <p class="text-gray-300">মোট প্রশ্ন</p>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-yellow-400">${totalAnswered}</p>
+                            <p class="text-gray-300">উত্তর দিয়েছেন</p>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-green-400">${totalCorrect}</p>
+                            <p class="text-gray-300">সঠিক উত্তর</p>
+                        </div>
+                         <div>
+                            <p class="font-semibold text-red-400">${totalIncorrect}</p>
+                            <p class="text-gray-300">ভুল উত্তর</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+
+        function startQuiz(category, chapterIndex) {
+            currentCategory = category;
+            currentChapterIndex = chapterIndex;
+            
+            loadAttemptProgress(); 
+            
+            currentQuiz = [...chapteredWordGroups[category][chapterIndex]];
+             // Shuffle quiz only on first attempt of a chapter
+            if (Object.keys(userAnswers).length === 0) {
+                 shuffleArray(currentQuiz);
+            }
+            
+            quizTitle.textContent = `${categoryTitles[category]} - Chapter ${chapterIndex + 1}`;
+            totalQuestionsEl.textContent = currentQuiz.length;
+
+            chapterMenu.classList.add('hidden');
+            resultsContainer.classList.add('hidden');
+            quizContainer.classList.remove('hidden');
+            
+            updateProgressBar();
+            displayCurrentPage();
+        }
+        
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function displayCurrentPage() {
+            questionList.innerHTML = '';
+            currentQuiz.forEach((question, index) => {
+                const originalIndex = rawWordGroups[currentCategory].findIndex(q => q.q === question.q);
+
+                const item = document.createElement('div');
+                item.className = 'question-row grid grid-cols-1 md:grid-cols-3 gap-2 md:gap-4 items-center p-3 rounded-lg';
+                item.innerHTML = `
+                    <p class="text-lg font-medium"><span class="mr-2 text-gray-400">${index + 1}.</span>${question.q}</p>
+                    <input type="text" id="answer-${index}" data-index="${index}" 
+                           placeholder="Enter চাপুন..." 
+                           class="page-answer-input w-full text-base p-2 rounded-md border border-gray-600 focus:border-blue-500 focus:ring-blue-500 transition">
+                    <div id="result-${index}" class="result-display text-base font-medium min-h-[2.5rem] flex items-center"></div>
+                `;
+                questionList.appendChild(item);
+                
+                const input = item.querySelector(`#answer-${index}`);
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' && input.value.trim() !== '') {
+                        checkSingleAnswer(index, input);
+                    }
+                });
+
+                if (userAnswers[index]) {
+                    input.value = userAnswers[index].userAnswer;
+                    input.disabled = true;
+                    const resultDiv = document.getElementById(`result-${index}`);
+                    if(userAnswers[index].isCorrect) {
+                         resultDiv.innerHTML = `<span class="text-2xl mr-2 text-green-500">✅</span> <span class="text-green-400">সঠিক!</span>`;
+                    } else {
+                         resultDiv.innerHTML = `<span class="text-2xl mr-2 text-red-500">❌</span> <span class="text-red-400">সঠিক: ${currentQuiz[index].a}</span>`;
+                    }
+                }
+            });
+        }
+        
+        function checkSingleAnswer(questionIndex, inputElement) {
+            const resultDiv = document.getElementById(`result-${questionIndex}`);
+            const userAnswer = inputElement.value.trim();
+            const correctAnswer = currentQuiz[questionIndex].a;
+            
+            answerTries[questionIndex] = (answerTries[questionIndex] || 0) + 1;
+
+            if (userAnswer.toLowerCase() === correctAnswer.toLowerCase()) {
+                userAnswers[questionIndex] = { userAnswer, isCorrect: true };
+                inputElement.disabled = true;
+                resultDiv.innerHTML = `<span class="text-2xl mr-2 text-green-500">✅</span> <span class="text-green-400">সঠিক!</span>`;
+            } else {
+                if (answerTries[questionIndex] >= 3) {
+                    userAnswers[questionIndex] = { userAnswer, isCorrect: false };
+                    inputElement.disabled = true;
+                    resultDiv.innerHTML = `<span class="text-2xl mr-2 text-red-500">❌</span> <span class="text-red-400">সঠিক: ${correctAnswer}</span>`;
+                } else {
+                    const triesLeft = 3 - answerTries[questionIndex];
+                    resultDiv.innerHTML = `<span class="text-2xl mr-2 text-yellow-500">🤔</span> <span class="text-yellow-400">আবার চেষ্টা করুন (${triesLeft} চেষ্টা বাকি)</span>`;
+                    inputElement.select();
+                }
+            }
+
+            if (inputElement.disabled) {
+                saveAttemptProgress();
+                updateProgressBar(true);
+            }
+        }
+        
+        function updateProgressBar(checkFinish = false) {
+             const answeredCount = Object.keys(userAnswers).length;
+             const progress = (answeredCount / currentQuiz.length) * 100;
+             progressBar.style.width = `${progress}%`;
+
+             if (checkFinish && answeredCount === currentQuiz.length) {
+                 setTimeout(showResults, 1500);
+             }
+        }
+
+        function calculateCurrentScore() {
+            score = 0;
+            for(let i=0; i < currentQuiz.length; i++) {
+                if(userAnswers[i] && userAnswers[i].isCorrect) {
+                    score++;
+                }
+            }
+        }
+
+        function showResults() {
+            calculateCurrentScore();
+            saveChapterResult();
+
+            const percentage = Math.round((score / currentQuiz.length) * 100);
+            
+            quizContainer.classList.add('hidden');
+            resultsContainer.classList.remove('hidden');
+
+            scorePercentage.textContent = `${percentage}%`;
+
+            if (percentage >= 80) finalMessage.textContent = "অসাধারণ!";
+            else if (percentage >= 60) finalMessage.textContent = "খুব ভালো!";
+            else if (percentage >= 40) finalMessage.textContent = "ভালো চেষ্টা!";
+            else finalMessage.textContent = "অনুশীলন চালিয়ে যান।";
+
+            const circle = resultCircle;
+            const radius = circle.r.baseVal.value;
+            const circumference = radius * 2 * Math.PI;
+            circle.style.strokeDasharray = `${circumference} ${circumference}`;
+            const offset = circumference - percentage / 100 * circumference;
+            circle.style.strokeDashoffset = offset;
+        }
+        
+        function restartChapter() {
+            const category = currentCategory;
+            const chapterIndex = currentChapterIndex;
+            localStorage.removeItem(getAttemptProgressKey());
+            userAnswers = {};
+            answerTries = {};
+            startQuiz(category, chapterIndex);
+        }
+
+        function backToChapterMenu() {
+            quizContainer.classList.add('hidden');
+            resultsContainer.classList.add('hidden');
+            selectCategory(currentCategory);
+        }
+        
+        function backToMainMenu() {
+            chapterMenu.classList.add('hidden');
+            mainMenu.classList.remove('hidden');
+        }
+        
+        // --- PROGRESS MANAGEMENT ---
+
+        function getAttemptProgressKey() {
+            return `attempt-${currentCategory}-${currentChapterIndex}`;
+        }
+
+        function saveAttemptProgress() {
+            const progress = { answers: userAnswers, tries: answerTries, quiz: currentQuiz };
+            localStorage.setItem(getAttemptProgressKey(), JSON.stringify(progress));
+        }
+
+        function loadAttemptProgress() {
+            const savedProgress = localStorage.getItem(getAttemptProgressKey());
+            if (savedProgress) {
+                const progress = JSON.parse(savedProgress);
+                userAnswers = progress.answers || {};
+                answerTries = progress.tries || {};
+                // Restore shuffled quiz order for consistency within an attempt
+                chapteredWordGroups[currentCategory][currentChapterIndex] = progress.quiz;
+            } else {
+                userAnswers = {};
+                answerTries = {};
+            }
+        }
+        
+        function loadOverallProgress() {
+            const savedProgress = localStorage.getItem('englishHubProgress');
+            overallProgress = savedProgress ? JSON.parse(savedProgress) : {};
+        }
+
+        function saveOverallProgress() {
+            localStorage.setItem('englishHubProgress', JSON.stringify(overallProgress));
+        }
+
+        function saveChapterResult() {
+            if (!overallProgress[currentCategory]) {
+                overallProgress[currentCategory] = { completedChapters: {} };
+            }
+            overallProgress[currentCategory].completedChapters[currentChapterIndex] = {
+                answers: userAnswers,
+                score: score,
+            };
+            saveOverallProgress();
+        }
+
+        // --- INIT & CLOCK ---
+        document.addEventListener('DOMContentLoaded', () => {
+            setupChapters();
+            loadOverallProgress();
+        });
+
+        const clockElement = document.getElementById('liveClock');
+        setInterval(() => {
+            clockElement.textContent = new Date().toLocaleTimeString('bn-BD', { hour12: true, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        }, 1000);
+
+    </script>
+</body>
+</html>
+
