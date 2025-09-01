@@ -303,6 +303,13 @@
     </div>
 
     <script>
+        // ===================================================================================
+        // DEVELOPER SETUP: PLEASE ADD YOUR GOOGLE AI API KEY HERE
+        // Get your free key from Google AI Studio: https://aistudio.google.com/app/apikey
+        // ===================================================================================
+        const apiKey = "AIzaSyBm5Zr3SukAzt1Jfm7HhGp9p4AIumW05Nw";
+        // ===================================================================================
+
         // --- STATE ---
         let currentCategory = ''; let currentDifficulty = 'Medium'; let currentQuiz = [];
         let currentPracticeTasks = []; let userAnswers = {};
@@ -361,7 +368,7 @@
             const numChannels = 1, bytesPerSample = 2, blockAlign = numChannels * bytesPerSample;
             const byteRate = sampleRate * blockAlign, dataSize = pcmData.length * bytesPerSample;
             const buffer = new ArrayBuffer(44 + dataSize); const view = new DataView(buffer);
-            const writeString = (v, o, s) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
+            const writeString = (v, o, s) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)) };
             writeString(view, 0, 'RIFF'); view.setUint32(4, 36 + dataSize, true); writeString(view, 8, 'WAVE');
             writeString(view, 12, 'fmt '); view.setUint32(16, 16, true); view.setUint16(20, 1, true);
             view.setUint16(22, numChannels, true); view.setUint32(24, sampleRate, true);
@@ -373,10 +380,16 @@
 
         // --- API Call Functions ---
         async function callTTSAPI(text) {
-            const apiKey = "";
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`;
-            const payload = { contents: [{ parts: [{ text: `Please say the following script clearly: ${text}` }] }],
-                generationConfig: { responseModalities: ["AUDIO"], speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: "Kore" } } } }, model: "gemini-2.5-flash-preview-tts" };
+            const payload = { 
+                contents: [{ parts: [{ text: `Please say the following script clearly: ${text}` }] }],
+                generationConfig: { 
+                    responseModalities: ["AUDIO"], 
+                    speechConfig: { 
+                        voiceConfig: { prebuiltVoiceConfig: { voiceName: "Kore" } } 
+                    } 
+                } 
+            };
             const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
             if (!response.ok) { const e = await response.json(); throw new Error(e.error?.message || `TTS API error! status: ${response.status}`); }
             const result = await response.json(); const part = result?.candidates?.[0]?.content?.parts?.[0];
@@ -390,7 +403,7 @@
         }
 
         async function callGeminiAPI(prompt, schema) {
-            const apiKey = ""; const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
             const payload = { contents: [{ parts: [{ text: prompt }] }], generationConfig: { responseMimeType: "application/json", responseSchema: schema } };
             const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
             if (!response.ok) { const e = await response.json(); throw new Error(e.error?.message || `HTTP error! status: ${response.status}`); }
@@ -600,28 +613,6 @@
         function toggleScript(index) { document.getElementById(`script-${index}`).classList.toggle('hidden'); }
 
         // --- TRANSLATOR LOGIC ---
-        function showTranslator() {
-            mainMenu.classList.add('hidden'); 
-            const a = document.createElement('div'); a.id = 'mainTranslatorView';
-            a.innerHTML = `<div id="translatorContainer" class="">
-                 <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-2xl md:text-3xl font-bold">Main Translator</h2>
-                    <button onclick="backToMainMenu()" class="glass-button py-2 px-4 text-sm rounded-lg">মূল মেনু</button>
-                </div>
-                <div class="space-y-4">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <textarea id="translatorInput" class="translator-textarea w-full h-48 p-3 rounded-lg border border-gray-600" placeholder="Enter text here..."></textarea>
-                        <div id="translatorOutput" class="translator-textarea w-full h-48 p-3 rounded-lg border border-gray-600 bg-gray-800/50 flex items-center justify-center text-gray-400">Translation will appear here...</div>
-                    </div>
-                    <div class="flex justify-center gap-4">
-                        <button id="translateEnToBnBtn" onclick="translateText('en', 'bn', 'translatorInput', 'translatorOutput')" class="glass-button py-3 px-6 rounded-xl font-semibold">English to Bangla</button>
-                        <button id="translateBnToEnBtn" onclick="translateText('bn', 'en', 'translatorInput', 'translatorOutput')" class="glass-button py-3 px-6 rounded-xl font-semibold">Bangla to English</button>
-                    </div>
-                </div>
-            </div>`;
-            document.getElementById('appContainer').appendChild(a);
-        }
-        
         function toggleInSessionTranslator() {
             const translator = document.getElementById('inSessionTranslator');
             const icon = document.getElementById('translatorIcon');
@@ -698,7 +689,7 @@
             quizContainer.classList.add('hidden');
             practiceContainer.classList.add('hidden');
             resultsContainer.classList.add('hidden');
-            generatorMenu.classList.remove('hidden');
+            // Directly call startGeneratedSession without going back to the generator menu
             startGeneratedSession();
         }
 
@@ -742,6 +733,22 @@
         }
         
         document.addEventListener('DOMContentLoaded', () => {
+            if (apiKey === "YOUR_GOOGLE_AI_API_KEY_HERE" || apiKey === "") {
+                document.body.innerHTML = `
+                <div class="min-h-screen w-full p-4 flex flex-col items-center justify-center text-center">
+                    <h1 class="text-3xl font-bold text-red-500">API Key Not Found!</h1>
+                    <p class="text-lg mt-4 text-gray-300">
+                        This application requires a Google AI API key to function.
+                        <br>
+                        Please ask the developer (Syed MD Shad) to configure the application correctly.
+                    </p>
+                    <p class="text-sm mt-8 text-gray-500">
+                        <b>Developer Instructions:</b> Please open the HTML file, find the 'apiKey' variable inside the script tag, and replace the placeholder with your actual Google AI API key.
+                    </p>
+                </div>`;
+                return;
+            }
+
             loadLifetimeStats(); displayLifetimeStats();
             loadStudyHistory(); displayStudyTime();
             selectDifficulty('Medium');
