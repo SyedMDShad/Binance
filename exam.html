@@ -40,15 +40,15 @@
         .progress-bar-inner {
             transition: width 0.5s ease-in-out;
         }
-        .page-answer-input, .translator-textarea {
+        .page-answer-input, .translator-textarea, .ai-helper-input {
              background-color: rgba(45, 55, 72, 0.7);
              color: #e2e8f0; /* slate-200 */
              transition: box-shadow 0.2s ease-in-out, background-color 0.2s ease-in-out;
         }
-        .page-answer-input::placeholder, .translator-textarea::placeholder {
+        .page-answer-input::placeholder, .translator-textarea::placeholder, .ai-helper-input::placeholder {
             color: #94a3b8; /* slate-400 */
         }
-        .page-answer-input:focus, .translator-textarea:focus {
+        .page-answer-input:focus, .translator-textarea:focus, .ai-helper-input:focus {
             outline: none;
             box-shadow: 0 0 0 2px #3b82f6; /* Ring color */
         }
@@ -98,7 +98,7 @@
         <main id="appContainer" class="w-full max-w-5xl p-4 sm:p-6 md:p-8 rounded-3xl glass-card shadow-2xl">
             
             <!-- Main Menu -->
-            <div id="mainMenu">
+            <div id="mainMenuContainer">
                 <h1 class="text-3xl md:text-4xl font-bold text-center mb-2 text-white">English Learning Hub</h1>
                 <p class="text-center text-gray-300 mb-6">আপনার পছন্দের সেকশনটি বেছে নিন।</p>
 
@@ -198,10 +198,10 @@
             </div>
 
             <!-- Difficulty & Generator Menu -->
-            <div id="generatorMenu" class="hidden">
+            <div id="generatorMenuContainer" class="hidden">
                  <div class="flex justify-between items-center mb-6">
                     <h2 id="generatorTitle" class="text-2xl md:text-3xl font-bold"></h2>
-                    <button onclick="backToMainMenu()" class="glass-button py-2 px-4 text-sm rounded-lg">মূল মেনু</button>
+                    <button onclick="handleBack()" class="glass-button py-2 px-4 text-sm rounded-lg">মূল মেনু</button>
                 </div>
                 <div id="generatorContainer" class="text-center">
                      <p class="text-lg text-gray-300 mb-4">অনুশীলনের জন্য লেভেল বেছে নিন।</p>
@@ -217,20 +217,45 @@
                 </div>
             </div>
 
-            <!-- In-Session Translator Widget -->
-            <div id="inSessionTranslatorWidget" class="mb-4 hidden">
-                <button id="toggleTranslatorBtn" onclick="toggleInSessionTranslator()" class="glass-button w-full text-left p-2 rounded-lg text-sm flex justify-between items-center">
-                    <span>Quick Translator</span>
-                    <span id="translatorIcon">+</span>
-                </button>
-                <div id="inSessionTranslator" class="hidden mt-2 p-3 rounded-lg border border-gray-700 bg-gray-900/50">
-                     <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
-                        <textarea id="inSessionInput" class="translator-textarea w-full h-24 p-2 rounded-md" placeholder="Enter text..."></textarea>
-                        <div id="inSessionOutput" class="translator-textarea w-full h-24 p-2 rounded-md flex items-center justify-center text-gray-400">...</div>
+             <!-- In-Session Widgets Container -->
+            <div id="inSessionWidgets" class="mb-4 hidden space-y-2">
+                <!-- Translator -->
+                <div>
+                    <button id="toggleTranslatorBtn" onclick="toggleWidget('Translator')" class="glass-button w-full text-left p-2 rounded-lg text-sm flex justify-between items-center">
+                        <span>Quick Translator</span>
+                        <span id="TranslatorIcon" class="font-mono">+</span>
+                    </button>
+                    <div id="inSessionTranslator" class="hidden mt-2 p-3 rounded-lg border border-gray-700 bg-gray-900/50">
+                         <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                            <textarea id="inSessionInput" class="translator-textarea w-full h-24 p-2 rounded-md" placeholder="Enter text..."></textarea>
+                            <div id="inSessionOutput" class="translator-textarea w-full h-24 p-2 rounded-md flex items-center justify-center text-gray-400">...</div>
+                        </div>
+                        <div class="flex justify-center gap-2 mt-2">
+                            <button onclick="translateText('en', 'bn', 'inSessionInput', 'inSessionOutput')" class="glass-button py-1 px-3 rounded-md text-xs">En &rarr; Bn</button>
+                            <button onclick="translateText('bn', 'en', 'inSessionInput', 'inSessionOutput')" class="glass-button py-1 px-3 rounded-md text-xs">Bn &rarr; En</button>
+                        </div>
                     </div>
-                    <div class="flex justify-center gap-2 mt-2">
-                        <button onclick="translateText('en', 'bn', 'inSessionInput', 'inSessionOutput')" class="glass-button py-1 px-3 rounded-md text-xs">En &rarr; Bn</button>
-                        <button onclick="translateText('bn', 'en', 'inSessionInput', 'inSessionOutput')" class="glass-button py-1 px-3 rounded-md text-xs">Bn &rarr; En</button>
+                </div>
+                <!-- AI Helper -->
+                <div>
+                    <button id="toggleAiHelperBtn" onclick="toggleWidget('AiHelper')" class="glass-button w-full text-left p-2 rounded-lg text-sm flex justify-between items-center">
+                        <span>Quick AI Helper</span>
+                        <span id="AiHelperIcon" class="font-mono">+</span>
+                    </button>
+                    <div id="inSessionAiHelper" class="hidden mt-2 p-3 rounded-lg border border-gray-700 bg-gray-900/50">
+                        <div id="aiHelperChatBox" class="h-40 overflow-y-auto mb-2 p-2 bg-black/20 rounded-md space-y-3">
+                           <p class="text-gray-400 text-sm">Ask me anything about English grammar, vocabulary, or sentence structure!</p>
+                        </div>
+                        <div class="flex gap-2">
+                           <input type="text" id="aiHelperInput" class="ai-helper-input w-full p-2 rounded-md" placeholder="Ask a question...">
+                           <input type="file" id="aiImageUpload" class="hidden" accept="image/*" onchange="handleImageUpload(event)">
+                           <button onclick="document.getElementById('aiImageUpload').click()" class="glass-button px-3 rounded-md text-xl">🖼️</button>
+                           <button id="aiHelperSendBtn" onclick="askGeminiHelper()" class="glass-button px-4 rounded-md">Send</button>
+                        </div>
+                         <div id="imagePreviewContainer" class="mt-2 hidden">
+                            <img id="imagePreview" src="" alt="Image preview" class="max-h-20 rounded-md">
+                            <button onclick="removeImagePreview()" class="text-red-400 text-xs ml-2">&times; remove</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -244,13 +269,13 @@
                     </div>
                     <div class="flex justify-end gap-2">
                         <button onclick="regenerateSession()" class="glass-button py-2 px-4 text-sm rounded-lg">Generate New</button>
-                        <button onclick="backToMainMenu()" class="glass-button py-2 px-4 text-sm rounded-lg">Main Menu</button>
+                        <button onclick="handleBack()" class="glass-button py-2 px-4 text-sm rounded-lg">Main Menu</button>
                     </div>
                 </div>
                 <div class="w-full bg-gray-700/50 rounded-full h-2.5 mb-4">
                     <div id="progressBar" class="bg-blue-500 h-2.5 rounded-full progress-bar-inner" style="width: 0%"></div>
                 </div>
-                <div id="questionList" class="space-y-4 max-h-[55vh] overflow-y-auto pr-2"></div>
+                <div id="questionList" class="space-y-4 max-h-[50vh] overflow-y-auto pr-2"></div>
             </div>
 
              <!-- Practice View -->
@@ -262,10 +287,10 @@
                     </div>
                      <div class="flex justify-end gap-2">
                         <button onclick="regenerateSession()" class="glass-button py-2 px-4 text-sm rounded-lg">Generate New</button>
-                        <button onclick="backToMainMenu()" class="glass-button py-2 px-4 text-sm rounded-lg">Main Menu</button>
+                        <button onclick="handleBack()" class="glass-button py-2 px-4 text-sm rounded-lg">Main Menu</button>
                     </div>
                 </div>
-                <div id="practiceTaskList" class="space-y-4 max-h-[55vh] overflow-y-auto pr-2">
+                <div id="practiceTaskList" class="space-y-4 max-h-[50vh] overflow-y-auto pr-2">
                     <!-- Practice tasks will be dynamically inserted here -->
                 </div>
             </div>
@@ -284,7 +309,7 @@
                 <p id="finalMessage" class="text-lg mb-8"></p>
                 <div class="flex justify-center gap-4">
                     <button onclick="regenerateSession()" class="glass-button py-3 px-6 rounded-xl text-lg font-semibold">আবার চেষ্টা করুন</button>
-                    <button onclick="backToMainMenu()" class="glass-button py-3 px-6 rounded-xl text-lg font-semibold">অন্যান্য সেকশন</button>
+                    <button onclick="handleBack()" class="glass-button py-3 px-6 rounded-xl text-lg font-semibold">অন্যান্য সেকশন</button>
                 </div>
             </div>
         </main>
@@ -303,29 +328,29 @@
     </div>
 
     <script>
-        // ===================================================================================
-        // DEVELOPER SETUP: PLEASE ADD YOUR GOOGLE AI API KEY HERE
-        // Get your free key from Google AI Studio: https://aistudio.google.com/app/apikey
-        // ===================================================================================
-        const apiKey = "AIzaSyBm5Zr3SukAzt1Jfm7HhGp9p4AIumW05Nw";
-        // ===================================================================================
+        // --- IMPORTANT: API KEY ---
+        // Replace "YOUR_GOOGLE_AI_API_KEY" with your actual Google AI API key.
+        const apiKey = "AIzaSyBIbnwHemZw-5iCq5OQcnda2LQs0JdaEkQ";
 
         // --- STATE ---
+        let currentView = 'mainMenu'; // mainMenu, generatorMenu, quiz, practice, results
+        let viewHistory = ['mainMenu'];
         let currentCategory = ''; let currentDifficulty = 'Medium'; let currentQuiz = [];
         let currentPracticeTasks = []; let userAnswers = {};
         let score = 0;
         let lifetimeStats = { words: {c:0, t:0}, sentences: {c:0, t:0}, grammar: {c:0, t:0}, ielts: {c:0, t:0} };
         const practiceCategories = ['ieltsReading', 'ieltsWriting', 'ieltsListening', 'ieltsSpeaking', 'dailyConversation'];
         let studyTimerInterval = null; let studyHistory = {};
+        let uploadedImageBase64 = null;
         
         // --- DOM ELEMENTS ---
-        const mainMenu = document.getElementById('mainMenu');
-        const generatorMenu = document.getElementById('generatorMenu');
+        const mainMenuContainer = document.getElementById('mainMenuContainer');
+        const generatorMenuContainer = document.getElementById('generatorMenuContainer');
         const quizContainer = document.getElementById('quizContainer');
         const practiceContainer = document.getElementById('practiceContainer');
         const resultsContainer = document.getElementById('resultsContainer');
         const historyModal = document.getElementById('historyModal');
-        const inSessionTranslatorWidget = document.getElementById('inSessionTranslatorWidget');
+        const inSessionWidgets = document.getElementById('inSessionWidgets');
         const quizTitle = document.getElementById('quizTitle');
         const practiceTitle = document.getElementById('practiceTitle');
         const practiceCounter = document.getElementById('practiceCounter');
@@ -368,7 +393,7 @@
             const numChannels = 1, bytesPerSample = 2, blockAlign = numChannels * bytesPerSample;
             const byteRate = sampleRate * blockAlign, dataSize = pcmData.length * bytesPerSample;
             const buffer = new ArrayBuffer(44 + dataSize); const view = new DataView(buffer);
-            const writeString = (v, o, s) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)) };
+            const writeString = (v, o, s) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
             writeString(view, 0, 'RIFF'); view.setUint32(4, 36 + dataSize, true); writeString(view, 8, 'WAVE');
             writeString(view, 12, 'fmt '); view.setUint32(16, 16, true); view.setUint16(20, 1, true);
             view.setUint16(22, numChannels, true); view.setUint32(24, sampleRate, true);
@@ -380,16 +405,10 @@
 
         // --- API Call Functions ---
         async function callTTSAPI(text) {
+            if (!apiKey || apiKey === "YOUR_GOOGLE_AI_API_KEY") { throw new Error("API key not configured."); }
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`;
-            const payload = { 
-                contents: [{ parts: [{ text: `Please say the following script clearly: ${text}` }] }],
-                generationConfig: { 
-                    responseModalities: ["AUDIO"], 
-                    speechConfig: { 
-                        voiceConfig: { prebuiltVoiceConfig: { voiceName: "Kore" } } 
-                    } 
-                } 
-            };
+            const payload = { contents: [{ parts: [{ text: `Please say the following script clearly: ${text}` }] }],
+                generationConfig: { responseModalities: ["AUDIO"], speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: "Kore" } } } }, model: "gemini-2.5-flash-preview-tts" };
             const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
             if (!response.ok) { const e = await response.json(); throw new Error(e.error?.message || `TTS API error! status: ${response.status}`); }
             const result = await response.json(); const part = result?.candidates?.[0]?.content?.parts?.[0];
@@ -402,21 +421,17 @@
             } else { throw new Error("Invalid audio data received"); }
         }
 
-        async function callGeminiAPI(prompt, schema) {
+        async function callGeminiAPI(payload) {
+            if (!apiKey || apiKey === "YOUR_GOOGLE_AI_API_KEY") { throw new Error("API key not configured."); }
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
-            const payload = { contents: [{ parts: [{ text: prompt }] }], generationConfig: { responseMimeType: "application/json", responseSchema: schema } };
             const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
             if (!response.ok) { const e = await response.json(); throw new Error(e.error?.message || `HTTP error! status: ${response.status}`); }
-            const result = await response.json(); const jsonText = result.candidates?.[0]?.content?.parts?.[0]?.text;
-            if (!jsonText) throw new Error("Received an empty response from the AI.");
-            return JSON.parse(jsonText);
+            const result = await response.json(); 
+            return result;
         }
-
+        
         // --- Core App Logic ---
-        function getCountForCategory(category) {
-            return 50;
-        }
-
+        function getCountForCategory(category) { return 50; }
         function getGroupForCategory(category) {
             if (['bnToEn', 'enToBn'].includes(category)) return 'words';
             if (['bnToEnSentence', 'commonPhrases'].includes(category)) return 'sentences';
@@ -428,7 +443,7 @@
         function selectCategory(category) {
             currentCategory = category;
             generatorTitle.textContent = categoryTitles[category];
-            mainMenu.classList.add('hidden'); generatorMenu.classList.remove('hidden'); generatorError.textContent = '';
+            navigateTo('generatorMenu');
         }
 
         function selectDifficulty(level) {
@@ -441,13 +456,18 @@
         async function startGeneratedSession() {
             setLoading(true); generatorError.textContent = ''; const count = getCountForCategory(currentCategory);
             const prompt = getPromptForCategory(currentCategory, count, currentDifficulty);
-            const schema = { type: "ARRAY", items: { type: "OBJECT", properties: { q: { type: "STRING" }, a: { type: "STRING" } }, required: ["q", "a"] } };
+            const payload = { contents: [{ parts: [{ text: prompt }] }], generationConfig: { responseMimeType: "application/json", 
+                responseSchema: { type: "ARRAY", items: { type: "OBJECT", properties: { q: { type: "STRING" }, a: { type: "STRING" } }, required: ["q", "a"] } } } };
             try {
-                const generatedData = await callGeminiAPI(prompt, schema);
+                const result = await callGeminiAPI(payload);
+                const jsonText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (!jsonText) throw new Error("AI could not generate questions. Please try again.");
+                const generatedData = JSON.parse(jsonText);
+
                 if (generatedData && generatedData.length > 0) {
                     if (practiceCategories.includes(currentCategory)) startPracticeSession(generatedData);
                     else startQuiz(generatedData);
-                } else { throw new Error("AI could not generate questions. Please try again."); }
+                } else { throw new Error("AI generated empty data."); }
             } catch (error) { console.error("API Error:", error); generatorError.textContent = `Error: ${error.message}`;
             } finally { setLoading(false); }
         }
@@ -467,7 +487,7 @@
                 case 'ieltsReading': return `Generate ${count} short English passages (50-80 words) for IELTS Reading at ${difficulty} level, each with one multiple-choice question. q: passage and question. a: the correct option letter. ${base}`;
                 case 'ieltsWriting': return `Generate ${count} IELTS Writing Task 2 prompts. Difficulty: ${difficulty}. q: the prompt. a: "Practice Task". ${base}`;
                 case 'ieltsListening': return `Generate ${count} short English dialogue scripts (2-4 lines). q: a question about the script. a: the full script. Difficulty: ${difficulty}. ${base}`;
-                case 'ieltsSpeaking': return `Generate ${count} IELTS Speaking Part 2 topic cards. q: the topic card. a: "Practice Task". Difficulty: ${difficulty}. ${base}`;
+                case 'ieltsSpeaking': return `Generate ${count} IELTS Speaking Part 2 topic cards. q: the topic card. a: "Practice Task". ${base}`;
             }
         }
         
@@ -485,9 +505,7 @@
             shuffleArray(currentQuiz);
             quizTitle.textContent = `${categoryTitles[currentCategory]} (${currentDifficulty})`;
             totalQuestionsEl.textContent = currentQuiz.length;
-            generatorMenu.classList.add('hidden'); 
-            inSessionTranslatorWidget.style.display = 'block';
-            quizContainer.classList.remove('hidden');
+            navigateTo('quiz');
             updateProgressBar(); displayQuizPage(); startStudyTimer();
         }
         
@@ -543,8 +561,7 @@
             stopStudyTimer();
             score = Object.values(userAnswers).filter(ans => ans.isCorrect).length;
             const percentage = Math.round((score / currentQuiz.length) * 100);
-            quizContainer.classList.add('hidden'); resultsContainer.classList.remove('hidden');
-            inSessionTranslatorWidget.style.display = 'none';
+            navigateTo('results');
             scorePercentage.textContent = `${percentage}%`;
             const group = getGroupForCategory(currentCategory);
             if(group) {
@@ -565,9 +582,7 @@
         // --- PRACTICE LOGIC ---
         function startPracticeSession(practiceData) {
             currentPracticeTasks = practiceData;
-            generatorMenu.classList.add('hidden'); 
-            inSessionTranslatorWidget.style.display = 'block';
-            practiceContainer.classList.remove('hidden');
+            navigateTo('practice');
             displayPracticeTasksList(); 
             startStudyTimer();
         }
@@ -612,12 +627,15 @@
 
         function toggleScript(index) { document.getElementById(`script-${index}`).classList.toggle('hidden'); }
 
-        // --- TRANSLATOR LOGIC ---
-        function toggleInSessionTranslator() {
-            const translator = document.getElementById('inSessionTranslator');
-            const icon = document.getElementById('translatorIcon');
-            const isHidden = translator.classList.toggle('hidden');
+        // --- WIDGETS LOGIC (TRANSLATOR & AI HELPER) ---
+        function toggleWidget(widgetName) {
+            const widget = document.getElementById(`inSession${widgetName}`);
+            const icon = document.getElementById(`${widgetName}Icon`);
+            const isHidden = widget.classList.toggle('hidden');
             icon.textContent = isHidden ? '+' : '-';
+            if (widgetName === 'AiHelper' && isHidden) {
+                removeImagePreview();
+            }
         }
 
         async function translateText(sourceLang, targetLang, inputId, outputId) {
@@ -628,15 +646,88 @@
             
             output.innerHTML = '<div class="loader"></div>';
             const prompt = `Translate the following text from ${sourceLang} to ${targetLang}. Provide only the translated text. Text: "${text}"`;
-            const schema = { type: "OBJECT", properties: { "translation": { "type": "STRING" } } };
+            const payload = { contents: [{ parts: [{ text: prompt }] }], generationConfig: { responseMimeType: "application/json", 
+                responseSchema: { type: "OBJECT", properties: { "translation": { "type": "STRING" } } } } };
              try {
-                const result = await callGeminiAPI(prompt, schema);
-                output.textContent = result.translation || "Could not translate.";
+                const result = await callGeminiAPI(payload);
+                const jsonText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (!jsonText) throw new Error("Could not translate.");
+                const parsed = JSON.parse(jsonText);
+                output.textContent = parsed.translation || "Could not translate.";
             } catch (error) {
                 console.error("Translation Error:", error);
                 output.textContent = "Translation failed. Please try again.";
             }
         }
+
+        async function askGeminiHelper() {
+            const input = document.getElementById('aiHelperInput');
+            const chatBox = document.getElementById('aiHelperChatBox');
+            const sendBtn = document.getElementById('aiHelperSendBtn');
+            let query = input.value.trim();
+            if(!query && !uploadedImageBase64) return;
+
+            // Display user query
+            chatBox.innerHTML += `<p class="text-right text-cyan-300"><span class="font-bold">You:</span> ${query || '[Image query]'}</p>`;
+            input.value = '';
+            chatBox.scrollTop = chatBox.scrollHeight;
+            sendBtn.disabled = true;
+
+            // Display loading indicator
+            const loadingP = document.createElement('p');
+            loadingP.className = 'text-left text-gray-400 italic';
+            loadingP.innerHTML = `<span>AI is thinking...</span>`;
+            chatBox.appendChild(loadingP);
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            const containsBengali = /[^\u0000-\u007F]/.test(query);
+             const prompt = `You are a concise English learning assistant. A student asked: "${query}". Provide a direct, short, and simple answer. If the question is in Bengali, answer in Bengali. Otherwise, answer in simple English. Analyze any provided image. Give only the final answer without extra conversation.`;
+            
+            const parts = [{ text: prompt }];
+            if(uploadedImageBase64) {
+                parts.push({ inlineData: { mime_type: "image/jpeg", data: uploadedImageBase64 } });
+            }
+
+            const payload = { contents: [{ parts: parts }]};
+
+            try {
+                const result = await callGeminiAPI(payload);
+                const answer = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                loadingP.innerHTML = `<span class="font-bold text-teal-300">AI Helper:</span> ${answer || "Sorry, I couldn't find an answer."}`;
+            } catch (error) {
+                console.error("AI Helper Error:", error);
+                loadingP.innerHTML = `<span class="font-bold text-red-400">AI Helper:</span> Error: ${error.message}`;
+            } finally {
+                chatBox.scrollTop = chatBox.scrollHeight;
+                sendBtn.disabled = false;
+                removeImagePreview();
+            }
+        }
+        document.getElementById('aiHelperInput').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                askGeminiHelper();
+            }
+        });
+        
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                uploadedImageBase64 = reader.result.split(',')[1];
+                document.getElementById('imagePreview').src = reader.result;
+                document.getElementById('imagePreviewContainer').classList.remove('hidden');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function removeImagePreview() {
+            uploadedImageBase64 = null;
+            document.getElementById('aiImageUpload').value = '';
+            document.getElementById('imagePreview').src = '';
+            document.getElementById('imagePreviewContainer').classList.add('hidden');
+        }
+
 
         // --- STUDY TIMER & HISTORY ---
         function formatTime(seconds) {
@@ -679,30 +770,60 @@
         }
         function closeHistory() { historyModal.classList.add('hidden'); }
         
-        // --- GENERAL NAVIGATION & UTILS ---
+        // --- NAVIGATION & UTILS ---
+        function navigateTo(view) {
+            const viewMap = {
+                mainMenu: mainMenuContainer,
+                generatorMenu: generatorMenuContainer,
+                quiz: quizContainer,
+                practice: practiceContainer,
+                results: resultsContainer,
+            };
+
+            // Hide all views
+            Object.values(viewMap).forEach(el => el.classList.add('hidden'));
+            inSessionWidgets.classList.add('hidden');
+
+            // Show the target view
+            if (viewMap[view]) {
+                viewMap[view].classList.remove('hidden');
+            }
+            if(view === 'quiz' || view === 'practice') {
+                 inSessionWidgets.classList.remove('hidden');
+            }
+            
+            // Manage history
+            if (currentView !== view) {
+                 if (viewHistory[viewHistory.length - 1] !== view) {
+                    history.pushState({view: view}, '', `#${view}`);
+                    viewHistory.push(view);
+                }
+            }
+            currentView = view;
+        }
+
+        function handleBack() {
+            if (viewHistory.length > 1) {
+                history.back(); // This will trigger onpopstate
+            }
+        }
+        
+        window.onpopstate = (event) => {
+             if(viewHistory.length > 1) {
+                viewHistory.pop();
+                const previousView = viewHistory[viewHistory.length - 1] || 'mainMenu';
+                navigateTo(previousView);
+             }
+        };
+
         function shuffleArray(array) {
             for (let i = array.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [array[i], array[j]] = [array[j], array[i]]; }
         }
         
         function regenerateSession() {
             stopStudyTimer();
-            quizContainer.classList.add('hidden');
-            practiceContainer.classList.add('hidden');
-            resultsContainer.classList.add('hidden');
-            // Directly call startGeneratedSession without going back to the generator menu
+            navigateTo('generatorMenu');
             startGeneratedSession();
-        }
-
-        function backToMainMenu() {
-            stopStudyTimer();
-            const mainTranslatorView = document.getElementById('mainTranslatorView');
-            if(mainTranslatorView) mainTranslatorView.remove();
-            
-            generatorMenu.classList.add('hidden'); resultsContainer.classList.add('hidden');
-            quizContainer.classList.add('hidden');
-            practiceContainer.classList.add('hidden');
-            inSessionTranslatorWidget.style.display = 'none';
-            mainMenu.classList.remove('hidden');
         }
 
         function loadLifetimeStats() { const s = localStorage.getItem('englishHubLifetimeStats'); if (s) lifetimeStats = JSON.parse(s); }
@@ -732,26 +853,27 @@
              todayStudyTimeEl.textContent = formatTime(seconds);
         }
         
-        document.addEventListener('DOMContentLoaded', () => {
-            if (apiKey === "YOUR_GOOGLE_AI_API_KEY_HERE" || apiKey === "") {
-                document.body.innerHTML = `
-                <div class="min-h-screen w-full p-4 flex flex-col items-center justify-center text-center">
-                    <h1 class="text-3xl font-bold text-red-500">API Key Not Found!</h1>
-                    <p class="text-lg mt-4 text-gray-300">
-                        This application requires a Google AI API key to function.
-                        <br>
-                        Please ask the developer (Syed MD Shad) to configure the application correctly.
-                    </p>
-                    <p class="text-sm mt-8 text-gray-500">
-                        <b>Developer Instructions:</b> Please open the HTML file, find the 'apiKey' variable inside the script tag, and replace the placeholder with your actual Google AI API key.
-                    </p>
-                </div>`;
-                return;
+        function displayApiKeyWarning() {
+            if (!apiKey || apiKey === "YOUR_GOOGLE_AI_API_KEY") {
+                document.getElementById('appContainer').innerHTML = `
+                    <div class="text-center p-8">
+                        <h1 class="text-3xl font-bold text-red-500 mb-4">API Key Not Found!</h1>
+                        <p class="text-gray-300 mb-6">This application requires a Google AI API key to function. Please ask the developer (Syed MD Shad) to configure the application correctly.</p>
+                        <p class="text-xs text-gray-500"><strong>Developer Instructions:</strong> Please open the HTML file, find the 'apiKey' variable inside the script tag, and replace the placeholder with your actual Google AI API key.</p>
+                    </div>
+                `;
             }
-
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            displayApiKeyWarning();
             loadLifetimeStats(); displayLifetimeStats();
             loadStudyHistory(); displayStudyTime();
             selectDifficulty('Medium');
+            currentView = 'mainMenu';
+            viewHistory = ['mainMenu'];
+             // Initial navigation setup
+            history.replaceState({view: 'mainMenu'}, '', '#mainMenu');
         });
 
     </script>
