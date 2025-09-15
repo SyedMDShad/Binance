@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>AOD Clock — 4 Styles</title>
+<style>
+  :root{ --bg:#0e0f12; --fg:#fff; --dim:#c9ccd6; --accent:#f5a623; --glass:rgba(255,255,255,.08); }
+  html,body{height:100%}
+  body{margin:0;background:var(--bg);color:var(--fg);font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Inter;
+       -webkit-user-select:none;user-select:none;touch-action:manipulation}
+  .wrap{position:fixed;inset:0;display:grid;grid-template-rows:1fr auto;}
+  .stage{display:grid;place-items:center}
+
+  .date{display:flex;gap:.45rem;align-items:center;justify-content:center;color:var(--dim);letter-spacing:.04em;font-weight:600;margin-bottom:.5rem}
+  .date span{font-size:clamp(12px,2.4vw,16px)}
+
+  /* Digital time */
+  .line{display:flex;align-items:baseline;gap:.16em;line-height:1}
+  .hh,.mm{font-variant-numeric:tabular-nums}
+  .hh{font-size:clamp(56px,18vw,160px);font-weight:900}
+  .colon{font-size:clamp(48px,14vw,140px);opacity:.9}
+  .mm{font-size:clamp(56px,18vw,160px);font-weight:800}
+  .ap{font-size:clamp(12px,4vw,20px);margin-left:.35em;color:var(--dim);letter-spacing:.15em}
+
+  .stack{display:grid;gap:.2em;justify-items:center}
+  .stack .HH{font-size:clamp(90px,28vw,220px);font-weight:900}
+  .stack .MM{font-size:clamp(84px,26vw,210px);font-weight:800;opacity:.95}
+
+  /* Analog */
+  .analog{position:relative;width:min(78vmin,520px);aspect-ratio:1;border-radius:50%;background:#1a1c21;box-shadow:inset 0 0 0 2px rgba(255,255,255,.06)}
+  .dial{position:absolute;inset:14px;border-radius:50%;background:#17181c}
+  .tick{position:absolute;left:50%;top:50%;width:2px;height:10%;background:#5f6672;transform-origin:50% calc(100% - 10px);opacity:.7}
+  .tick.h{height:12%;width:3px;background:#9aa1ac;opacity:.9}
+  .num{position:absolute;left:50%;top:50%;color:#e5e7eb;font-weight:800;transform:translate(-50%,-50%)}
+  .ah,.am,.as{position:absolute;left:50%;top:50%;transform-origin:50% 90%;transform:translate(-50%,-90%);border-radius:999px;background:#e5e7eb}
+  .ah{width:10px;height:26%}
+  .am{width:8px;height:34%}
+  .as{width:2px;height:38%;background:var(--accent)}
+  .pin{position:absolute;left:50%;top:50%;width:14px;height:14px;background:#000;border:3px solid var(--accent);border-radius:50%;transform:translate(-50%,-50%)}
+
+  /* Neon Circle */
+  .neonwrap{position:relative;width:min(78vmin,520px);aspect-ratio:1;border-radius:50%;display:grid;place-items:center}
+  .neonring{position:absolute;inset:0;border-radius:50%;box-shadow:0 0 40px rgba(0,255,213,.15), inset 0 0 0 14px rgba(0,255,213,.25)}
+  .neontxt{font-family:"Agency FB",Rajdhani,system-ui,sans-serif;font-size:clamp(40px,14vw,120px);letter-spacing:.03em;color:#7ef9e2;text-shadow:0 0 22px rgba(0,180,255,.55)}
+  .neondate{margin-top:1rem;color:var(--dim);font-weight:600;letter-spacing:.05em}
+
+  /* Controls */
+  .ctrl{position:fixed;left:50%;bottom:max(3vh,14px);transform:translateX(-50%);display:flex;gap:10px}
+  .btn{padding:.7rem 1rem;border-radius:14px;border:1px solid rgba(255,255,255,.1);background:var(--glass);color:var(--fg);font-weight:600;cursor:pointer}
+  .ctrl.hidden{display:none}
+
+  /* Fullscreen click layer */
+  .clicker{position:fixed;inset:0;cursor:pointer;z-index:5}
+</style>
+</head>
+<body>
+  <div class="wrap" id="root">
+    <div class="clicker" id="clicker"></div>
+    <main class="stage" id="stage"></main>
+    <div class="ctrl hidden" id="ctrl">
+      <button class="btn" id="prevBtn">◀︎ Style</button>
+      <button class="btn" id="nextBtn">Style ▶︎</button>
+      <button class="btn" id="wakeBtn">Keep Screen On</button>
+    </div>
+  </div>
+<script>
+const stage=document.getElementById('stage');
+const ctrl=document.getElementById('ctrl');
+const prevBtn=document.getElementById('prevBtn');
+const nextBtn=document.getElementById('nextBtn');
+const wakeBtn=document.getElementById('wakeBtn');
+const clicker=document.getElementById('clicker');
+
+const designs=['ios-analog','digital-one-line','digital-stacked','neon-circle'];
+let idx=parseInt(localStorage.getItem('aod.style')||'0',10)%designs.length;
+
+function fmtDate(d){
+  const D=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const M=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return `${D[d.getDay()]} • ${M[d.getMonth()]} ${d.getDate()}`;
+}
+
+function mount(style){
+  stage.innerHTML='';
+  if(style==='digital-one-line'||style==='digital-stacked'){
+    const date=document.createElement('div'); date.className='date'; date.innerHTML=`<span id="dTxt">${fmtDate(new Date())}</span>`;
+    stage.appendChild(date);
+    if(style==='digital-one-line'){
+      const line=document.createElement('div'); line.className='line'; line.innerHTML=`<span class="hh" id="hh"></span><span class="colon">:</span><span class="mm" id="mm"></span><span class="ap" id="ap"></span>`; stage.appendChild(line);
+    } else {
+      const st=document.createElement('div'); st.className='stack'; st.innerHTML=`<div class="HH" id="HH"></div><div class="MM" id="MM"></div>`; stage.appendChild(st);
+    }
+  }
+  if(style==='ios-analog'){
+    const face=document.createElement('div');
+    face.className='analog';
+    face.innerHTML=`<div class="dial"></div><div class="ah" id="ah"></div><div class="am" id="am"></div><div class="as" id="as"></div><div class="pin"></div>`;
+    // First attach to the DOM so it has a real size
+    stage.appendChild(face);
+    // Now draw ticks & numbers using the actual dimensions
+    const size=face.clientWidth; const cx=size/2, cy=size/2; const rTick= size/2 - 16; const rNum = size/2 - 52;
+    for(let i=0;i<60;i++){
+      const t=document.createElement('div');
+      t.className='tick'+(i%5===0?' h':'');
+      t.style.transform=`translate(-50%,-100%) rotate(${i*6}deg)`;
+      t.style.left= cx+'px'; t.style.top= cy+'px';
+      face.appendChild(t);
+    }
+    for(let h=1;h<=12;h++){
+      const n=document.createElement('div'); n.className='num'; n.textContent=h;
+      const angle=(h-3)*(Math.PI/6);
+      n.style.left = (cx + rNum*Math.cos(angle))+'px';
+      n.style.top  = (cy + rNum*Math.sin(angle))+'px';
+      face.appendChild(n);
+    }
+  }
+  if(style==='neon-circle'){
+    const wrap=document.createElement('div'); wrap.className='neonwrap'; wrap.innerHTML=`<div class="neonring" id="ring"></div><div class="neontxt" id="neonTxt"></div><div class="neondate" id="neonDate"></div>`; stage.appendChild(wrap);
+  }
+}
+
+function tick(){
+  const now=new Date();
+  const h=now.getHours(),m=now.getMinutes(),s=now.getSeconds();
+  const ap=h>=12?'PM':'AM';const hh=h%12||12;
+  if(document.getElementById('hh')) document.getElementById('hh').textContent=String(hh).padStart(2,'0');
+  if(document.getElementById('mm')) document.getElementById('mm').textContent=String(m).padStart(2,'0');
+  if(document.getElementById('ap')) document.getElementById('ap').textContent=ap;
+  if(document.getElementById('HH')) document.getElementById('HH').textContent=String(hh).padStart(2,'0');
+  if(document.getElementById('MM')) document.getElementById('MM').textContent=String(m).padStart(2,'0');
+  if(document.getElementById('dTxt')) document.getElementById('dTxt').textContent=fmtDate(now);
+
+  const ah=document.getElementById('ah'),am=document.getElementById('am'),as=document.getElementById('as');
+  if(ah) ah.style.transform=`translate(-50%,-90%) rotate(${(h%12)*30+m*0.5}deg)`;
+  if(am) am.style.transform=`translate(-50%,-90%) rotate(${m*6+s*0.1}deg)`;
+  if(as) as.style.transform=`translate(-50%,-90%) rotate(${s*6}deg)`;
+
+  const ring=document.getElementById('ring'),neonTxt=document.getElementById('neonTxt'),neonDate=document.getElementById('neonDate');
+  if(ring) ring.style.boxShadow=`0 0 40px rgba(0,255,213,.15), inset 0 0 0 14px rgba(0,255,213,.25), inset 0 0 0 ${6+(s%5)}px rgba(0,255,213,.18)`;
+  if(neonTxt) neonTxt.textContent=`${String(hh).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+  if(neonDate) neonDate.textContent=fmtDate(now);
+}
+
+function applyDesign(i){idx=i;localStorage.setItem('aod.style',idx);mount(designs[idx]);tick();}
+
+let hideTimer;function showControls(){ctrl.classList.remove('hidden');clearTimeout(hideTimer);hideTimer=setTimeout(()=>ctrl.classList.add('hidden'),5000);} 
+clicker.addEventListener('click',()=>showControls());
+prevBtn.addEventListener('click',()=>applyDesign((idx-1+designs.length)%designs.length));
+nextBtn.addEventListener('click',()=>applyDesign((idx+1)%designs.length));
+
+let wakeLock=null;async function requestWakeLock(){if('wakeLock' in navigator){try{wakeLock=await navigator.wakeLock.request('screen');wakeBtn.textContent='Screen Kept On ✅';wakeLock.addEventListener('release',()=>{wakeBtn.textContent='Keep Screen On'});}catch(err){alert(`Wake Lock failed: ${err.message}`);}}else{alert('Wake Lock API not supported.');}}
+wakeBtn.addEventListener('click',requestWakeLock);
+document.addEventListener('visibilitychange',()=>{if(wakeLock!==null&&document.visibilityState==='visible'){requestWakeLock();}});
+
+applyDesign(idx);setInterval(tick,1000);
+</script>
+</body>
+</html>
