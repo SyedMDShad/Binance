@@ -10,13 +10,12 @@
   body{margin:0;background:var(--bg);color:var(--fg);font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Inter;
        -webkit-user-select:none;user-select:none;touch-action:manipulation}
   .wrap{position:fixed;inset:0;display:grid;grid-template-rows:1fr auto;}
-  .stage{display:grid;place-items:center}
+  .stage{display:grid;place-items:center;text-align:center}
 
-  .date{display:flex;gap:.45rem;align-items:center;justify-content:center;color:var(--dim);letter-spacing:.04em;font-weight:600;margin-bottom:.5rem}
-  .date span{font-size:clamp(12px,2.4vw,16px)}
+  .date{color:var(--dim);font-weight:600;letter-spacing:.05em;margin-top:1rem}
 
   /* Digital time */
-  .line{display:flex;align-items:baseline;gap:.16em;line-height:1}
+  .line{display:flex;justify-content:center;align-items:baseline;gap:.16em;line-height:1}
   .hh,.mm{font-variant-numeric:tabular-nums}
   .hh{font-size:clamp(56px,18vw,160px);font-weight:900}
   .colon{font-size:clamp(48px,14vw,140px);opacity:.9}
@@ -28,11 +27,11 @@
   .stack .MM{font-size:clamp(84px,26vw,210px);font-weight:800;opacity:.95}
 
   /* Analog */
-  .analog{position:relative;width:min(78vmin,520px);aspect-ratio:1;border-radius:50%;background:#1a1c21;box-shadow:inset 0 0 0 2px rgba(255,255,255,.06)}
+  .analog{position:relative;width:min(78vmin,520px);aspect-ratio:1;border-radius:50%;background:#1a1c21;box-shadow:inset 0 0 0 2px rgba(255,255,255,.06);display:flex;justify-content:center;align-items:center}
   .dial{position:absolute;inset:14px;border-radius:50%;background:#17181c}
   .tick{position:absolute;left:50%;top:50%;width:2px;height:10%;background:#5f6672;transform-origin:50% calc(100% - 10px);opacity:.7}
   .tick.h{height:12%;width:3px;background:#9aa1ac;opacity:.9}
-  .num{position:absolute;left:50%;top:50%;color:#e5e7eb;font-weight:800;transform:translate(-50%,-50%)}
+  .num{position:absolute;color:#e5e7eb;font-weight:800;font-size:clamp(14px,3vw,20px)}
   .ah,.am,.as{position:absolute;left:50%;top:50%;transform-origin:50% 90%;transform:translate(-50%,-90%);border-radius:999px;background:#e5e7eb}
   .ah{width:10px;height:26%}
   .am{width:8px;height:34%}
@@ -46,12 +45,12 @@
   .neondate{margin-top:1rem;color:var(--dim);font-weight:600;letter-spacing:.05em}
 
   /* Controls */
-  .ctrl{position:fixed;left:50%;bottom:max(3vh,14px);transform:translateX(-50%);display:flex;gap:10px}
+  .ctrl{position:fixed;left:50%;bottom:max(3vh,14px);transform:translateX(-50%);display:flex;gap:10px;z-index:10}
   .btn{padding:.7rem 1rem;border-radius:14px;border:1px solid rgba(255,255,255,.1);background:var(--glass);color:var(--fg);font-weight:600;cursor:pointer}
   .ctrl.hidden{display:none}
 
   /* Fullscreen click layer */
-  .clicker{position:fixed;inset:0;cursor:pointer;z-index:5}
+  .clicker{position:fixed;inset:0;z-index:1}
 </style>
 </head>
 <body>
@@ -62,6 +61,7 @@
       <button class="btn" id="prevBtn">◀︎ Style</button>
       <button class="btn" id="nextBtn">Style ▶︎</button>
       <button class="btn" id="wakeBtn">Keep Screen On</button>
+      <button class="btn" id="fsBtn">Fullscreen</button>
     </div>
   </div>
 <script>
@@ -70,6 +70,7 @@ const ctrl=document.getElementById('ctrl');
 const prevBtn=document.getElementById('prevBtn');
 const nextBtn=document.getElementById('nextBtn');
 const wakeBtn=document.getElementById('wakeBtn');
+const fsBtn=document.getElementById('fsBtn');
 const clicker=document.getElementById('clicker');
 
 const designs=['ios-analog','digital-one-line','digital-stacked','neon-circle'];
@@ -84,34 +85,30 @@ function fmtDate(d){
 function mount(style){
   stage.innerHTML='';
   if(style==='digital-one-line'||style==='digital-stacked'){
-    const date=document.createElement('div'); date.className='date'; date.innerHTML=`<span id="dTxt">${fmtDate(new Date())}</span>`;
-    stage.appendChild(date);
     if(style==='digital-one-line'){
       const line=document.createElement('div'); line.className='line'; line.innerHTML=`<span class="hh" id="hh"></span><span class="colon">:</span><span class="mm" id="mm"></span><span class="ap" id="ap"></span>`; stage.appendChild(line);
     } else {
       const st=document.createElement('div'); st.className='stack'; st.innerHTML=`<div class="HH" id="HH"></div><div class="MM" id="MM"></div>`; stage.appendChild(st);
     }
+    const date=document.createElement('div'); date.className='date'; date.innerHTML=`<span id="dTxt">${fmtDate(new Date())}</span>`; stage.appendChild(date);
   }
   if(style==='ios-analog'){
     const face=document.createElement('div');
     face.className='analog';
     face.innerHTML=`<div class="dial"></div><div class="ah" id="ah"></div><div class="am" id="am"></div><div class="as" id="as"></div><div class="pin"></div>`;
-    // First attach to the DOM so it has a real size
     stage.appendChild(face);
-    // Now draw ticks & numbers using the actual dimensions
-    const size=face.clientWidth; const cx=size/2, cy=size/2; const rTick= size/2 - 16; const rNum = size/2 - 52;
+    const size=face.clientWidth; const cx=size/2, cy=size/2; const rNum=size/2-36;
     for(let i=0;i<60;i++){
-      const t=document.createElement('div');
-      t.className='tick'+(i%5===0?' h':'');
+      const t=document.createElement('div'); t.className='tick'+(i%5===0?' h':'');
       t.style.transform=`translate(-50%,-100%) rotate(${i*6}deg)`;
-      t.style.left= cx+'px'; t.style.top= cy+'px';
+      t.style.left=cx+'px'; t.style.top=cy+'px';
       face.appendChild(t);
     }
     for(let h=1;h<=12;h++){
       const n=document.createElement('div'); n.className='num'; n.textContent=h;
       const angle=(h-3)*(Math.PI/6);
-      n.style.left = (cx + rNum*Math.cos(angle))+'px';
-      n.style.top  = (cy + rNum*Math.sin(angle))+'px';
+      n.style.left=(cx+(rNum*Math.cos(angle)))-12+'px';
+      n.style.top=(cy+(rNum*Math.sin(angle)))-12+'px';
       face.appendChild(n);
     }
   }
@@ -144,12 +141,27 @@ function tick(){
 
 function applyDesign(i){idx=i;localStorage.setItem('aod.style',idx);mount(designs[idx]);tick();}
 
-let hideTimer;function showControls(){ctrl.classList.remove('hidden');clearTimeout(hideTimer);hideTimer=setTimeout(()=>ctrl.classList.add('hidden'),5000);} 
+let hideTimer;
+function showControls(){
+  ctrl.classList.remove('hidden');
+  clearTimeout(hideTimer);
+  hideTimer=setTimeout(()=>ctrl.classList.add('hidden'),5000);
+}
+
 clicker.addEventListener('click',()=>showControls());
 prevBtn.addEventListener('click',()=>applyDesign((idx-1+designs.length)%designs.length));
 nextBtn.addEventListener('click',()=>applyDesign((idx+1)%designs.length));
 
-let wakeLock=null;async function requestWakeLock(){if('wakeLock' in navigator){try{wakeLock=await navigator.wakeLock.request('screen');wakeBtn.textContent='Screen Kept On ✅';wakeLock.addEventListener('release',()=>{wakeBtn.textContent='Keep Screen On'});}catch(err){alert(`Wake Lock failed: ${err.message}`);}}else{alert('Wake Lock API not supported.');}}
+fsBtn.addEventListener('click',()=>{
+  if(!document.fullscreenElement){
+    document.documentElement.requestFullscreen().catch(err=>alert(`Error: ${err.message}`));
+  } else {
+    document.exitFullscreen();
+  }
+});
+
+defaultWakeText='Keep Screen On';
+let wakeLock=null;async function requestWakeLock(){if('wakeLock' in navigator){try{wakeLock=await navigator.wakeLock.request('screen');wakeBtn.textContent='Screen Kept On ✅';wakeLock.addEventListener('release',()=>{wakeBtn.textContent=defaultWakeText});}catch(err){alert(`Wake Lock failed: ${err.message}`);}}else{alert('Wake Lock API not supported.');}}
 wakeBtn.addEventListener('click',requestWakeLock);
 document.addEventListener('visibilitychange',()=>{if(wakeLock!==null&&document.visibilityState==='visible'){requestWakeLock();}});
 
