@@ -676,7 +676,7 @@
       const app = initializeApp(firebaseConfig);
       const db = getFirestore(app);
 
-      const SYNC_KEY = "syed-sync";
+      const SYNC_KEY = "syed-sync-9f3a72c8e41b7d2a6e5798yiuhlkjc";
 
       function refFor(cardId, date) {
         return doc(db, "users", SYNC_KEY, "states", `${cardId}-${date}`);
