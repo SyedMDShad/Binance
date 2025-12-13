@@ -22,7 +22,7 @@
             padding: 1rem;
             transition: background-color 0.3s ease;
         }
-        
+
         /* True Black Dark mode styles */
         .dark body { background: #000000; }
         .dark .glass-card, .dark .modal-content {
@@ -53,10 +53,10 @@
         .dark .progress-bar-inner { background-color: #10b981; }
         .dark .progress-bar-bg { background-color: #374151; }
         .dark .settings-menu {
-            background: rgba(28, 28, 30, 0.8); 
+            background: rgba(28, 28, 30, 0.8);
             border-color: rgba(58, 58, 60, 0.7);
         }
-        .dark .settings-menu a { color: #f3f4f6; } /* Light text for dark menu */
+        .dark .settings-menu a { color: #f3f4f6; }
         .dark .settings-menu a:hover { background-color: rgba(58, 58, 60, 0.6); }
 
         .glass-card {
@@ -68,7 +68,7 @@
             box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
             width: 100%;
         }
-        
+
         .clock-widget {
             background: rgba(255, 255, 255, 0.6);
             backdrop-filter: blur(10px);
@@ -93,44 +93,44 @@
         }
         .task-checkbox:checked { background-color: #34d399; }
         .task-checkbox:checked::before { content: '✔'; color: white; font-size: 0.875rem; }
-        
+
         .task-item.completed { opacity: 0.5; text-decoration: line-through; }
-        
+
         .task-item { transition: transform 0.2s ease-out, box-shadow 0.2s ease-out, background-color 0.2s ease-out; cursor: pointer; }
         .task-item:hover { transform: translateX(5px) scale(1.03); box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08); }
-        
+
         .bd-time-color { color: #10b981; }
         .usa-time-color { color: #f87171; }
         .pm-time-color { color: #8b5cf6; }
         .special-font { font-family: 'Playfair Display', serif; font-size: 1.05em; }
 
-        .countdown-warn { color: #f59e0b; } /* amber-500 */
-        .countdown-urgent { color: #ef4444; } /* red-500 */
-        
+        .countdown-warn { color: #f59e0b; }
+        .countdown-urgent { color: #ef4444; }
+
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
             display: none; align-items: center; justify-content: center; z-index: 50;
             perspective: 1000px;
         }
-        
+
         #focus-mode-content {
             transition: transform 0.1s ease-out;
         }
-        
+
         .settings-menu {
             background: rgba(255, 255, 255, 0.7);
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
         }
-        .settings-menu a { color: #1f2937; } /* Dark text for light menu */
+        .settings-menu a { color: #1f2937; }
         .settings-menu a:hover { background-color: rgba(255, 255, 255, 0.5); }
     </style>
 </head>
 <body class="text-gray-800">
 
     <div class="container mx-auto px-2 sm:px-4 w-full">
-        
+
         <!-- Header with Theme Toggle -->
         <div class="flex justify-center items-center my-8 gap-4 flex-wrap">
              <div class="clock-widget">
@@ -162,7 +162,7 @@
                 </div>
             </div>
         </div>
-        
+
         <!-- Weekly Progress Bars -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <div id="current-week-progress" class="progress-bar-container glass-card p-4"></div>
@@ -170,10 +170,8 @@
         </div>
 
         <!-- Schedule Cards -->
-        <main class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            <!-- Cards will be dynamically inserted here -->
-        </main>
-        
+        <main class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></main>
+
         <!-- Future Ideas Box -->
         <div id="idea-box-container" class="glass-card p-4 mt-8">
             <h3 class="font-bold text-center mb-2">Future Ideas</h3>
@@ -183,7 +181,7 @@
                 <button id="reset-ideas-btn" class="settings-btn text-xs py-2 px-3 rounded-lg">Reset</button>
             </div>
         </div>
-        
+
         <!-- Modals -->
         <div id="focus-mode-overlay" class="modal-overlay">
             <div id="focus-mode-content" class="modal-content glass-card text-white text-center p-8 rounded-2xl"></div>
@@ -195,7 +193,7 @@
                 <div id="qrcode" class="flex justify-center"></div>
             </div>
         </div>
-         <div id="clash-warning-overlay" class="modal-overlay">
+        <div id="clash-warning-overlay" class="modal-overlay">
             <div id="clash-warning-content" class="modal-content glass-card p-8 text-center text-gray-800 max-w-md"></div>
         </div>
 
@@ -211,10 +209,10 @@
             PERADISE: [ { slot: 1, bd: '6:33 AM', usa: '8:33 PM' }, { slot: 2, bd: '9:33 AM', usa: '11:33 PM' }, { slot: 3, bd: '6:33 PM', usa: '8:33 AM' }, { slot: 4, bd: '9:38 PM', usa: '11:38 AM' }, { slot: 5, bd: '3:33 AM', usa: '5:33 PM' }, { slot: 6, bd: '3:33 PM', usa: '5:33 AM' } ],
             VALERIO: [ { slot: 1, bd: '1:33 AM', usa: '3:33 PM' }, { slot: 2, bd: '4:33 AM', usa: '6:33 PM' }, { slot: 3, bd: '7:33 AM', usa: '9:33 PM' }, { slot: 4, bd: '10:33 AM', usa: '12:33 AM' }, { slot: 5, bd: '7:33 PM', usa: '9:33 AM' }, { slot: 6, bd: '10:33 PM', usa: '12:33 PM' } ]
         };
-        
+
         const cardIds = Object.keys(scheduleData);
         let focusCountdownInterval;
-        
+
         // --- THEME TOGGLE LOGIC ---
         const themeToggleBtn = document.getElementById('theme-toggle');
         const lightIcon = document.getElementById('theme-toggle-light-icon');
@@ -244,7 +242,7 @@
 
         function sendNotification(cardId, task) {
             if (!('Notification' in window) || Notification.permission !== 'granted') return;
-            const notification = new Notification(`Time to post for ${cardId}!`, {
+            new Notification(`Time to post for ${cardId}!`, {
                 body: `Post now at ${task.bd} (BD)`,
                 icon: 'https://img.icons8.com/color/48/000000/appointment-reminders.png',
                 tag: `${cardId}-${task.slot}`,
@@ -295,7 +293,7 @@
             }
             return `<div class="task-item flex items-center justify-between p-3 rounded-lg"><div class="flex items-center gap-3"><div class="flex-shrink-0 w-7 h-7 bg-black/10 rounded-md flex items-center justify-center font-bold text-xs">${item.slot}</div><div class="task-text text-sm"><p class="${bdTimeClass} ${specialFontClass}">${item.bd} <span class="text-gray-500 text-xs">(BD)</span></p><p class="font-normal usa-time-color ${specialFontClass}">${item.usa} <span class="text-gray-500 text-xs">(USA)</span></p></div></div><input type="checkbox" class="task-checkbox flex-shrink-0" data-card="${cardId}" data-index="${index}"></div>`;
         }
-        
+
         function renderAllCards() {
             const mainContainer = document.querySelector('main');
             mainContainer.innerHTML = '';
@@ -306,13 +304,13 @@
 
         function renderSchedule(cardId) {
             const container = document.getElementById(`${cardId.toLowerCase()}-tasks`);
-            container.innerHTML = ''; 
+            container.innerHTML = '';
             scheduleData[cardId].forEach((item, index) => {
                 container.innerHTML += createTaskItem(item, cardId, index);
                 if (index === 3) container.innerHTML += `<div class="my-1 border-t border-dashed border-black/20 dark:border-white/20"></div>`;
             });
         }
-        
+
         function updateSummary(cardId) {
             const date = document.getElementById(`${cardId.toLowerCase()}-date`).value;
             const state = JSON.parse(localStorage.getItem(`schedule-${cardId}-${date}`)) || [];
@@ -415,7 +413,8 @@
             const prevWeekEl = document.getElementById('previous-week-progress');
             prevWeekEl.innerHTML = `<div class="text-sm text-center font-semibold mb-2">Previous Week</div><div class="text-xs text-center mb-2">Planned: ${prevWeekStats.totalPlanned} | Posted: ${prevWeekStats.totalDone} | Success: ${prevWeekStats.successRate}% ✅</div><div class="progress-bar-bg w-full bg-gray-200 rounded-full h-2.5"><div class="progress-bar-inner bg-blue-500 h-2.5 rounded-full" style="width: ${prevWeekStats.successRate}%"></div></div>`;
         }
-        
+
+        // FIX: Keep CSV strings valid JS by using \n (no literal newlines inside quotes)
         function exportTodaySummary() {
             let csvContent = "data:text/csv;charset=utf-8,Page,Date,Slot,BD Time,USA Time,Status\n";
             const todayBD = getTodayDateStringBD();
@@ -429,10 +428,14 @@
             });
             const encodedUri = encodeURI(csvContent);
             const link = document.createElement("a");
-            link.setAttribute("href", encodedUri); link.setAttribute("download", `posting_summary_${todayBD}.csv`);
-            document.body.appendChild(link); link.click(); document.body.removeChild(link);
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `posting_summary_${todayBD}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
-        
+
+        // FIX: split by \n instead of a broken literal newline token
         function importCSV() {
             const input = document.createElement('input');
             input.type = 'file';
@@ -444,25 +447,25 @@
                 reader.onload = readerEvent => {
                     if (confirm("Are you sure you want to import this CSV? This may overwrite existing data for the dates in the file.")) {
                         const csv = readerEvent.target.result;
-                        const lines = csv.split('\n').slice(1); // Skip header
+                        const lines = csv.split('\n').slice(1);
                         lines.forEach(line => {
                             if (!line) return;
                             const [page, date, slot, bdTime, usaTime, status] = line.split(',');
-                            const cardId = page.trim();
-                            const dateStr = date.trim();
+                            const cardId = (page || '').trim();
+                            const dateStr = (date || '').trim();
                             if (cardIds.includes(cardId) && dateStr) {
                                 let state = JSON.parse(localStorage.getItem(`schedule-${cardId}-${dateStr}`)) || new Array(scheduleData[cardId].length).fill(false);
-                                const slotIndex = parseInt(slot.trim()) - 1;
+                                const slotIndex = parseInt((slot || '').trim(), 10) - 1;
                                 if (slotIndex >= 0 && slotIndex < state.length) {
-                                    state[slotIndex] = status.trim().toLowerCase() === 'done';
+                                    state[slotIndex] = (status || '').trim().toLowerCase() === 'done';
                                 }
                                 localStorage.setItem(`schedule-${cardId}-${dateStr}`, JSON.stringify(state));
                             }
                         });
                         location.reload();
                     }
-                }
-            }
+                };
+            };
             input.click();
         }
 
@@ -491,12 +494,12 @@
                     const taskTime = new Date(nowInBD);
                     taskTime.setHours(hours, minutes, 0, 0);
                     const diff = taskTime - nowInBD;
-                    if (diff > 0 && diff <= 3600000) { // Within next 1 hour
+                    if (diff > 0 && diff <= 3600000) {
                         upcomingPosts.push({ time: taskTime, card: cardId, task: task });
                     }
                  });
             });
-            
+
             upcomingPosts.sort((a, b) => a.time - b.time);
 
             if (upcomingPosts.length > 0) {
@@ -514,10 +517,10 @@
                 content.innerHTML = `<h2 class="text-4xl font-bold">No posts in the next hour.</h2>`;
             }
             overlay.style.display = 'flex';
-            if(focusCountdownInterval) clearInterval(focusCountdownInterval);
+            if (focusCountdownInterval) clearInterval(focusCountdownInterval);
             focusCountdownInterval = setInterval(showFocusMode, 1000);
         }
-        
+
         function checkForClashes() {
             const timeMap = {};
             let clashes = [];
@@ -541,7 +544,10 @@
 
         // --- INITIALIZATION ---
         document.addEventListener('DOMContentLoaded', () => {
-            renderAllCards(); updateClocks(); setInterval(updateClocks, 1000);
+            renderAllCards();
+            updateClocks();
+            setInterval(updateClocks, 1000);
+
             cardIds.forEach(cardId => {
                 renderSchedule(cardId);
                 const datePicker = document.getElementById(`${cardId.toLowerCase()}-date`);
@@ -549,7 +555,7 @@
                 loadState(cardId);
                 datePicker.addEventListener('change', () => loadState(cardId));
             });
-            
+
             document.querySelector('.container').addEventListener('click', (e) => {
                 const taskItem = e.target.closest('.task-item');
                 if (taskItem && e.target.type !== 'checkbox') {
@@ -566,11 +572,11 @@
                     saveState(cardId);
                 }
             });
-            
+
             document.getElementById('export-csv-btn').addEventListener('click', exportTodaySummary);
             document.getElementById('import-csv-btn').addEventListener('click', importCSV);
             document.getElementById('export-png-btn').addEventListener('click', exportAsPNG);
-            
+
             const focusOverlay = document.getElementById('focus-mode-overlay');
             document.getElementById('focus-mode-btn').addEventListener('click', showFocusMode);
             focusOverlay.addEventListener('click', () => {
@@ -585,20 +591,20 @@
                 const rotateY = (clientX / innerWidth - 0.5) * 30;
                 content.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
             });
-            
+
             const ideaBox = document.getElementById('idea-input');
             ideaBox.value = localStorage.getItem('contentIdeas') || '';
             document.getElementById('save-ideas-btn').addEventListener('click', () => {
-                localStorage.setItem('contentIdeas', ideaBox.value)
+                localStorage.setItem('contentIdeas', ideaBox.value);
                 alert('Ideas Saved!');
             });
             document.getElementById('reset-ideas-btn').addEventListener('click', () => {
-                if(confirm('Are you sure you want to reset all ideas?')) {
+                if (confirm('Are you sure you want to reset all ideas?')) {
                     ideaBox.value = '';
                     localStorage.removeItem('contentIdeas');
                 }
             });
-            
+
             const settingsBtn = document.getElementById('settings-btn');
             const settingsMenu = document.getElementById('settings-menu');
             settingsBtn.addEventListener('click', (e) => {
@@ -620,7 +626,7 @@
                 new QRCode(qrEl, { text: url, width: 256, height: 256 });
                 document.getElementById('qr-code-overlay').style.display = 'flex';
             });
-            
+
             document.getElementById('qr-code-overlay').addEventListener('click', () => {
                  document.getElementById('qr-code-overlay').style.display = 'none';
             });
@@ -628,21 +634,124 @@
             const urlParams = new URLSearchParams(window.location.search);
             const syncData = urlParams.get('data');
             if (syncData) {
-                if (confirm("Sync data from another device? This will overwrite current data.")) {
+                if (confirm('Sync data from another device? This will overwrite current data.')) {
                     const data = JSON.parse(decodeURIComponent(syncData));
                     localStorage.clear();
                     for (const key in data) {
                         localStorage.setItem(key, data[key]);
                     }
-                    window.location.href = window.location.href.split('?')[0]; // Reload without params
+                    window.location.href = window.location.href.split('?')[0];
                 }
             }
 
-            updateWeeklyProgressBar(); updateAllCountdowns();
+            updateWeeklyProgressBar();
+            updateAllCountdowns();
             setInterval(updateAllCountdowns, 30000);
-            requestNotificationPermission(); setInterval(checkAndSendNotifications, 60000);
+            requestNotificationPermission();
+            setInterval(checkAndSendNotifications, 60000);
             checkForClashes();
         });
     </script>
+
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+      import {
+        getFirestore,
+        doc,
+        setDoc,
+        getDoc,
+        serverTimestamp,
+        onSnapshot
+      } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+
+      const firebaseConfig = {
+        apiKey: "AIzaSyAwtMq6qF5NZN49E98YLlIYN-FaGqC0v0I",
+        authDomain: "fb-sync-bf14e.firebaseapp.com",
+        projectId: "fb-sync-bf14e",
+        storageBucket: "fb-sync-bf14e.firebasestorage.app",
+        messagingSenderId: "323719220242",
+        appId: "1:323719220242:web:d1021bd67b8e29e54c1ccb"
+      };
+
+      const app = initializeApp(firebaseConfig);
+      const db = getFirestore(app);
+
+      const SYNC_KEY = "syed-sync";
+
+      function refFor(cardId, date) {
+        return doc(db, "users", SYNC_KEY, "states", `${cardId}-${date}`);
+      }
+
+      const baseSaveState = window.saveState;
+      const baseLoadState = window.loadState;
+
+      window.saveState = async function (cardId) {
+        if (typeof baseSaveState === "function") baseSaveState(cardId);
+
+        const date = document.getElementById(`${cardId.toLowerCase()}-date`).value;
+        const key = `schedule-${cardId}-${date}`;
+        const state = JSON.parse(localStorage.getItem(key) || "[]");
+
+        try {
+          await setDoc(refFor(cardId, date), { state, updatedAt: serverTimestamp() }, { merge: true });
+        } catch (e) {}
+      };
+
+      const listeners = new Map();
+
+      function watchState(cardId) {
+        const date = document.getElementById(`${cardId.toLowerCase()}-date`).value;
+        const k = `${cardId}-${date}`;
+
+        if (listeners.has(k)) return;
+
+        const unsub = onSnapshot(refFor(cardId, date), (snap) => {
+          if (!snap.exists()) return;
+
+          const currentDate = document.getElementById(`${cardId.toLowerCase()}-date`).value;
+          const state = (snap.data() && snap.data().state) ? snap.data().state : [];
+
+          localStorage.setItem(`schedule-${cardId}-${date}`, JSON.stringify(state));
+
+          if (currentDate === date && typeof baseLoadState === "function") {
+            baseLoadState(cardId);
+          }
+        });
+
+        listeners.set(k, unsub);
+      }
+
+      window.loadState = async function (cardId) {
+        const date = document.getElementById(`${cardId.toLowerCase()}-date`).value;
+
+        try {
+          const snap = await getDoc(refFor(cardId, date));
+          if (snap.exists()) {
+            const state = (snap.data() && snap.data().state) ? snap.data().state : [];
+            localStorage.setItem(`schedule-${cardId}-${date}`, JSON.stringify(state));
+          }
+        } catch (e) {}
+
+        if (typeof baseLoadState === "function") baseLoadState(cardId);
+
+        try { watchState(cardId); } catch (e) {}
+      };
+
+      window.addEventListener("DOMContentLoaded", () => {
+        try {
+          const ids = window.cardIds || Object.keys(window.scheduleData || {});
+          ids.forEach((id) => {
+            try { watchState(id); } catch (e) {}
+            const dp = document.getElementById(`${id.toLowerCase()}-date`);
+            if (dp) {
+              dp.addEventListener("change", () => {
+                try { watchState(id); } catch (e) {}
+              });
+            }
+          });
+        } catch (e) {}
+      });
+    </script>
+
 </body>
 </html>
