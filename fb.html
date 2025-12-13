@@ -207,7 +207,7 @@
             SHOP: [ { slot: 1, bd: '12:00 AM', usa: '2:00 PM' }, { slot: 2, bd: '3:00 AM', usa: '5:00 PM' }, { slot: 3, bd: '6:00 AM', usa: '8:00 PM' }, { slot: 4, bd: '9:00 AM', usa: '11:00 PM' }, { slot: 5, bd: '12:00 PM', usa: '2:00 AM' }, { slot: 6, bd: '9:00 PM', usa: '11:00 AM' } ],
             BRUSHART: [ { slot: 1, bd: '6:11 AM', usa: '8:11 PM' }, { slot: 2, bd: '9:11 AM', usa: '11:11 PM' }, { slot: 3, bd: '6:11 PM', usa: '8:11 AM' }, { slot: 4, bd: '9:11 PM', usa: '11:11 AM' }, { slot: 5, bd: '3:11 AM', usa: '5:11 PM' }, { slot: 6, bd: '3:11 PM', usa: '5:11 AM' } ],
             PERADISE: [ { slot: 1, bd: '6:33 AM', usa: '8:33 PM' }, { slot: 2, bd: '9:33 AM', usa: '11:33 PM' }, { slot: 3, bd: '6:33 PM', usa: '8:33 AM' }, { slot: 4, bd: '9:38 PM', usa: '11:38 AM' }, { slot: 5, bd: '3:33 AM', usa: '5:33 PM' }, { slot: 6, bd: '3:33 PM', usa: '5:33 AM' } ],
-            VALERIO: [ { slot: 1, bd: '1:33 AM', usa: '3:33 PM' }, { slot: 2, bd: '4:33 AM', usa: '6:33 PM' }, { slot: 3, bd: '7:33 AM', usa: '9:33 PM' }, { slot: 4, bd: '10:33 AM', usa: '12:33 AM' }, { slot: 5, bd: '7:33 PM', usa: '9:33 AM' }, { slot: 6, bd: '10:33 PM', usa: '12:33 PM' } ]
+            BREATHING: [ { slot: 1, bd: '1:33 AM', usa: '3:33 PM' }, { slot: 2, bd: '4:33 AM', usa: '6:33 PM' }, { slot: 3, bd: '7:33 AM', usa: '9:33 PM' }, { slot: 4, bd: '10:33 AM', usa: '12:33 AM' }, { slot: 5, bd: '7:33 PM', usa: '9:33 AM' }, { slot: 6, bd: '10:33 PM', usa: '12:33 PM' } ]
         };
 
         const cardIds = Object.keys(scheduleData);
@@ -287,7 +287,7 @@
         function createTaskItem(item, cardId, index) {
             let bdTimeClass = "font-bold bd-time-color";
             let specialFontClass = "";
-            if (['ARTS', 'BOOM', 'SHOP', 'VALERIO'].includes(cardId.toUpperCase()) && item.slot >= 5) bdTimeClass = "font-bold pm-time-color";
+            if (['ARTS', 'BOOM', 'SHOP', 'BREATHING'].includes(cardId.toUpperCase()) && item.slot >= 5) bdTimeClass = "font-bold pm-time-color";
             if (['BRUSHART', 'PERADISE'].includes(cardId.toUpperCase()) && item.slot >= 5) {
                 specialFontClass = "special-font"; bdTimeClass = "font-bold pm-time-color";
             }
