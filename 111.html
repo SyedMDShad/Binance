@@ -3,525 +3,477 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DualAI Hub - Ultimate</title>
+    <title>Gemini Arena - Battle Mode</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <script>
-        // --- YOUR API KEY ---
-        const USER_API_KEY = "AIzaSyDOvdH7pR_P4zBhJzVW6edDv-JOovfhnJQ";
+        // --- YOUR KEY ---
+        const USER_KEY = "AIzaSyDOvdH7pR_P4zBhJzVW6edDv-JOovfhnJQ";
 
         tailwind.config = {
             darkMode: 'class',
             theme: {
                 extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                        display: ['Space Grotesk', 'sans-serif'],
-                    },
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
                     colors: {
-                        dark: '#050505',
-                        card: '#111111',
-                        border: '#222222',
-                        accent: '#3b82f6',
-                    },
-                    animation: {
-                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        dark: '#121212',
+                        card: '#1e1e1e',
+                        border: '#2c2c2c',
+                        accent: '#cba6f7', // Arena-like purple hint
                     }
                 }
             }
         }
     </script>
     <style>
-        body { background-color: #000; color: #fff; }
-        .glass { background: rgba(20, 20, 20, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.08); }
-        .scroll-hide::-webkit-scrollbar { width: 4px; }
-        .scroll-hide::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
-        .canvas-pattern {
-            background-image: radial-gradient(#222 1px, transparent 1px);
-            background-size: 24px 24px;
+        body { background-color: #121212; color: #e0e0e0; }
+        .scroll-hide::-webkit-scrollbar { width: 6px; }
+        .scroll-hide::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+        .msg-user { background-color: #2b2b2b; border-radius: 12px 12px 0 12px; }
+        .msg-ai { background-color: transparent; }
+        .typing-indicator span {
+            display: inline-block; width: 4px; height: 4px; background: #888; border-radius: 50%;
+            animation: bounce 1.4s infinite ease-in-out both; margin: 0 1px;
         }
-        /* Loading Dots */
-        .typing-dot {
-            width: 4px; height: 4px; background: #fff; border-radius: 50%; display: inline-block;
-            animation: typing 1.4s infinite ease-in-out both; margin: 0 1px;
+        .typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
+        .typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
+        
+        /* Select Dropdown styling like Arena */
+        .arena-select {
+            background: #2c2c2c; border: 1px solid #3a3a3a; color: white; padding: 4px 8px; 
+            border-radius: 6px; font-size: 12px; outline: none; cursor: pointer;
         }
-        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
-        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
-        @keyframes typing { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
+        .arena-select:hover { border-color: #555; }
     </style>
 </head>
-<body class="h-screen flex flex-col overflow-hidden selection:bg-blue-500/30">
+<body class="h-screen flex flex-col overflow-hidden">
 
-    <!-- Header -->
-    <header class="h-16 border-b border-border flex items-center justify-between px-6 bg-dark/90 backdrop-blur z-50">
-        <div onclick="goHome()" class="flex items-center gap-3 cursor-pointer group">
-            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-violet-600 flex items-center justify-center shadow-lg transition transform group-hover:scale-110">
-                <i class="fa-solid fa-cube text-white text-sm"></i>
+    <!-- Navbar -->
+    <header class="h-14 border-b border-border bg-[#181818] flex items-center justify-between px-4 z-50">
+        <div class="flex items-center gap-4">
+            <div class="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent cursor-pointer" onclick="location.reload()">
+                Gemini Arena ⚔️
             </div>
-            <h1 class="font-display font-bold text-xl tracking-tight">DualAI <span class="text-gray-500 font-sans text-xs font-normal border border-border px-1.5 py-0.5 rounded ml-1">MAX</span></h1>
+            <!-- Mode Switcher -->
+            <div class="hidden md:flex bg-dark rounded-lg p-1 border border-border">
+                <button onclick="switchMode('arena')" id="btn-arena" class="px-3 py-1 rounded text-xs font-medium bg-gray-700 text-white transition">Side-by-Side</button>
+                <button onclick="switchMode('studio')" id="btn-studio" class="px-3 py-1 rounded text-xs font-medium text-gray-400 hover:text-white transition">Image Studio</button>
+            </div>
         </div>
 
-        <div id="clock" class="font-mono text-blue-400 text-lg tracking-widest bg-gray-900/80 px-6 py-1.5 rounded-full border border-blue-500/30 shadow-[0_0_15px_rgba(59,130,246,0.15)] hidden md:block">--:--:--</div>
-
         <div class="flex items-center gap-3">
-            <div id="apiStatus" class="text-[10px] bg-green-900/20 text-green-400 px-2 py-1 rounded border border-green-800 flex items-center gap-2">
-                <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span> Key Loaded
+            <div id="status" class="text-[10px] text-green-500 flex items-center gap-1">
+                <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span> Online
             </div>
-            <button onclick="toggleSettings()" class="w-9 h-9 rounded-full bg-card hover:bg-white/10 text-gray-400 hover:text-white transition flex items-center justify-center border border-border">
-                <i class="fa-solid fa-gear"></i>
-            </button>
+            <button onclick="openSettings()" class="text-gray-400 hover:text-white transition"><i class="fa-solid fa-gear"></i></button>
         </div>
     </header>
 
-    <!-- Main Content -->
-    <div class="flex-1 relative overflow-hidden">
+    <!-- MAIN CONTENT -->
+    <div class="flex-1 relative overflow-hidden flex">
 
-        <!-- 1. HOME VIEW -->
-        <div id="view-home" class="absolute inset-0 z-30 bg-dark flex flex-col items-center justify-center p-6 animate-fade-in">
-            <div class="text-center mb-12">
-                <h2 class="text-4xl md:text-5xl font-display font-bold mb-4 text-white">Select Workspace</h2>
-                <p class="text-gray-500 text-lg">Powerful Dual Intelligence & Image Tools</p>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl w-full">
-                <!-- Chat Card -->
-                <div onclick="switchView('ai')" class="group bg-card border border-border rounded-2xl p-8 cursor-pointer hover:border-blue-500/50 transition hover:shadow-[0_0_30px_rgba(59,130,246,0.15)]">
-                    <div class="w-14 h-14 bg-blue-500/10 text-blue-400 rounded-xl flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition border border-blue-500/20">
-                        <i class="fa-solid fa-robot"></i>
+        <!-- VIEW 1: ARENA (CHAT) -->
+        <div id="view-arena" class="flex-1 flex flex-col w-full h-full">
+            
+            <!-- Model Headers -->
+            <div class="h-10 border-b border-border flex bg-[#181818]">
+                <!-- Left Header -->
+                <div class="flex-1 border-r border-border flex items-center justify-between px-3">
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-bold text-blue-400">Model A</span>
+                        <select id="leftModel" class="arena-select">
+                            <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+                            <option value="gemini-3-pro-preview">Gemini 3.0 Pro (Preview)</option>
+                            <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
+                            <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
+                        </select>
                     </div>
-                    <h3 class="text-2xl font-bold text-white mb-2">Dual AI Chat</h3>
-                    <p class="text-gray-400 text-sm leading-relaxed">
-                        <span class="text-blue-400 font-bold">Left:</span> Gemini 1.5 Pro (Smart)<br>
-                        <span class="text-yellow-400 font-bold">Right:</span> Gemini 1.5 Flash (Fast)
-                    </p>
-                    <div class="mt-6 flex items-center text-blue-500 text-sm font-medium opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition">
-                        Open Chat <i class="fa-solid fa-arrow-right ml-2"></i>
-                    </div>
+                    <button onclick="clearSide('left')" class="text-gray-500 hover:text-white text-xs"><i class="fa-solid fa-eraser"></i></button>
                 </div>
-
-                <!-- Editor Card -->
-                <div onclick="switchView('editor')" class="group bg-card border border-border rounded-2xl p-8 cursor-pointer hover:border-purple-500/50 transition hover:shadow-[0_0_30px_rgba(168,85,247,0.15)]">
-                    <div class="w-14 h-14 bg-purple-500/10 text-purple-400 rounded-xl flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition border border-purple-500/20">
-                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                
+                <!-- Right Header -->
+                <div class="flex-1 flex items-center justify-between px-3">
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-bold text-purple-400">Model B</span>
+                        <select id="rightModel" class="arena-select">
+                            <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
+                            <option value="gemini-2.5-flash-image">Gemini 2.5 Flash (Img Gen)</option>
+                            <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+                            <option value="gemini-3-flash-preview">Gemini 3.0 Flash</option>
+                        </select>
                     </div>
-                    <h3 class="text-2xl font-bold text-white mb-2">Image Studio</h3>
-                    <p class="text-gray-400 text-sm leading-relaxed">
-                        4K Upscaling, Color Grading, Filters, and Professional Adjustments.
-                    </p>
-                    <div class="mt-6 flex items-center text-purple-500 text-sm font-medium opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition">
-                        Open Editor <i class="fa-solid fa-arrow-right ml-2"></i>
-                    </div>
+                    <button onclick="clearSide('right')" class="text-gray-500 hover:text-white text-xs"><i class="fa-solid fa-eraser"></i></button>
                 </div>
             </div>
-        </div>
 
-        <!-- 2. AI CHAT VIEW -->
-        <div id="view-ai" class="absolute inset-0 z-20 bg-dark flex flex-col hidden">
-            <!-- Toolbar -->
-            <div class="h-14 border-b border-border bg-card/80 backdrop-blur flex items-center justify-between px-4">
-                <button onclick="goHome()" class="text-xs font-medium text-gray-400 hover:text-white flex items-center gap-2 px-3 py-1.5 rounded hover:bg-white/5 transition">
-                    <i class="fa-solid fa-arrow-left"></i> Home
-                </button>
-                <div class="flex items-center gap-2">
-                    <span class="text-[10px] text-gray-500 uppercase tracking-widest hidden md:block">Dual Intelligence</span>
-                </div>
-                <button onclick="clearChat()" class="text-xs text-red-400 hover:text-red-300 flex items-center gap-2 px-3 py-1.5 rounded hover:bg-white/5 transition">
-                    <i class="fa-solid fa-trash-can"></i> Clear
-                </button>
-            </div>
-
-            <!-- Chat Area -->
+            <!-- Chat Windows -->
             <div class="flex-1 flex overflow-hidden">
-                <!-- Left: Pro -->
-                <div class="flex-1 flex flex-col border-r border-border bg-[#0d1117]">
-                    <div class="p-3 border-b border-white/5 flex items-center justify-between bg-black/20">
-                        <div class="flex items-center gap-2">
-                            <i class="fa-solid fa-gem text-blue-400"></i>
-                            <span class="text-sm font-bold text-gray-200">Gemini 1.5 Pro</span>
-                        </div>
-                        <span class="text-[10px] bg-blue-500/10 text-blue-400 px-2 py-0.5 rounded border border-blue-500/20">Premium</span>
-                    </div>
-                    <div id="leftChat" class="flex-1 overflow-y-auto p-4 space-y-4 scroll-hide text-sm">
-                        <div class="intro-msg text-center mt-20 text-gray-600 text-xs">Ready. Ask anything...</div>
-                    </div>
+                <!-- Left Window -->
+                <div id="leftChat" class="flex-1 bg-[#0d0d0d] overflow-y-auto p-4 space-y-4 border-r border-border scroll-hide">
+                    <div class="text-center mt-20 text-gray-700 text-xs uppercase tracking-widest font-bold">Model A Ready</div>
                 </div>
                 
-                <!-- Right: Flash -->
-                <div class="flex-1 flex flex-col bg-[#111]">
-                    <div class="p-3 border-b border-white/5 flex items-center justify-between bg-black/20">
-                        <div class="flex items-center gap-2">
-                            <i class="fa-solid fa-bolt text-yellow-400"></i>
-                            <span class="text-sm font-bold text-gray-200">Gemini 1.5 Flash</span>
-                        </div>
-                        <span class="text-[10px] bg-yellow-500/10 text-yellow-400 px-2 py-0.5 rounded border border-yellow-500/20">Fast</span>
-                    </div>
-                    <div id="rightChat" class="flex-1 overflow-y-auto p-4 space-y-4 scroll-hide text-sm">
-                        <div class="intro-msg text-center mt-20 text-gray-600 text-xs">Ready. Ask anything...</div>
-                    </div>
+                <!-- Right Window -->
+                <div id="rightChat" class="flex-1 bg-[#0d0d0d] overflow-y-auto p-4 space-y-4 scroll-hide">
+                    <div class="text-center mt-20 text-gray-700 text-xs uppercase tracking-widest font-bold">Model B Ready</div>
                 </div>
             </div>
 
-            <!-- Input -->
-            <div class="p-4 bg-card border-t border-border">
-                <div id="chatImagePreview" class="hidden mb-2 relative inline-block animate-fade-in">
-                    <img id="chatImgThumb" src="" class="h-20 rounded-lg border border-gray-600 object-cover">
-                    <button onclick="removeChatImage()" class="absolute -top-2 -right-2 bg-red-600 hover:bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs shadow-lg transition"><i class="fa-solid fa-xmark"></i></button>
-                </div>
-                <div class="max-w-4xl mx-auto flex gap-3 relative">
-                    <button onclick="document.getElementById('chatFileInput').click()" class="w-12 h-12 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white flex items-center justify-center transition border border-gray-700 hover:border-gray-500">
-                        <i class="fa-solid fa-paperclip text-lg"></i>
-                    </button>
-                    <input type="file" id="chatFileInput" class="hidden" accept="image/*" onchange="handleChatImage(event)">
-                    
-                    <textarea id="promptBox" rows="1" class="flex-1 bg-gray-900 border border-gray-700 rounded-xl px-5 py-3 text-sm text-white focus:outline-none focus:border-blue-500 transition resize-none shadow-inner placeholder-gray-600" placeholder="Type a message to Gemini Pro & Flash..."></textarea>
-                    
-                    <button onclick="sendPrompt()" class="absolute right-2 top-2 p-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition shadow-lg w-8 h-8 flex items-center justify-center">
-                        <i class="fa-solid fa-paper-plane text-xs"></i>
-                    </button>
+            <!-- Input Area -->
+            <div class="p-4 bg-[#181818] border-t border-border">
+                <div class="max-w-4xl mx-auto flex flex-col gap-2">
+                    <!-- Image Preview -->
+                    <div id="imgPreview" class="hidden flex items-center gap-2 bg-[#252525] p-2 rounded w-fit">
+                        <img id="thumb" src="" class="h-10 w-10 object-cover rounded border border-gray-600">
+                        <span class="text-xs text-gray-400">Image attached</span>
+                        <button onclick="clearImg()" class="text-red-400 hover:text-white ml-2"><i class="fa-solid fa-times"></i></button>
+                    </div>
+
+                    <div class="flex gap-2">
+                        <button onclick="document.getElementById('fileIn').click()" class="h-10 w-10 rounded-lg bg-[#252525] hover:bg-[#333] text-gray-400 transition flex items-center justify-center border border-border">
+                            <i class="fa-solid fa-image"></i>
+                        </button>
+                        <input type="file" id="fileIn" class="hidden" accept="image/*" onchange="handleFile(event)">
+                        
+                        <textarea id="prompt" rows="1" class="flex-1 bg-[#252525] text-white text-sm px-3 py-2.5 rounded-lg border border-border focus:border-blue-500 outline-none resize-none" placeholder="Enter your prompt here..."></textarea>
+                        
+                        <button onclick="send()" class="h-10 w-10 rounded-lg bg-blue-600 hover:bg-blue-500 text-white transition flex items-center justify-center">
+                            <i class="fa-solid fa-paper-plane"></i>
+                        </button>
+                    </div>
+                    <div class="text-center text-[10px] text-gray-600">
+                        Models will generate responses simultaneously.
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- 3. EDITOR VIEW -->
-        <div id="view-editor" class="absolute inset-0 z-20 bg-dark flex flex-col hidden">
-            <div class="h-14 border-b border-border bg-card flex items-center justify-between px-4">
-                <div class="flex items-center gap-4">
-                    <button onclick="goHome()" class="text-gray-400 hover:text-white px-3 py-1.5 rounded hover:bg-white/5 transition flex items-center gap-2">
-                        <i class="fa-solid fa-arrow-left"></i> Home
-                    </button>
-                    <div class="h-6 w-px bg-gray-700"></div>
-                    <button onclick="document.getElementById('editFileInput').click()" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-1.5 rounded-md text-xs font-bold transition flex items-center gap-2 shadow-lg shadow-blue-900/20">
-                        <i class="fa-solid fa-upload"></i> Upload
-                    </button>
-                    <input type="file" id="editFileInput" class="hidden" accept="image/*" onchange="handleEditUpload(event)">
-                </div>
-                
-                <div class="flex items-center gap-2">
-                    <button onclick="undo()" class="w-9 h-9 flex items-center justify-center rounded text-gray-400 hover:text-white hover:bg-gray-800 transition border border-transparent hover:border-gray-700" title="Undo"><i class="fa-solid fa-rotate-left"></i></button>
-                    <button onclick="resetEditor()" class="w-9 h-9 flex items-center justify-center rounded text-red-400 hover:text-red-300 hover:bg-red-900/20 transition border border-transparent hover:border-red-900/50" title="Reset"><i class="fa-solid fa-trash-can"></i></button>
-                    <div class="h-6 w-px bg-gray-700 mx-2"></div>
-                    <button onclick="downloadImage()" class="bg-green-600 hover:bg-green-500 text-white px-4 py-1.5 rounded-md text-xs font-bold transition shadow-lg shadow-green-900/20">Download</button>
+        <!-- VIEW 2: IMAGE STUDIO -->
+        <div id="view-studio" class="flex-1 flex flex-col hidden bg-[#050505]">
+            <div class="h-10 border-b border-border bg-[#181818] flex items-center justify-between px-4">
+                <span class="text-xs font-bold text-gray-400 uppercase">Local Image Editor</span>
+                <div class="flex gap-2">
+                    <button onclick="document.getElementById('editFile').click()" class="text-xs bg-blue-600 px-3 py-1 rounded text-white hover:bg-blue-500">Upload</button>
+                    <input type="file" id="editFile" class="hidden" onchange="loadEditorImage(event)">
+                    <button onclick="downloadEdit()" class="text-xs bg-green-600 px-3 py-1 rounded text-white hover:bg-green-500">Save</button>
                 </div>
             </div>
 
             <div class="flex-1 flex overflow-hidden">
-                <div class="flex-1 canvas-pattern flex items-center justify-center relative p-8 overflow-auto">
-                    <canvas id="editorCanvas" class="shadow-2xl max-w-full max-h-full object-contain hidden border border-gray-800"></canvas>
-                    <div id="editorPlaceholder" onclick="document.getElementById('editFileInput').click()" class="text-center cursor-pointer group">
-                        <div class="w-24 h-24 bg-gray-800 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition shadow-xl border border-gray-700 group-hover:border-blue-500">
-                            <i class="fa-solid fa-image text-5xl text-gray-500 group-hover:text-blue-500 transition"></i>
-                        </div>
-                        <h3 class="text-gray-300 font-medium">Click to Open Image</h3>
-                        <p class="text-gray-600 text-xs mt-2">Supports JPG, PNG, WEBP</p>
-                    </div>
-                    <div id="resBadge" class="absolute bottom-4 right-4 bg-black/80 backdrop-blur border border-gray-800 px-3 py-1.5 rounded-lg flex gap-3 text-xs font-mono text-gray-400 hidden">
-                        <span id="dimText">0 x 0</span>
-                        <span class="w-px h-4 bg-gray-700"></span>
-                        <span id="sizeText">0 MB</span>
+                <!-- Canvas -->
+                <div class="flex-1 flex items-center justify-center p-8 bg-[url('https://www.transparenttextures.com/patterns/dark-matter.png')]">
+                    <canvas id="canvas" class="max-w-full max-h-full shadow-2xl border border-gray-800 hidden"></canvas>
+                    <div id="studio-placeholder" class="text-center text-gray-600">
+                        <i class="fa-solid fa-image text-4xl mb-2"></i>
+                        <p class="text-xs">Upload an image to edit</p>
                     </div>
                 </div>
 
-                <div class="w-72 bg-card border-l border-border flex flex-col overflow-y-auto">
-                    <div class="p-4 border-b border-border"><h3 class="text-xs font-bold text-gray-500 uppercase tracking-widest">Tools</h3></div>
-                    <div class="p-4 space-y-6">
-                        <div>
-                            <label class="text-xs text-gray-400 mb-2 block font-medium">Filters</label>
-                            <button onclick="applyInvert()" class="w-full bg-gray-800 hover:bg-gray-700 text-gray-300 py-3 rounded text-xs flex items-center justify-between px-3 transition border border-gray-700 group">
-                                Invert Colors <i class="fa-solid fa-circle-half-stroke text-gray-500 group-hover:text-white"></i>
-                            </button>
-                        </div>
-                        <div class="border-t border-border pt-4">
-                            <label class="text-xs text-gray-400 block mb-3 font-medium">Adjustments</label>
-                            <div class="space-y-4">
-                                <div><div class="flex justify-between text-[10px] text-gray-500 mb-1"><span>Brightness</span><span id="b-val" class="font-mono">100%</span></div><input type="range" min="0" max="200" value="100" class="w-full h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer" oninput="updateAdjustments('brightness', this.value)"></div>
-                                <div><div class="flex justify-between text-[10px] text-gray-500 mb-1"><span>Contrast</span><span id="c-val" class="font-mono">100%</span></div><input type="range" min="0" max="200" value="100" class="w-full h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer" oninput="updateAdjustments('contrast', this.value)"></div>
-                                <button onclick="applyAdjustments()" class="w-full bg-blue-600/10 text-blue-400 hover:bg-blue-600 hover:text-white py-2 rounded text-xs font-bold transition border border-blue-600/30">Apply Adjustments</button>
-                            </div>
-                        </div>
-                        <div class="border-t border-border pt-4">
-                            <label class="text-xs text-gray-400 mb-3 block font-medium">AI Upscale (Canvas)</label>
-                            <div class="grid grid-cols-2 gap-2">
-                                <button onclick="upscale(2)" class="bg-gray-800 hover:bg-purple-900/30 hover:text-purple-400 text-gray-300 py-3 rounded border border-gray-700 transition flex flex-col items-center gap-1 group"><span class="text-xs font-bold">2x HD</span><span class="text-[9px] text-gray-500 group-hover:text-purple-300" id="info-2x">calc...</span></button>
-                                <button onclick="upscale(4)" class="bg-gray-800 hover:bg-purple-900/30 hover:text-purple-400 text-gray-300 py-3 rounded border border-gray-700 transition flex flex-col items-center gap-1 group"><span class="text-xs font-bold">4x Ultra</span><span class="text-[9px] text-gray-500 group-hover:text-purple-300" id="info-4x">calc...</span></button>
-                            </div>
+                <!-- Tools Panel -->
+                <div class="w-64 bg-[#111] border-l border-border p-4 space-y-6 overflow-y-auto">
+                    <div>
+                        <label class="text-[10px] uppercase text-gray-500 font-bold mb-2 block">Quick Actions</label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button onclick="applyFilter('invert')" class="bg-[#222] hover:bg-[#333] text-gray-300 py-2 rounded text-xs border border-border">Invert</button>
+                            <button onclick="applyFilter('bw')" class="bg-[#222] hover:bg-[#333] text-gray-300 py-2 rounded text-xs border border-border">B&W</button>
                         </div>
                     </div>
+
+                    <div>
+                        <label class="text-[10px] uppercase text-gray-500 font-bold mb-2 block">Adjustments</label>
+                        <div class="space-y-3">
+                            <div>
+                                <div class="flex justify-between text-[10px] text-gray-400"><span>Brightness</span><span id="v-b">100%</span></div>
+                                <input type="range" min="0" max="200" value="100" class="w-full h-1 bg-gray-700 rounded cursor-pointer mt-1" oninput="updateEdit('brightness', this.value)">
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-[10px] text-gray-400"><span>Contrast</span><span id="v-c">100%</span></div>
+                                <input type="range" min="0" max="200" value="100" class="w-full h-1 bg-gray-700 rounded cursor-pointer mt-1" oninput="updateEdit('contrast', this.value)">
+                            </div>
+                            <button onclick="commitEdit()" class="w-full bg-blue-900/30 text-blue-400 border border-blue-900/50 py-1.5 rounded text-xs mt-2 hover:bg-blue-900/50">Apply Changes</button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="text-[10px] uppercase text-gray-500 font-bold mb-2 block">Upscale</label>
+                        <div class="flex gap-2">
+                            <button onclick="doUpscale(2)" class="flex-1 bg-[#222] hover:bg-purple-900/20 text-gray-300 hover:text-purple-400 py-2 rounded text-xs border border-border">2x HD</button>
+                            <button onclick="doUpscale(4)" class="flex-1 bg-[#222] hover:bg-purple-900/20 text-gray-300 hover:text-purple-400 py-2 rounded text-xs border border-border">4x Ultra</button>
+                        </div>
+                    </div>
+                    
+                    <button onclick="resetCanvas()" class="w-full text-red-400 hover:text-red-300 text-xs py-2 border border-red-900/30 rounded hover:bg-red-900/10">Reset All</button>
                 </div>
             </div>
         </div>
+
     </div>
 
-    <!-- Settings -->
-    <div id="settingsModal" class="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-[#111] border border-border rounded-xl w-full max-w-md p-6 shadow-2xl relative">
-            <button onclick="toggleSettings()" class="absolute top-4 right-4 text-gray-500 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
-            <h2 class="text-lg font-bold mb-1 text-white">API Configuration</h2>
-            <div class="space-y-4 mt-6">
-                <div>
-                    <label class="block text-xs font-bold text-gray-500 mb-1">Google API Key</label>
-                    <input type="password" id="keyGemini" class="w-full bg-black border border-gray-800 rounded p-2 text-sm text-white focus:border-blue-500 outline-none transition" placeholder="Paste Key Here">
-                </div>
+    <!-- API Modal -->
+    <div id="settingsModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[60] hidden flex items-center justify-center">
+        <div class="bg-[#1e1e1e] w-80 p-5 rounded-lg border border-border shadow-2xl">
+            <h3 class="text-sm font-bold text-white mb-4">Settings</h3>
+            <label class="text-xs text-gray-400 block mb-1">Google API Key</label>
+            <input type="password" id="apiKeyInput" class="w-full bg-[#121212] border border-border rounded p-2 text-xs text-white mb-4 outline-none focus:border-blue-500">
+            <div class="flex justify-end gap-2">
+                <button onclick="openSettings()" class="text-xs text-gray-400 hover:text-white px-3 py-1">Cancel</button>
+                <button onclick="saveKey()" class="text-xs bg-blue-600 text-white px-3 py-1.5 rounded">Save</button>
             </div>
-            <button onclick="saveSettings()" class="w-full mt-6 bg-blue-600 text-white text-sm font-bold py-2.5 rounded hover:bg-blue-500 transition">Save & Close</button>
         </div>
     </div>
 
     <script>
-        // GLOBAL STATE
-        const app = {
-            view: 'home',
-            key: localStorage.getItem('gemini_key') || USER_API_KEY,
-            chat: { image: null },
-            editor: { original: null, history: [], currentSrc: null, fileName: 'image.png', filters: { brightness: 100, contrast: 100 } }
+        // --- CORE ---
+        const state = {
+            key: localStorage.getItem('gemini_key') || USER_KEY,
+            chatImg: null,
+            editor: { img: null, history: [], filters: {b:100, c:100}, name: 'image.png' }
         };
 
-        const canvas = document.getElementById('editorCanvas');
-        const ctx = canvas.getContext('2d');
-
-        // CLOCK
-        setInterval(() => {
-            document.getElementById('clock').innerText = new Date().toLocaleTimeString('en-US', { hour12: true });
-        }, 1000);
-
-        // NAVIGATION
-        function switchView(v) {
-            ['view-home', 'view-ai', 'view-editor'].forEach(id => document.getElementById(id).classList.add('hidden'));
-            document.getElementById('view-' + v).classList.remove('hidden');
-            app.view = v;
+        // --- NAVIGATION ---
+        function switchMode(mode) {
+            document.getElementById('view-arena').classList.add('hidden');
+            document.getElementById('view-studio').classList.add('hidden');
+            document.getElementById(`view-${mode}`).classList.remove('hidden');
+            
+            // Update buttons
+            document.getElementById('btn-arena').className = mode === 'arena' ? "px-3 py-1 rounded text-xs font-medium bg-gray-700 text-white transition" : "px-3 py-1 rounded text-xs font-medium text-gray-400 hover:text-white transition";
+            document.getElementById('btn-studio').className = mode === 'studio' ? "px-3 py-1 rounded text-xs font-medium bg-gray-700 text-white transition" : "px-3 py-1 rounded text-xs font-medium text-gray-400 hover:text-white transition";
         }
-        function goHome() { switchView('home'); }
 
-        // SETTINGS
-        function toggleSettings() {
+        // --- SETTINGS ---
+        function openSettings() {
             const m = document.getElementById('settingsModal');
             m.classList.toggle('hidden');
-            if(!m.classList.contains('hidden')) document.getElementById('keyGemini').value = app.key;
+            if(!m.classList.contains('hidden')) document.getElementById('apiKeyInput').value = state.key;
         }
-        function saveSettings() {
-            const k = document.getElementById('keyGemini').value;
+        function saveKey() {
+            const k = document.getElementById('apiKeyInput').value;
+            state.key = k;
             localStorage.setItem('gemini_key', k);
-            app.key = k;
-            toggleSettings();
-            // Update UI status
-            if(k) document.getElementById('apiStatus').innerHTML = '<span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span> Key Updated';
+            openSettings();
         }
 
-        // ================= CHAT LOGIC (ROBUST) =================
-        function handleChatImage(e) {
+        // --- ARENA CHAT ---
+        function handleFile(e) {
             const f = e.target.files[0];
             if(!f) return;
             const r = new FileReader();
-            r.onload = (ev) => {
-                app.chat.image = ev.target.result;
-                document.getElementById('chatImgThumb').src = ev.target.result;
-                document.getElementById('chatImagePreview').classList.remove('hidden');
+            r.onload = ev => {
+                state.chatImg = ev.target.result;
+                document.getElementById('thumb').src = ev.target.result;
+                document.getElementById('imgPreview').classList.remove('hidden');
             };
             r.readAsDataURL(f);
         }
-        function removeChatImage() {
-            app.chat.image = null;
-            document.getElementById('chatImagePreview').classList.add('hidden');
-            document.getElementById('chatFileInput').value = '';
+        function clearImg() {
+            state.chatImg = null;
+            document.getElementById('imgPreview').classList.add('hidden');
+            document.getElementById('fileIn').value = '';
         }
-        function clearChat() {
-            document.getElementById('leftChat').innerHTML = '<div class="intro-msg text-center mt-20 text-gray-600 text-xs">Chat Cleared</div>';
-            document.getElementById('rightChat').innerHTML = '<div class="intro-msg text-center mt-20 text-gray-600 text-xs">Chat Cleared</div>';
-            removeChatImage();
+        function clearSide(side) {
+            document.getElementById(`${side}Chat`).innerHTML = `<div class="text-center mt-20 text-gray-700 text-xs uppercase tracking-widest font-bold">Model ${side === 'left' ? 'A' : 'B'} Ready</div>`;
         }
 
-        async function sendPrompt() {
-            const txt = document.getElementById('promptBox').value;
-            if(!txt) return;
-            document.getElementById('promptBox').value = '';
-
-            // Remove intro text
-            document.querySelectorAll('.intro-msg').forEach(el => el.remove());
-
-            appendMsg('left', 'user', txt);
-            appendMsg('right', 'user', txt);
-
-            const img = app.chat.image ? app.chat.image.split(',')[1] : null;
-
-            // PARALLEL CALLS: Left (Pro) & Right (Flash)
-            callGeminiSafe(txt, img, 'gemini-1.5-pro', 'left');
-            callGeminiSafe(txt, img, 'gemini-1.5-flash', 'right');
-        }
-
-        function appendMsg(side, role, text) {
-            const div = document.getElementById(side === 'left' ? 'leftChat' : 'rightChat');
-            const el = document.createElement('div');
+        async function send() {
+            const txt = document.getElementById('prompt').value;
+            if(!txt && !state.chatImg) return;
             
-            if(role === 'user') {
-                el.className = "bg-gray-800 text-white p-3 rounded-lg rounded-tr-none self-end ml-6 mb-4 text-xs border border-gray-700 animate-fade-in";
-                el.innerText = text;
-            } else if(role === 'load') {
-                el.id = `loader-${side}`;
-                el.className = "text-xs text-gray-500 italic mb-4 flex items-center gap-2";
-                el.innerHTML = '<span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span>';
-            } else {
-                el.className = "text-gray-300 text-sm leading-relaxed mb-6 pb-2 border-b border-gray-800/50 animate-fade-in";
-                let html = text.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>').replace(/```([\s\S]*?)```/g, '<code class="block bg-black p-2 rounded text-xs text-green-400 font-mono my-2 overflow-x-auto">$1</code>').replace(/\n/g, '<br>');
-                el.innerHTML = html;
-                if(text.startsWith('Error:')) el.classList.add('text-red-400');
+            document.getElementById('prompt').value = '';
+            
+            // Prepare image data if exists
+            let imgData = null, mime = null;
+            if(state.chatImg) {
+                const parts = state.chatImg.split(',');
+                mime = parts[0].match(/:(.*?);/)[1];
+                imgData = parts[1];
+                clearImg(); // Remove from input after send
             }
-            div.appendChild(el);
-            div.scrollTop = div.scrollHeight;
+
+            // User Bubbles
+            addBubble('left', 'user', txt, state.chatImg);
+            addBubble('right', 'user', txt, state.chatImg);
+
+            // Get selected models
+            const modelA = document.getElementById('leftModel').value;
+            const modelB = document.getElementById('rightModel').value;
+
+            // Fetch
+            callAPI(modelA, 'left', txt, imgData, mime);
+            callAPI(modelB, 'right', txt, imgData, mime);
         }
 
-        async function callGeminiSafe(p, img, model, side) {
-            appendMsg(side, 'load');
+        function addBubble(side, role, text, img) {
+            const container = document.getElementById(`${side}Chat`);
+            if(container.querySelector('.text-center')) container.innerHTML = ''; // Remove placeholder
 
-            // Fallback logic inside
+            const div = document.createElement('div');
+            div.className = `p-3 text-sm mb-4 ${role === 'user' ? 'msg-user text-white ml-auto max-w-[85%]' : 'msg-ai text-gray-300 mr-auto w-full border-b border-border pb-2'}`;
+            
+            if(img && role === 'user') {
+                div.innerHTML += `<img src="${img}" class="max-h-32 rounded border border-gray-600 mb-2">`;
+            }
+            
+            if(role === 'load') {
+                div.innerHTML = `<div class="typing-indicator"><span></span><span></span><span></span></div>`;
+                div.id = `load-${side}`;
+            } else {
+                div.innerHTML += text ? text.replace(/\n/g, '<br>') : '';
+            }
+            
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        async function callAPI(model, side, prompt, imgB64, mime) {
+            addBubble(side, 'load');
             try {
-                const parts = [{ text: p }];
-                if(img) parts.push({ inline_data: { mime_type: "image/png", data: img } });
+                const parts = [];
+                if(prompt) parts.push({text: prompt});
+                if(imgB64) parts.push({inline_data: {mime_type: mime, data: imgB64}});
 
-                let url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${app.key}`;
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${state.key}`;
                 
-                let res = await fetch(url, {
+                // Safety: OFF
+                const safety = [
+                    { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
+                    { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
+                    { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
+                    { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
+                ];
+
+                const res = await fetch(url, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ contents: [{ parts }] })
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ contents: [{parts}], safetySettings: safety })
                 });
 
-                let data = await res.json();
-
-                // If Pro fails (sometimes overloaded), try 1.0 Pro fallback for Left Side
-                if(data.error && model === 'gemini-1.5-pro') {
-                    console.log("Fallback to 1.0 Pro...");
-                    url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${app.key}`;
-                    // Remove image for 1.0 if it doesn't support vision in text-only endpoint (Gemini Pro Vision is separate)
-                    // But for safety, let's just try text-only fallback if image fails, or alert user.
-                    // Simplified fallback: Just show error for now to keep it clean, but formatted nicely.
-                    throw new Error(data.error.message);
-                }
+                const data = await res.json();
+                document.getElementById(`load-${side}`).remove();
 
                 if(data.error) throw new Error(data.error.message);
+
+                let reply = "";
+                // Handle text and images in response
+                if(data.candidates?.[0]?.content?.parts) {
+                    data.candidates[0].content.parts.forEach(p => {
+                        if(p.text) reply += p.text;
+                        if(p.inline_data) reply += `<br><img src="data:${p.inline_data.mime_type};base64,${p.inline_data.data}" class="mt-2 rounded border border-gray-700 max-w-full">`;
+                    });
+                } else {
+                    reply = "⚠️ No content returned.";
+                }
                 
-                const loader = document.getElementById(`loader-${side}`);
-                if(loader) loader.remove();
+                // Simple markdown parse
+                reply = reply.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+                
+                addBubble(side, 'ai', reply);
 
-                const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "No response text.";
-                appendMsg(side, 'ai', reply);
-
-            } catch (err) {
-                const loader = document.getElementById(`loader-${side}`);
-                if(loader) loader.remove();
-                appendMsg(side, 'ai', `<span class="text-red-400"><i class="fa-solid fa-triangle-exclamation mr-1"></i> ${err.message}</span>`);
+            } catch(e) {
+                document.getElementById(`load-${side}`)?.remove();
+                addBubble(side, 'ai', `<span class="text-red-400 text-xs">Error: ${e.message}</span>`);
             }
         }
 
-        // ================= EDITOR LOGIC =================
-        function handleEditUpload(e) {
+        // --- IMAGE STUDIO (CANVAS) ---
+        const cvs = document.getElementById('canvas');
+        const ctx = cvs.getContext('2d');
+
+        function loadEditorImage(e) {
             const f = e.target.files[0];
             if(!f) return;
-            app.editor.fileName = f.name;
+            state.editor.name = f.name;
             const r = new FileReader();
-            r.onload = (ev) => {
+            r.onload = ev => {
                 const img = new Image();
                 img.onload = () => {
-                    app.editor.original = img;
-                    app.editor.history = [img.src];
-                    document.getElementById('editorCanvas').classList.remove('hidden');
-                    document.getElementById('editorPlaceholder').classList.add('hidden');
-                    document.getElementById('resBadge').classList.remove('hidden');
-                    renderEditor(img.src);
+                    state.editor.img = img;
+                    state.editor.history = [img.src];
+                    draw();
+                    document.getElementById('studio-placeholder').classList.add('hidden');
+                    cvs.classList.remove('hidden');
                 };
                 img.src = ev.target.result;
             };
             r.readAsDataURL(f);
         }
 
-        function renderEditor(src, filters = null) {
+        function draw(src = null, filterStr = null) {
             const img = new Image();
             img.onload = () => {
-                canvas.width = img.width;
-                canvas.height = img.height;
-                
-                // Info
-                const mb = (img.width*img.height*4)/(1024*1024) * 0.15;
-                document.getElementById('dimText').innerText = `${img.width}x${img.height}`;
-                document.getElementById('sizeText').innerText = `~${mb.toFixed(1)}MB`;
-                
-                // Upscale Info
-                const r2 = mb * 4; const r4 = mb * 16;
-                document.getElementById('info-2x').innerText = `~${r2.toFixed(1)}MB`;
-                document.getElementById('info-4x').innerText = `~${r4.toFixed(1)}MB`;
-
-                if(filters) ctx.filter = `brightness(${filters.brightness}%) contrast(${filters.contrast}%)`;
-                else ctx.filter = 'none';
-                
+                cvs.width = img.width;
+                cvs.height = img.height;
+                if(filterStr) ctx.filter = filterStr;
+                else ctx.filter = `brightness(${state.editor.filters.b}%) contrast(${state.editor.filters.c}%)`;
                 ctx.drawImage(img, 0, 0);
-                app.editor.currentSrc = canvas.toDataURL();
             };
-            img.src = src;
+            img.src = src || (state.editor.history.length ? state.editor.history[state.editor.history.length-1] : state.editor.img.src);
         }
 
-        function applyInvert() {
-            if(!app.editor.currentSrc) return;
-            const w = canvas.width; const h = canvas.height;
+        function updateEdit(t, v) {
+            if(t==='brightness') { state.editor.filters.b = v; document.getElementById('v-b').innerText = v+'%'; }
+            if(t==='contrast') { state.editor.filters.c = v; document.getElementById('v-c').innerText = v+'%'; }
+            draw();
+        }
+
+        function commitEdit() {
+            state.editor.history.push(cvs.toDataURL());
+            // Reset sliders visual only, keep logic consistent
+            state.editor.filters = {b:100, c:100};
+            document.querySelectorAll('input[type=range]').forEach(i=>i.value=100);
+            document.getElementById('v-b').innerText = '100%';
+            document.getElementById('v-c').innerText = '100%';
+        }
+
+        function applyFilter(type) {
+            if(!state.editor.img) return;
+            const w = cvs.width, h = cvs.height;
             const d = ctx.getImageData(0,0,w,h);
             const da = d.data;
-            for(let i=0; i<da.length; i+=4) { da[i]=255-da[i]; da[i+1]=255-da[i+1]; da[i+2]=255-da[i+2]; }
+            for(let i=0; i<da.length; i+=4) {
+                if(type === 'invert') { da[i]=255-da[i]; da[i+1]=255-da[i+1]; da[i+2]=255-da[i+2]; }
+                if(type === 'bw') { const a=(da[i]+da[i+1]+da[i+2])/3; da[i]=a; da[i+1]=a; da[i+2]=a; }
+            }
             ctx.putImageData(d, 0, 0);
-            pushHistory(canvas.toDataURL());
+            commitEdit();
         }
 
-        function updateAdjustments(t, v) {
-            app.editor.filters[t] = v;
-            if(t==='brightness') document.getElementById('b-val').innerText = v+'%';
-            if(t==='contrast') document.getElementById('c-val').innerText = v+'%';
-            const base = app.editor.history[app.editor.history.length-1];
-            renderEditor(base, app.editor.filters);
-        }
-
-        function applyAdjustments() {
-            pushHistory(canvas.toDataURL());
-            app.editor.filters = {brightness:100, contrast:100};
-            document.getElementById('b-val').innerText = '100%';
-            document.getElementById('c-val').innerText = '100%';
-            document.querySelectorAll('input[type=range]').forEach(i=>i.value=100);
-        }
-
-        function upscale(f) {
-            if(!app.editor.currentSrc) return;
-            const t = new Image(); t.src = canvas.toDataURL();
-            t.onload = () => {
-                const nw=t.width*f, nh=t.height*f;
-                canvas.width=nw; canvas.height=nh;
-                ctx.imageSmoothingEnabled=true; ctx.imageSmoothingQuality='high';
-                ctx.drawImage(t,0,0,nw,nh);
-                pushHistory(canvas.toDataURL());
-                renderEditor(canvas.toDataURL());
-                alert(`Upscaled ${f}x`);
+        function doUpscale(fac) {
+            if(!state.editor.img) return;
+            const temp = new Image();
+            temp.src = cvs.toDataURL();
+            temp.onload = () => {
+                cvs.width *= fac; cvs.height *= fac;
+                ctx.imageSmoothingEnabled = true;
+                ctx.imageSmoothingQuality = 'high';
+                ctx.drawImage(temp, 0, 0, cvs.width, cvs.height);
+                commitEdit();
+                alert(`Upscaled ${fac}x`);
             };
         }
 
-        function pushHistory(s) { app.editor.history.push(s); }
-        function undo() {
-            if(app.editor.history.length<=1) return;
-            app.editor.history.pop();
-            renderEditor(app.editor.history[app.editor.history.length-1]);
-            ctx.filter='none';
-        }
-        function resetEditor() {
+        function resetCanvas() {
             if(!confirm('Reset?')) return;
-            app.editor.original=null; app.editor.history=[];
-            document.getElementById('editorCanvas').classList.add('hidden');
-            document.getElementById('editorPlaceholder').classList.remove('hidden');
-            document.getElementById('resBadge').classList.add('hidden');
+            state.editor.history = [];
+            state.editor.filters = {b:100, c:100};
+            draw(state.editor.img.src);
         }
-        function downloadImage() {
-            if(!app.editor.currentSrc) return;
+
+        function downloadEdit() {
+            if(!state.editor.img) return;
             const a = document.createElement('a');
-            a.download = 'edited_'+app.editor.fileName;
-            a.href = canvas.toDataURL('image/jpeg', 0.95);
+            a.download = 'edited_' + state.editor.name;
+            a.href = cvs.toDataURL('image/jpeg', 0.9);
             a.click();
         }
 
-        document.getElementById('promptBox').addEventListener('keydown', e => { if(e.key==='Enter' && !e.shiftKey) { e.preventDefault(); sendPrompt(); } });
+        // Auto Textarea
+        document.getElementById('prompt').addEventListener('keydown', e => {
+            if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+        });
     </script>
 </body>
 </html>
