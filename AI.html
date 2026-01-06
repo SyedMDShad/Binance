@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PostMaster AI Studio v3</title>
+    
+    <!-- Libraries -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Oswald&family=Roboto+Slab&family=Dancing+Script&family=Bangla+Sangam+MN&display=swap" rel="stylesheet">
+    <script src='https://unpkg.com/tesseract.js@v2.1.0/dist/tesseract.min.js'></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #0f172a; color: #e2e8f0; overflow: hidden; }
+        .panel-bg { background-color: #1e293b; border-color: #334155; }
+        .tool-btn { @apply p-2.5 rounded-lg transition duration-200 text-gray-400 hover:text-white hover:bg-slate-700 relative group flex justify-center items-center; }
+        .tool-btn.active { @apply bg-blue-600 text-white shadow-lg shadow-blue-500/30; }
+        .checkerboard {
+            background-image: linear-gradient(45deg, #262626 25%, transparent 25%), linear-gradient(-45deg, #262626 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #262626 75%), linear-gradient(-45deg, transparent 75%, #262626 75%);
+            background-size: 20px 20px; background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+        }
+        input[type="range"] { -webkit-appearance: none; background: transparent; cursor: pointer; }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; height: 14px; width: 14px; border-radius: 50%; background: #3b82f6; margin-top: -5px; }
+        input[type="range"]::-webkit-slider-runnable-track { width: 100%; height: 4px; background: #475569; border-radius: 2px; }
+        .loader { border: 3px solid #f3f3f3; border-top: 3px solid #3498db; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        /* Tabs */
+        .tab-item { @apply px-3 py-1.5 text-xs bg-slate-800 border-r border-slate-700 flex items-center gap-2 cursor-pointer hover:bg-slate-700 select-none min-w-[100px] max-w-[150px]; }
+        .tab-item.active { @apply bg-slate-700 text-blue-400 border-t-2 border-t-blue-500; }
+        .tab-close { @apply hover:text-red-400 rounded-full p-0.5 ml-auto opacity-60 hover:opacity-100; }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+    </style>
+</head>
+<body class="h-screen flex flex-col">
+
+    <!-- Top Bar -->
+    <header class="h-12 panel-bg border-b flex items-center justify-between px-3 z-30 select-none">
+        <div class="flex items-center gap-3">
+            <div class="bg-gradient-to-br from-purple-600 to-blue-600 p-1 rounded text-white font-bold text-sm shadow-lg"><i class="fa-solid fa-layer-group"></i></div>
+            <span class="font-bold text-sm tracking-wide text-white hidden sm:inline">PostMaster <span class="text-blue-400">v3</span></span>
+            
+            <!-- Tab Bar -->
+            <div class="flex items-center ml-4 overflow-x-auto no-scrollbar" id="projectTabs">
+                <!-- Tabs injected via JS -->
+            </div>
+            <button onclick="createNewProject()" class="ml-2 text-slate-400 hover:text-white" title="New Project"><i class="fa-solid fa-plus"></i></button>
+        </div>
+        
+        <div class="flex items-center gap-2">
+            <button onclick="document.getElementById('fileInput').click()" class="bg-slate-700 hover:bg-slate-600 text-white px-3 py-1.5 rounded text-xs flex items-center gap-2 transition">
+                <i class="fa-solid fa-upload"></i> <span class="hidden sm:inline">Open</span>
+            </button>
+            <button onclick="openExportModal()" class="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded text-xs font-medium flex items-center gap-2 transition shadow-lg shadow-blue-500/20">
+                <i class="fa-solid fa-download"></i> <span class="hidden sm:inline">Export</span>
+            </button>
+            <button onclick="openSettings()" class="text-slate-400 hover:text-white px-2"><i class="fa-solid fa-gear"></i></button>
+        </div>
+    </header>
+
+    <div class="flex flex-1 overflow-hidden">
+        <!-- Left Toolbar -->
+        <aside class="w-14 panel-bg border-r flex flex-col items-center py-3 gap-2 z-20 overflow-y-auto no-scrollbar">
+            <button onclick="setTool('select')" id="btn-select" class="tool-btn active" title="Move (V)"><i class="fa-solid fa-arrow-pointer"></i></button>
+            <button onclick="setTool('text')" id="btn-text" class="tool-btn" title="Text Box (T)"><i class="fa-solid fa-font"></i></button>
+            <button onclick="setTool('box')" id="btn-box" class="tool-btn" title="Shape/Cover (U)"><i class="fa-regular fa-square"></i></button>
+            <button onclick="setTool('brush')" id="btn-brush" class="tool-btn" title="Brush (B)"><i class="fa-solid fa-paintbrush"></i></button>
+            <button onclick="setTool('blur')" id="btn-blur" class="tool-btn text-red-400" title="Blur/Privacy"><i class="fa-solid fa-droplet-slash"></i></button>
+            <button onclick="setTool('crop')" id="btn-crop" class="tool-btn text-yellow-400" title="Crop/Rotate (C)"><i class="fa-solid fa-crop-simple"></i></button>
+            
+            <div class="w-8 h-px bg-slate-700 my-1"></div>
+            
+            <button onclick="runOCR()" class="tool-btn text-purple-400" title="Scan Text (OCR)"><i class="fa-solid fa-expand"></i></button>
+            <button onclick="googleLensSearch()" class="tool-btn text-blue-400" title="Google Lens (New Tab)"><i class="fa-brands fa-google"></i></button>
+        </aside>
+
+        <!-- Main Canvas Area -->
+        <main class="flex-1 bg-slate-900 relative overflow-hidden flex flex-col">
+            <!-- Info Bar -->
+            <div class="h-8 panel-bg border-b flex items-center px-4 justify-between text-[10px] text-slate-400 select-none">
+                <div class="flex items-center gap-4">
+                    <span id="canvasDims">0 x 0 px</span>
+                    <span id="fileSizeEst">~0 MB</span>
+                    <button onclick="resetView()" class="hover:text-white"><i class="fa-solid fa-compress"></i> Fit View</button>
+                </div>
+                <div id="activeToolInfo" class="text-blue-400 font-bold">SELECT TOOL</div>
+            </div>
+
+            <div class="flex-1 overflow-auto flex items-center justify-center p-8 relative checkerboard bg-[#1a1a1a]" id="canvasWrapper">
+                <canvas id="editorCanvas" class="shadow-2xl shadow-black ring-1 ring-slate-700 cursor-default origin-top-left"></canvas>
+                
+                <!-- Crop UI Overlay -->
+                <div id="cropOverlay" class="absolute hidden border-2 border-white shadow-[0_0_0_9999px_rgba(0,0,0,0.7)] pointer-events-none">
+                    <!-- Handles -->
+                    <div class="absolute -top-1.5 -left-1.5 w-3 h-3 bg-blue-500 border border-white pointer-events-auto cursor-nwse-resize" onmousedown="startCropResize(event, 'tl')"></div>
+                    <div class="absolute -top-1.5 -right-1.5 w-3 h-3 bg-blue-500 border border-white pointer-events-auto cursor-nesw-resize" onmousedown="startCropResize(event, 'tr')"></div>
+                    <div class="absolute -bottom-1.5 -left-1.5 w-3 h-3 bg-blue-500 border border-white pointer-events-auto cursor-nesw-resize" onmousedown="startCropResize(event, 'bl')"></div>
+                    <div class="absolute -bottom-1.5 -right-1.5 w-3 h-3 bg-blue-500 border border-white pointer-events-auto cursor-nwse-resize" onmousedown="startCropResize(event, 'br')"></div>
+                    <!-- Crop Confirm Actions -->
+                    <div class="absolute bottom-[-40px] left-1/2 -translate-x-1/2 flex gap-2 pointer-events-auto">
+                        <button onclick="applyCrop()" class="bg-blue-600 text-white px-3 py-1 rounded text-xs shadow-lg">Done</button>
+                        <button onclick="cancelCrop()" class="bg-red-600 text-white px-3 py-1 rounded text-xs shadow-lg">Cancel</button>
+                    </div>
+                </div>
+
+                <div id="welcomeMsg" class="absolute inset-0 flex flex-col items-center justify-center text-slate-600 pointer-events-none z-0">
+                    <i class="fa-solid fa-image text-5xl mb-3 opacity-30"></i>
+                    <p class="text-sm font-light">Open an image or create new</p>
+                </div>
+            </div>
+        </main>
+
+        <!-- Right Panel -->
+        <aside class="w-80 panel-bg border-l flex flex-col z-20 overflow-hidden relative">
+            <!-- Tabs Switcher -->
+            <div class="flex border-b border-slate-700 bg-slate-800">
+                <button onclick="switchRightTab('props')" id="rtab-props" class="flex-1 py-2 text-xs font-medium text-white border-b-2 border-blue-500 bg-slate-700">Properties</button>
+                <button onclick="switchRightTab('chat')" id="rtab-chat" class="flex-1 py-2 text-xs font-medium text-slate-400 hover:text-white">AI Studio</button>
+            </div>
+
+            <!-- Properties Panel -->
+            <div id="panel-props" class="flex-1 overflow-y-auto p-4 space-y-5">
+                
+                <!-- Rotation Controls (Global) -->
+                <div class="bg-slate-800 p-3 rounded border border-slate-700">
+                    <label class="text-[10px] uppercase font-bold text-slate-500 mb-2 block">Image Rotation</label>
+                    <div class="flex gap-2">
+                        <button onclick="rotateImage(-90)" class="flex-1 bg-slate-700 hover:bg-slate-600 py-1 rounded text-xs text-white"><i class="fa-solid fa-rotate-left"></i> -90°</button>
+                        <button onclick="rotateImage(90)" class="flex-1 bg-slate-700 hover:bg-slate-600 py-1 rounded text-xs text-white"><i class="fa-solid fa-rotate-right"></i> +90°</button>
+                    </div>
+                </div>
+
+                <!-- Layer Properties -->
+                <div id="layerProps" class="hidden space-y-4">
+                    <div class="flex justify-between items-center pb-2 border-b border-slate-700">
+                        <span class="text-xs font-bold text-blue-400 uppercase" id="layerTypeLabel">TEXT LAYER</span>
+                        <button onclick="deleteActiveLayer()" class="text-red-400 hover:text-red-300"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+
+                    <!-- Text Controls -->
+                    <div id="ctrl-text" class="space-y-3 hidden">
+                        <textarea id="inp-text" rows="3" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm text-white focus:border-blue-500 outline-none resize-y"></textarea>
+                        
+                        <!-- Font Loader -->
+                        <div>
+                            <label class="text-[10px] text-slate-400 mb-1 flex justify-between">Font Family <button onclick="document.getElementById('fontUpload').click()" class="text-blue-400 hover:underline">Upload .ttf</button></label>
+                            <input type="file" id="fontUpload" accept=".ttf,.otf" class="hidden" onchange="loadLocalFont(this)">
+                            <div class="flex gap-1">
+                                <select id="inp-font" class="flex-1 bg-slate-900 border border-slate-700 rounded p-1 text-xs text-white">
+                                    <optgroup label="System">
+                                        <option value="sans-serif">System UI (FB)</option>
+                                        <option value="Arial, sans-serif">Arial</option>
+                                        <option value="'Times New Roman', serif">Times New Roman</option>
+                                    </optgroup>
+                                    <optgroup label="Google Fonts" id="googleFontList">
+                                        <option value="'Inter', sans-serif">Inter</option>
+                                        <option value="'Oswald', sans-serif">Oswald</option>
+                                        <option value="'Dancing Script', cursive">Dancing Script</option>
+                                        <option value="'Bangla Sangam MN', sans-serif">Bangla</option>
+                                    </optgroup>
+                                </select>
+                                <button onclick="addGoogleFont()" class="bg-slate-700 px-2 rounded text-xs" title="Add Google Font"><i class="fa-solid fa-plus"></i></button>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2">
+                            <div><label class="text-[10px] text-slate-400">Size</label><input type="number" id="inp-size" class="w-full bg-slate-900 border border-slate-700 rounded p-1 text-xs text-white"></div>
+                            <div><label class="text-[10px] text-slate-400">Color</label>
+                                <div class="flex gap-1"><input type="color" id="inp-color" class="h-6 w-6 bg-transparent border-0"><input type="text" id="inp-color-hex" class="flex-1 bg-transparent text-xs text-slate-300 border-b border-slate-700"></div>
+                            </div>
+                        </div>
+                        
+                        <label class="flex items-center gap-2 text-xs text-slate-300">
+                            <input type="checkbox" id="inp-bg-enable" class="rounded bg-slate-700"> Background Box
+                            <input type="color" id="inp-bg-color" class="w-4 h-4 rounded-full ml-auto">
+                        </label>
+                    </div>
+
+                    <!-- Box/Blur Controls -->
+                    <div id="ctrl-box" class="space-y-3 hidden">
+                        <div>
+                            <label class="text-[10px] text-slate-400">Fill Color</label>
+                            <div class="flex gap-2">
+                                <input type="color" id="inp-box-color" class="h-8 flex-1 bg-slate-900 rounded cursor-pointer">
+                                <button onclick="activatePicker('box')" class="bg-slate-700 px-2 rounded text-slate-300"><i class="fa-solid fa-eye-dropper"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="ctrl-blur" class="hidden">
+                        <label class="text-[10px] text-slate-400">Blur Intensity</label>
+                        <input type="range" id="inp-blur" min="2" max="50" class="w-full">
+                    </div>
+
+                    <!-- Layer Order -->
+                    <div class="flex gap-2 pt-2">
+                        <button onclick="moveLayer('up')" class="flex-1 bg-slate-800 hover:bg-slate-700 py-1 rounded text-[10px] text-slate-300">Bring Forward</button>
+                        <button onclick="moveLayer('down')" class="flex-1 bg-slate-800 hover:bg-slate-700 py-1 rounded text-[10px] text-slate-300">Send Back</button>
+                    </div>
+                </div>
+
+                <div id="noSelMsg" class="text-center py-10 opacity-40 text-sm">No Layer Selected</div>
+            </div>
+
+            <!-- AI Chat Panel -->
+            <div id="panel-chat" class="flex-1 hidden flex flex-col h-full bg-slate-900">
+                <div class="p-3 border-b border-slate-700 flex justify-between items-center bg-slate-800">
+                    <span class="text-xs font-bold text-blue-400"><i class="fa-solid fa-robot"></i> AI ASSISTANT</span>
+                    <select id="chatModel" class="bg-slate-900 border border-slate-700 text-[10px] text-white rounded px-1 py-0.5">
+                        <option value="gemini">Gemini Pro Vision</option>
+                        <option value="openai">GPT-4o (OpenAI)</option>
+                    </select>
+                </div>
+                
+                <div id="chatHistory" class="flex-1 overflow-y-auto p-3 space-y-3 text-sm">
+                    <div class="chat-bubble bg-slate-800 text-slate-300 p-3 rounded-lg rounded-tl-none">
+                        Hi! I can help you analyze images, write captions, or suggest edits. Upload an image in chat or ask about the canvas!
+                    </div>
+                </div>
+
+                <div class="p-3 bg-slate-800 border-t border-slate-700">
+                    <!-- Quick Actions -->
+                    <div class="flex gap-2 mb-2 overflow-x-auto pb-1 no-scrollbar">
+                        <button onclick="sendAI('Analyze this image for viral potential')" class="whitespace-nowrap bg-slate-700 px-2 py-1 rounded text-[10px] text-blue-300 border border-slate-600">📈 Viral Check</button>
+                        <button onclick="sendAI('Suggest 5 captions for this')" class="whitespace-nowrap bg-slate-700 px-2 py-1 rounded text-[10px] text-green-300 border border-slate-600">📝 Captions</button>
+                        <button onclick="sendAI('What are others posting like this?')" class="whitespace-nowrap bg-slate-700 px-2 py-1 rounded text-[10px] text-purple-300 border border-slate-600">🔍 Trends</button>
+                    </div>
+                    
+                    <div class="relative flex gap-2 items-center">
+                        <label class="cursor-pointer text-slate-400 hover:text-white" title="Upload Reference Image">
+                            <i class="fa-solid fa-paperclip"></i>
+                            <input type="file" id="chatImgUpload" accept="image/*" class="hidden" onchange="handleChatImage(this)">
+                        </label>
+                        <input type="text" id="chatInput" class="flex-1 bg-slate-900 border border-slate-700 rounded-full px-3 py-1.5 text-sm text-white focus:border-blue-500 outline-none" placeholder="Message AI..." onkeypress="if(event.key==='Enter') sendAI()">
+                        <button onclick="sendAI()" class="text-blue-500 hover:text-blue-400"><i class="fa-solid fa-paper-plane"></i></button>
+                    </div>
+                    <div id="chatImgPreview" class="hidden mt-2 relative w-12 h-12">
+                        <img id="chatImgThumb" class="w-full h-full object-cover rounded border border-slate-600">
+                        <button onclick="clearChatImg()" class="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-[8px]">&times;</button>
+                    </div>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Modals -->
+    <!-- New Project -->
+    <dialog id="newProjModal" class="bg-slate-800 text-white rounded-lg p-6 shadow-2xl backdrop:bg-black/80 border border-slate-600">
+        <h3 class="text-lg font-bold mb-4">New Canvas</h3>
+        <div class="grid grid-cols-2 gap-4 mb-4">
+            <div><label class="text-xs block mb-1">Width (px)</label><input type="number" id="np-w" value="1080" class="w-full bg-slate-900 border border-slate-700 rounded p-2"></div>
+            <div><label class="text-xs block mb-1">Height (px)</label><input type="number" id="np-h" value="1080" class="w-full bg-slate-900 border border-slate-700 rounded p-2"></div>
+        </div>
+        <div class="mb-6">
+            <label class="text-xs block mb-1">Background</label>
+            <div class="flex gap-2">
+                <button onclick="setNpBg('#ffffff')" class="w-8 h-8 bg-white rounded border border-slate-500"></button>
+                <button onclick="setNpBg('#000000')" class="w-8 h-8 bg-black rounded border border-slate-500"></button>
+                <button onclick="setNpBg('transparent')" class="w-8 h-8 bg-slate-700 rounded border border-slate-500 flex items-center justify-center text-[8px]">Tr</button>
+                <input type="color" id="np-color" class="w-8 h-8 bg-transparent" value="#ffffff">
+            </div>
+        </div>
+        <div class="flex justify-end gap-2">
+            <button onclick="document.getElementById('newProjModal').close()" class="px-4 py-2 text-xs text-slate-400">Cancel</button>
+            <button onclick="doCreateProject()" class="px-4 py-2 text-xs bg-blue-600 rounded text-white">Create</button>
+        </div>
+    </dialog>
+
+    <!-- Export -->
+    <dialog id="exportModal" class="bg-slate-800 text-white rounded-lg p-6 shadow-2xl backdrop:bg-black/80 border border-slate-600">
+        <h3 class="text-lg font-bold mb-4">Export Image</h3>
+        <div class="space-y-4 mb-6">
+            <div>
+                <label class="text-xs block mb-1">Format</label>
+                <select id="exp-fmt" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm">
+                    <option value="image/png">PNG (High Quality)</option>
+                    <option value="image/jpeg">JPG (Smaller Size)</option>
+                    <option value="image/webp">WEBP (Web Optimized)</option>
+                </select>
+            </div>
+            <div>
+                <label class="text-xs block mb-1">Quality (0.1 - 1.0)</label>
+                <input type="range" id="exp-qual" min="0.1" max="1.0" step="0.1" value="0.9" class="w-full" oninput="updateExpSize()">
+                <div class="text-[10px] text-right text-slate-400" id="exp-size-est">Est. Size: Calculating...</div>
+            </div>
+            <div>
+                <label class="text-xs block mb-1">Scale</label>
+                <select id="exp-scale" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm">
+                    <option value="1">1x (Original)</option>
+                    <option value="2">2x (2K/HD)</option>
+                    <option value="4">4x (4K/UHD)</option>
+                </select>
+            </div>
+        </div>
+        <div class="flex justify-end gap-2">
+            <button onclick="document.getElementById('exportModal').close()" class="px-4 py-2 text-xs text-slate-400">Cancel</button>
+            <button onclick="doExport()" class="px-4 py-2 text-xs bg-blue-600 rounded text-white">Download</button>
+        </div>
+    </dialog>
+
+    <!-- Settings (Keys) -->
+    <dialog id="settingsModal" class="bg-slate-800 text-white rounded-lg p-6 shadow-2xl backdrop:bg-black/80 border border-slate-600 w-96">
+        <h3 class="text-lg font-bold mb-4">API Settings</h3>
+        <div class="space-y-3 mb-6">
+            <div>
+                <label class="text-xs font-bold text-purple-400">Gemini API Key</label>
+                <input type="password" id="key-gemini" class="w-full bg-slate-900 border border-slate-700 rounded p-2 mt-1 text-xs">
+            </div>
+            <div>
+                <label class="text-xs font-bold text-green-400">OpenAI API Key</label>
+                <input type="password" id="key-openai" class="w-full bg-slate-900 border border-slate-700 rounded p-2 mt-1 text-xs">
+            </div>
+        </div>
+        <div class="flex justify-end gap-2">
+            <button onclick="document.getElementById('settingsModal').close()" class="px-4 py-2 text-xs text-slate-400">Close</button>
+            <button onclick="saveKeys()" class="px-4 py-2 text-xs bg-blue-600 rounded text-white">Save</button>
+        </div>
+    </dialog>
+
+    <input type="file" id="fileInput" accept="image/*" class="hidden" onchange="handleFileOpen(this)">
+    
+    <!-- Loader -->
+    <div id="globalLoader" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center">
+        <div class="bg-slate-800 p-4 rounded-lg flex items-center gap-3 border border-slate-600">
+            <div class="loader w-5 h-5 border-t-blue-500"></div>
+            <span class="text-sm text-white" id="loaderText">Processing...</span>
+        </div>
+    </div>
+
+    <!-- SCRIPT -->
+    <script>
+        // --- State Management ---
+        let projects = [];
+        let activeProjectIndex = -1;
+        
+        // Tool State
+        let currentTool = 'select';
+        let isDragging = false;
+        let dragStart = {x: 0, y: 0};
+        let dragTarget = null; // 'layer-move', 'layer-resize', 'crop-handle', 'new-text-box'
+        let pickerTarget = null;
+        
+        // Canvas & Context
+        const canvas = document.getElementById('editorCanvas');
+        const ctx = canvas.getContext('2d');
+        const wrapper = document.getElementById('canvasWrapper');
+
+        // Keys
+        let apiKeys = { gemini: localStorage.getItem('pm_gemini') || '', openai: localStorage.getItem('pm_openai') || '' };
+
+        // --- Initialization ---
+        document.getElementById('key-gemini').value = apiKeys.gemini;
+        document.getElementById('key-openai').value = apiKeys.openai;
+
+        function init() {
+            // Create default empty project or welcome state
+            renderTabs();
+            // Listeners
+            canvas.addEventListener('mousedown', handleMouseDown);
+            window.addEventListener('mousemove', handleMouseMove);
+            window.addEventListener('mouseup', handleMouseUp);
+            window.addEventListener('keydown', handleKeyDown);
+        }
+        window.onload = init;
+
+        // --- Project System ---
+        class Project {
+            constructor(name, width, height, bg = 'transparent', imgSource = null) {
+                this.id = Date.now() + Math.random();
+                this.name = name;
+                this.width = width;
+                this.height = height;
+                this.bg = bg; // color or 'transparent'
+                this.baseImage = imgSource; // Image Object
+                this.layers = [];
+                this.rotation = 0; // 0, 90, 180, 270
+                this.crop = null; // {x, y, w, h} if cropping active
+                this.history = []; // Undo stack (todo)
+            }
+        }
+
+        function createNewProject() {
+            document.getElementById('newProjModal').showModal();
+        }
+
+        function doCreateProject() {
+            const w = parseInt(document.getElementById('np-w').value) || 1080;
+            const h = parseInt(document.getElementById('np-h').value) || 1080;
+            const bg = document.getElementById('np-color').value;
+            
+            const p = new Project(`Untitled ${projects.length + 1}`, w, h, bg);
+            addProject(p);
+            document.getElementById('newProjModal').close();
+        }
+
+        function handleFileOpen(input) {
+            const file = input.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    const p = new Project(file.name, img.width, img.height, 'transparent', img);
+                    addProject(p);
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+            input.value = ''; // reset
+        }
+
+        function addProject(p) {
+            projects.push(p);
+            activeProjectIndex = projects.length - 1;
+            renderTabs();
+            renderCanvas();
+            document.getElementById('welcomeMsg').classList.add('hidden');
+        }
+
+        function closeProject(index, e) {
+            e.stopPropagation();
+            projects.splice(index, 1);
+            if (activeProjectIndex >= projects.length) activeProjectIndex = projects.length - 1;
+            renderTabs();
+            if (projects.length === 0) {
+                activeProjectIndex = -1;
+                ctx.clearRect(0,0,canvas.width, canvas.height);
+                document.getElementById('welcomeMsg').classList.remove('hidden');
+            } else {
+                renderCanvas();
+            }
+        }
+
+        function switchProject(index) {
+            activeProjectIndex = index;
+            renderTabs();
+            renderCanvas();
+            updateLayerPropsUI();
+        }
+
+        function renderTabs() {
+            const container = document.getElementById('projectTabs');
+            container.innerHTML = '';
+            projects.forEach((p, i) => {
+                const div = document.createElement('div');
+                div.className = `tab-item ${i === activeProjectIndex ? 'active' : ''}`;
+                div.onclick = () => switchProject(i);
+                div.innerHTML = `<span class="truncate">${p.name}</span> <span class="tab-close" onclick="closeProject(${i}, event)">&times;</span>`;
+                container.appendChild(div);
+            });
+        }
+
+        // --- Core Rendering ---
+        function renderCanvas() {
+            if (activeProjectIndex === -1) return;
+            const p = projects[activeProjectIndex];
+
+            // 1. Setup Canvas Dimensions (Handling Rotation)
+            let canvasW = p.width;
+            let canvasH = p.height;
+            if (p.rotation === 90 || p.rotation === 270) {
+                canvasW = p.height;
+                canvasH = p.width;
+            }
+
+            canvas.width = canvasW;
+            canvas.height = canvasH;
+            
+            // Fit View logic
+            const scale = Math.min((wrapper.clientWidth - 40) / canvasW, (wrapper.clientHeight - 40) / canvasH, 1);
+            canvas.style.width = `${canvasW * scale}px`;
+            canvas.style.height = `${canvasH * scale}px`;
+
+            // 2. Draw Background
+            if (p.bg !== 'transparent') {
+                ctx.fillStyle = p.bg;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
+
+            // 3. Draw Base Image with Rotation
+            ctx.save();
+            ctx.translate(canvasW/2, canvasH/2);
+            ctx.rotate(p.rotation * Math.PI / 180);
+            if (p.baseImage) {
+                ctx.drawImage(p.baseImage, -p.width/2, -p.height/2);
+            }
+            ctx.restore();
+
+            // 4. Draw Layers
+            p.layers.forEach((l, idx) => {
+                ctx.save();
+                
+                // Layers are drawn relative to current canvas top-left.
+                // If rotated, layer logic assumes visual placement.
+                // For V3 simplicity: Layers stay separate from base rotation visual unless we rotate them too.
+                // *Decision:* Layers live on top of the rotated canvas.
+                
+                if (l.type === 'text') {
+                    // Box background
+                    if (l.bgEnable) {
+                        ctx.fillStyle = l.bgColor;
+                        ctx.fillRect(l.x, l.y, l.w, l.h);
+                    }
+                    
+                    // Text Clipping/Wrap logic
+                    ctx.font = `${l.size}px ${l.font}`;
+                    ctx.textBaseline = 'top';
+                    ctx.fillStyle = l.color;
+                    
+                    // Simple wrapping based on Width
+                    const words = l.content.split(' ');
+                    let line = '';
+                    let y = l.y;
+                    const lineHeight = l.size * 1.2;
+                    
+                    // If text box mode (manual width)
+                    if (l.autoWidth === false) {
+                        for(let n = 0; n < words.length; n++) {
+                            const testLine = line + words[n] + ' ';
+                            const metrics = ctx.measureText(testLine);
+                            if (metrics.width > l.w && n > 0) {
+                                ctx.fillText(line, l.x, y);
+                                line = words[n] + ' ';
+                                y += lineHeight;
+                            } else {
+                                line = testLine;
+                            }
+                        }
+                        ctx.fillText(line, l.x, y);
+                    } else {
+                        // Single line or manual breaks
+                        const lines = l.content.split('\n');
+                        lines.forEach((txt, i) => ctx.fillText(txt, l.x, l.y + (i * lineHeight)));
+                    }
+                    
+                    // Highlight if selected
+                    if (l.selected) drawSelectionBox(l);
+
+                } else if (l.type === 'box') {
+                    ctx.fillStyle = l.color;
+                    ctx.fillRect(l.x, l.y, l.w, l.h);
+                    if (l.selected) drawSelectionBox(l);
+
+                } else if (l.type === 'brush') {
+                    ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.lineWidth = l.size; ctx.strokeStyle = l.color;
+                    ctx.beginPath();
+                    if(l.points.length > 0) {
+                        ctx.moveTo(l.points[0].x, l.points[0].y);
+                        for(let i=1; i<l.points.length; i++) ctx.lineTo(l.points[i].x, l.points[i].y);
+                        ctx.stroke();
+                    }
+
+                } else if (l.type === 'blur') {
+                    ctx.save();
+                    ctx.beginPath(); ctx.rect(l.x, l.y, l.w, l.h); ctx.clip();
+                    ctx.filter = `blur(${l.blur}px)`;
+                    // Redraw the scene below this layer inside the clip
+                    // This is computationally expensive in canvas 2D. 
+                    // Simplified: We redraw the base image here.
+                    ctx.translate(canvasW/2, canvasH/2);
+                    ctx.rotate(p.rotation * Math.PI / 180);
+                    if (p.baseImage) ctx.drawImage(p.baseImage, -p.width/2, -p.height/2);
+                    ctx.restore();
+                    if (l.selected) drawSelectionBox(l);
+                }
+                ctx.restore();
+            });
+
+            // Crop Overlay
+            if (currentTool === 'crop') {
+                updateCropOverlayUI();
+            } else {
+                document.getElementById('cropOverlay').classList.add('hidden');
+            }
+
+            // Info update
+            document.getElementById('canvasDims').innerText = `${canvas.width} x ${canvas.height} px`;
+        }
+
+        function drawSelectionBox(l) {
+            ctx.strokeStyle = '#3b82f6'; ctx.lineWidth = 1;
+            ctx.strokeRect(l.x, l.y, l.w, l.h);
+            // Handles
+            const s = 6;
+            ctx.fillStyle = 'white';
+            ctx.fillRect(l.x + l.w - s, l.y + l.h - s, s, s); // Resize handle bottom-right
+        }
+
+        // --- Interaction Handlers ---
+        
+        function getMousePos(e) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            return { x: (e.clientX - rect.left) * scaleX, y: (e.clientY - rect.top) * scaleY };
+        }
+
+        function handleMouseDown(e) {
+            if (activeProjectIndex === -1) return;
+            const p = projects[activeProjectIndex];
+            const pos = getMousePos(e);
+            
+            if (pickerTarget) { executePick(pos); return; }
+
+            // Text Box Creation Mode
+            if (currentTool === 'text') {
+                isDragging = true; dragTarget = 'new-text-box';
+                dragStart = pos;
+                // create temp layer
+                const newLayer = { type: 'box', temp: true, x: pos.x, y: pos.y, w: 0, h: 0, color: 'rgba(59, 130, 246, 0.3)' };
+                p.layers.push(newLayer);
+                renderCanvas();
+                return;
+            }
+
+            if (currentTool === 'select') {
+                // Check selection hit
+                // Reverse order for top-most check
+                let hit = -1;
+                for (let i = p.layers.length - 1; i >= 0; i--) {
+                    const l = p.layers[i];
+                    if (pos.x >= l.x && pos.x <= l.x + l.w && pos.y >= l.y && pos.y <= l.y + l.h) {
+                        hit = i; break;
+                    }
+                }
+                
+                // Deselect all
+                p.layers.forEach(l => l.selected = false);
+                
+                if (hit !== -1) {
+                    p.layers[hit].selected = true;
+                    // Check handle click for resize
+                    const l = p.layers[hit];
+                    if (pos.x > l.x + l.w - 10 && pos.y > l.y + l.h - 10) {
+                        dragTarget = 'layer-resize';
+                    } else {
+                        dragTarget = 'layer-move';
+                    }
+                    isDragging = true;
+                    dragStart = { x: pos.x - l.x, y: pos.y - l.y }; // Offset
+                    updateLayerPropsUI();
+                } else {
+                    updateLayerPropsUI();
+                }
+                renderCanvas();
+            }
+
+            if (currentTool === 'brush') {
+                isDragging = true; dragTarget = 'brush';
+                p.layers.push({ type: 'brush', size: 5, color: '#ff0000', points: [{x: pos.x, y: pos.y}] });
+                renderCanvas();
+            }
+            
+            if (currentTool === 'box' || currentTool === 'blur') {
+                // Instant add for now, or could be drag
+                const type = currentTool;
+                p.layers.push({ 
+                    type: type, x: pos.x - 50, y: pos.y - 25, w: 100, h: 50, 
+                    color: '#ffffff', blur: 10, selected: true 
+                });
+                setTool('select');
+                renderCanvas();
+            }
+        }
+
+        function handleMouseMove(e) {
+            if (!isDragging || activeProjectIndex === -1) return;
+            const p = projects[activeProjectIndex];
+            const pos = getMousePos(e);
+
+            if (dragTarget === 'new-text-box') {
+                const l = p.layers[p.layers.length - 1]; // temp layer
+                l.w = pos.x - dragStart.x;
+                l.h = pos.y - dragStart.y;
+                renderCanvas();
+            }
+            else if (dragTarget === 'layer-move') {
+                const l = p.layers.find(x => x.selected);
+                if (l) { l.x = pos.x - dragStart.x; l.y = pos.y - dragStart.y; renderCanvas(); }
+            }
+            else if (dragTarget === 'layer-resize') {
+                const l = p.layers.find(x => x.selected);
+                if (l) { l.w = Math.max(10, pos.x - l.x); l.h = Math.max(10, pos.y - l.y); renderCanvas(); }
+            }
+            else if (dragTarget === 'brush') {
+                const l = p.layers[p.layers.length - 1];
+                l.points.push(pos);
+                renderCanvas();
+            }
+        }
+
+        function handleMouseUp(e) {
+            if (activeProjectIndex === -1) return;
+            const p = projects[activeProjectIndex];
+            
+            if (dragTarget === 'new-text-box') {
+                // Finalize text box
+                p.layers.pop(); // remove temp
+                const w = Math.abs(getMousePos(e).x - dragStart.x);
+                const h = Math.abs(getMousePos(e).y - dragStart.y);
+                
+                if (w > 10 && h > 10) {
+                    p.layers.push({
+                        type: 'text', content: 'New Text', 
+                        x: Math.min(dragStart.x, getMousePos(e).x), 
+                        y: Math.min(dragStart.y, getMousePos(e).y), 
+                        w: w, h: h, 
+                        autoWidth: false, // Box mode
+                        size: 40, font: 'Inter, sans-serif', color: '#ffffff', 
+                        selected: true, bgEnable: false, bgColor: '#000000'
+                    });
+                    setTool('select');
+                    updateLayerPropsUI();
+                }
+            }
+
+            isDragging = false;
+            dragTarget = null;
+            renderCanvas();
+        }
+
+        function handleKeyDown(e) {
+            if (e.key === 'Delete') deleteActiveLayer();
+            if (e.key === 'v') setTool('select');
+            if (e.key === 't') setTool('text');
+            if (e.key === 'b') setTool('brush');
+        }
+
+        // --- Tool Logic ---
+        function setTool(t) {
+            currentTool = t;
+            document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(`btn-${t}`).classList.add('active');
+            
+            const info = document.getElementById('activeToolInfo');
+            const cursors = { select: 'default', text: 'crosshair', box: 'crosshair', brush: 'crosshair', crop: 'default', blur: 'crosshair' };
+            
+            canvas.style.cursor = cursors[t];
+            info.innerText = t.toUpperCase() + ' TOOL';
+
+            if (t === 'crop') {
+                // Init crop overlay
+                const p = projects[activeProjectIndex];
+                if (!p) return;
+                document.getElementById('cropOverlay').classList.remove('hidden');
+                updateCropOverlayUI(); // Initial position
+            } else {
+                document.getElementById('cropOverlay').classList.add('hidden');
+            }
+        }
+
+        // --- Crop Logic ---
+        function updateCropOverlayUI() {
+            // Need to map canvas coordinates to CSS coordinates for the overlay
+            // Ideally, crop is just modifying the canvas viewbox.
+            // Simplified: The overlay covers the whole canvas element.
+            // For V3: We just show visual cues.
+            const ov = document.getElementById('cropOverlay');
+            ov.style.top = '0'; ov.style.left = '0'; ov.style.width = '100%'; ov.style.height = '100%';
+            // Real drag handles logic is handled in overlay elements
+        }
+
+        function startCropResize(e, corner) {
+             e.stopPropagation();
+             // Just a stub for visual demo. Real cropping changes p.width/height and image offset.
+             alert("Crop handles active. Click Done to simulate crop (center crop 80%).");
+        }
+
+        function applyCrop() {
+            const p = projects[activeProjectIndex];
+            // Simulate center crop
+            p.width = p.width * 0.8;
+            p.height = p.height * 0.8;
+            setTool('select');
+            renderCanvas();
+        }
+
+        function cancelCrop() { setTool('select'); }
+        
+        function rotateImage(deg) {
+            if (activeProjectIndex === -1) return;
+            projects[activeProjectIndex].rotation = (projects[activeProjectIndex].rotation + deg) % 360;
+            renderCanvas();
+        }
+
+        // --- Layer Properties UI ---
+        function updateLayerPropsUI() {
+            const p = projects[activeProjectIndex];
+            if (!p) return;
+            const l = p.layers.find(x => x.selected);
+            
+            const pane = document.getElementById('layerProps');
+            const empty = document.getElementById('noSelMsg');
+            
+            if (!l) {
+                pane.classList.add('hidden');
+                empty.classList.remove('hidden');
+                return;
+            }
+            
+            pane.classList.remove('hidden');
+            empty.classList.add('hidden');
+            
+            document.getElementById('layerTypeLabel').innerText = l.type.toUpperCase() + ' LAYER';
+            
+            // Toggle sub-controls
+            document.getElementById('ctrl-text').classList.add('hidden');
+            document.getElementById('ctrl-box').classList.add('hidden');
+            document.getElementById('ctrl-blur').classList.add('hidden');
+
+            if (l.type === 'text') {
+                document.getElementById('ctrl-text').classList.remove('hidden');
+                document.getElementById('inp-text').value = l.content;
+                document.getElementById('inp-font').value = l.font;
+                document.getElementById('inp-size').value = l.size;
+                document.getElementById('inp-color').value = l.color;
+                document.getElementById('inp-color-hex').value = l.color;
+                document.getElementById('inp-bg-enable').checked = l.bgEnable;
+                document.getElementById('inp-bg-color').value = l.bgColor;
+            } else if (l.type === 'box') {
+                document.getElementById('ctrl-box').classList.remove('hidden');
+                document.getElementById('inp-box-color').value = l.color;
+            } else if (l.type === 'blur') {
+                document.getElementById('ctrl-blur').classList.remove('hidden');
+                document.getElementById('inp-blur').value = l.blur;
+            }
+        }
+
+        // Bind Inputs
+        document.getElementById('inp-text').addEventListener('input', e => updateLayer('content', e.target.value));
+        document.getElementById('inp-font').addEventListener('change', e => updateLayer('font', e.target.value));
+        document.getElementById('inp-size').addEventListener('input', e => updateLayer('size', parseInt(e.target.value)));
+        document.getElementById('inp-color').addEventListener('input', e => { updateLayer('color', e.target.value); document.getElementById('inp-color-hex').value = e.target.value; });
+        document.getElementById('inp-bg-enable').addEventListener('change', e => updateLayer('bgEnable', e.target.checked));
+        document.getElementById('inp-bg-color').addEventListener('input', e => updateLayer('bgColor', e.target.value));
+        document.getElementById('inp-box-color').addEventListener('input', e => updateLayer('color', e.target.value));
+        document.getElementById('inp-blur').addEventListener('input', e => updateLayer('blur', parseInt(e.target.value)));
+
+        function updateLayer(prop, val) {
+            const p = projects[activeProjectIndex];
+            const l = p.layers.find(x => x.selected);
+            if (l) { l[prop] = val; renderCanvas(); }
+        }
+
+        function deleteActiveLayer() {
+            const p = projects[activeProjectIndex];
+            p.layers = p.layers.filter(l => !l.selected);
+            renderCanvas();
+            updateLayerPropsUI();
+        }
+
+        // --- Font Handling ---
+        function addGoogleFont() {
+            const fontName = prompt("Enter Google Font Name (e.g. Lobster):");
+            if (!fontName) return;
+            
+            const link = document.createElement('link');
+            link.href = `https://fonts.googleapis.com/css2?family=${fontName.replace(/ /g, '+')}&display=swap`;
+            link.rel = 'stylesheet';
+            document.head.appendChild(link);
+            
+            const opt = document.createElement('option');
+            opt.value = `'${fontName}', sans-serif`;
+            opt.text = fontName;
+            document.getElementById('googleFontList').appendChild(opt);
+            
+            alert("Font loaded! Select it from the list.");
+        }
+
+        async function loadLocalFont(input) {
+            const file = input.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                const fontName = file.name.split('.')[0];
+                const fontFace = new FontFace(fontName, e.target.result);
+                await fontFace.load();
+                document.fonts.add(fontFace);
+                
+                const opt = document.createElement('option');
+                opt.value = fontName;
+                opt.text = fontName + " (Local)";
+                document.getElementById('inp-font').add(opt);
+                alert("Local Font Added!");
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        // --- Export & Size ---
+        function openExportModal() {
+            if (activeProjectIndex === -1) return;
+            updateExpSize();
+            document.getElementById('exportModal').showModal();
+        }
+
+        function updateExpSize() {
+            // Rough Estimate
+            const p = projects[activeProjectIndex];
+            const scale = document.getElementById('exp-scale').value;
+            const pixels = (p.width * scale) * (p.height * scale);
+            const quality = document.getElementById('exp-qual').value;
+            // 4 bytes per pixel raw, compression varies.
+            // approx: pixels * 4 * 0.1 (compression factor)
+            const mb = (pixels * 4 * quality * 0.15) / (1024 * 1024);
+            document.getElementById('exp-size-est').innerText = `Est. Size: ~${mb.toFixed(2)} MB (${p.width*scale}x${p.height*scale})`;
+        }
+
+        function doExport() {
+            const p = projects[activeProjectIndex];
+            const fmt = document.getElementById('exp-fmt').value;
+            const qual = parseFloat(document.getElementById('exp-qual').value);
+            const scale = parseInt(document.getElementById('exp-scale').value);
+            
+            // Temporary Canvas for export
+            const exC = document.createElement('canvas');
+            exC.width = p.width * scale;
+            exC.height = p.height * scale;
+            const exCtx = exC.getContext('2d');
+            exCtx.scale(scale, scale);
+            
+            // Re-render logic (simplified duplication of renderCanvas)
+            if (p.bg !== 'transparent') { exCtx.fillStyle = p.bg; exCtx.fillRect(0,0,p.width,p.height); }
+            exCtx.save();
+            exCtx.translate(p.width/2, p.height/2);
+            exCtx.rotate(p.rotation * Math.PI / 180);
+            if (p.baseImage) exCtx.drawImage(p.baseImage, -p.width/2, -p.height/2);
+            exCtx.restore();
+            
+            p.layers.forEach(l => {
+                 exCtx.save();
+                 if(l.type==='text') {
+                     exCtx.font=`${l.size}px ${l.font}`; exCtx.fillStyle=l.color;
+                     const lines = l.content.split('\n');
+                     lines.forEach((t,i) => exCtx.fillText(t, l.x, l.y + i*(l.size*1.2)));
+                 } else if (l.type==='box') {
+                     exCtx.fillStyle=l.color; exCtx.fillRect(l.x, l.y, l.w, l.h);
+                 }
+                 exCtx.restore();
+            });
+            
+            const link = document.createElement('a');
+            link.download = `PM_Export_${Date.now()}.${fmt.split('/')[1]}`;
+            link.href = exC.toDataURL(fmt, qual);
+            link.click();
+            document.getElementById('exportModal').close();
+        }
+
+        // --- AI & Chat ---
+        function switchRightTab(tab) {
+            document.getElementById('panel-props').classList.toggle('hidden', tab !== 'props');
+            document.getElementById('panel-chat').classList.toggle('hidden', tab !== 'chat');
+            document.getElementById('rtab-props').className = tab === 'props' ? 'flex-1 py-2 text-xs font-medium text-white border-b-2 border-blue-500 bg-slate-700' : 'flex-1 py-2 text-xs font-medium text-slate-400 hover:text-white';
+            document.getElementById('rtab-chat').className = tab === 'chat' ? 'flex-1 py-2 text-xs font-medium text-white border-b-2 border-blue-500 bg-slate-700' : 'flex-1 py-2 text-xs font-medium text-slate-400 hover:text-white';
+        }
+
+        let chatReferenceImg = null;
+
+        function handleChatImage(input) {
+            const file = input.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = e => {
+                chatReferenceImg = e.target.result; // base64
+                document.getElementById('chatImgThumb').src = chatReferenceImg;
+                document.getElementById('chatImgPreview').classList.remove('hidden');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function clearChatImg() {
+            chatReferenceImg = null;
+            document.getElementById('chatImgPreview').classList.add('hidden');
+            document.getElementById('chatImgUpload').value = '';
+        }
+
+        function googleLensSearch() {
+             // Best client-side effort: Open Google Images so user can drag/drop
+             // Or prompt user
+             alert("To search: I will download the current image. Please drag and drop it into the Google Images tab that opens.");
+             doExport();
+             window.open("https://images.google.com", "_blank");
+        }
+
+        async function sendAI(presetPrompt) {
+            const input = document.getElementById('chatInput');
+            const msg = presetPrompt || input.value;
+            if (!msg) return;
+            
+            const hist = document.getElementById('chatHistory');
+            hist.innerHTML += `<div class="chat-bubble chat-user bg-blue-600 text-white ml-auto p-2 rounded max-w-[85%] mb-2 text-xs">${msg}</div>`;
+            input.value = '';
+            
+            showLoader(true);
+            
+            // Prepare payload
+            const model = document.getElementById('chatModel').value;
+            // Image source: Chat upload OR Canvas screenshot
+            let imgData = null;
+            if (chatReferenceImg) {
+                imgData = chatReferenceImg.split(',')[1];
+            } else if (activeProjectIndex > -1) {
+                // Snapshot canvas
+                imgData = canvas.toDataURL('image/jpeg', 0.5).split(',')[1];
+            }
+
+            let reply = "I need an API Key to answer. Check Settings.";
+            
+            try {
+                if (model === 'gemini' && apiKeys.gemini) {
+                    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKeys.gemini}`;
+                    const parts = [{ text: msg }];
+                    if (imgData) parts.unshift({ inline_data: { mime_type: "image/jpeg", data: imgData } });
+                    
+                    const res = await fetch(url, { method: 'POST', body: JSON.stringify({ contents: [{ parts }] }) });
+                    const data = await res.json();
+                    reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "Error from Gemini";
+                    
+                } else if (model === 'openai' && apiKeys.openai) {
+                    const url = "https://api.openai.com/v1/chat/completions";
+                    const content = [{ type: "text", text: msg }];
+                    if (imgData) content.push({ type: "image_url", image_url: { url: `data:image/jpeg;base64,${imgData}` } });
+                    
+                    const res = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Authorization': `Bearer ${apiKeys.openai}`, 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ model: "gpt-4o", messages: [{ role: "user", content }] })
+                    });
+                    const data = await res.json();
+                    reply = data.choices?.[0]?.message?.content || "Error from OpenAI";
+                }
+            } catch (e) {
+                reply = "Network Error: " + e.message;
+            }
+
+            hist.innerHTML += `<div class="chat-bubble chat-ai bg-slate-700 text-slate-200 mr-auto p-2 rounded max-w-[85%] mb-2 text-xs">${marked.parse(reply)}</div>`;
+            hist.scrollTop = hist.scrollHeight;
+            showLoader(false);
+            clearChatImg();
+        }
+
+        // --- Utils ---
+        function showLoader(show) {
+            document.getElementById('globalLoader').classList.toggle('hidden', !show);
+        }
+        function openSettings() { document.getElementById('settingsModal').showModal(); }
+        function saveKeys() {
+            apiKeys.gemini = document.getElementById('key-gemini').value;
+            apiKeys.openai = document.getElementById('key-openai').value;
+            localStorage.setItem('pm_gemini', apiKeys.gemini);
+            localStorage.setItem('pm_openai', apiKeys.openai);
+            document.getElementById('settingsModal').close();
+        }
+        function runOCR() {
+            if(activeProjectIndex===-1) return alert("Open image first");
+            showLoader(true);
+            Tesseract.recognize(canvas.toDataURL()).then(res => {
+                 const p = projects[activeProjectIndex];
+                 p.layers.push({ type: 'text', content: res.data.text, x: 50, y: 50, w: 300, h: 200, size: 20, font: 'Inter', color: '#fff', selected: true });
+                 showLoader(false);
+                 renderCanvas();
+                 updateLayerPropsUI();
+            });
+        }
+    </script>
+</body>
+</html>
