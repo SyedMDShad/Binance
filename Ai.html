@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DualAI Studio - Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        dark: '#050505',
+                        panel: '#0f0f0f',
+                        border: '#1f1f1f',
+                        accent: '#3b82f6',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #000; color: #e5e5e5; }
+        .glass { background: rgba(20, 20, 20, 0.95); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.08); }
+        .scroll-hide::-webkit-scrollbar { width: 4px; }
+        .scroll-hide::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
+        input[type="range"] {
+            -webkit-appearance: none; width: 100%; height: 4px; background: #333; border-radius: 2px;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none; width: 14px; height: 14px; background: #3b82f6; border-radius: 50%; cursor: pointer;
+        }
+        .canvas-bg {
+            background-image: radial-gradient(#1a1a1a 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        /* Hover actions for history items */
+        .history-item:hover .history-actions {
+            display: flex;
+        }
+    </style>
+</head>
+<body class="h-screen flex flex-col font-sans overflow-hidden bg-black selection:bg-blue-500/30">
+
+    <!-- Header -->
+    <header class="h-16 border-b border-border flex items-center justify-between px-4 sm:px-6 bg-dark z-40 relative shadow-lg">
+        <div class="flex items-center gap-3 sm:gap-4">
+            <button onclick="toggleSidebar()" class="text-gray-400 hover:text-white p-2 rounded hover:bg-white/5 transition">
+                <i class="fa-solid fa-bars text-lg"></i>
+            </button>
+            <div class="font-bold text-lg sm:text-xl bg-gradient-to-r from-blue-400 to-indigo-500 bg-clip-text text-transparent tracking-tight whitespace-nowrap">
+                DualAI <span class="text-xs text-gray-500 font-mono font-normal ml-1 border border-gray-800 px-1 rounded hidden sm:inline-block">PRO</span>
+            </div>
+        </div>
+
+        <!-- Neon Clock (Fixed & Responsive) -->
+        <div class="font-mono text-blue-400 text-xs sm:text-lg tracking-wider sm:tracking-widest bg-gray-900/80 px-3 py-1 sm:px-6 sm:py-1.5 rounded-full border border-blue-500/30 shadow-[0_0_15px_rgba(59,130,246,0.15)] whitespace-nowrap" id="clock">
+            Loading...
+        </div>
+
+        <div class="flex items-center gap-2 sm:gap-3">
+            <button onclick="toggleEditor()" id="editorToggleBtn" class="bg-blue-600/10 text-blue-400 border border-blue-600/30 px-2 py-1.5 sm:px-3 rounded-lg text-xs font-medium hover:bg-blue-600 hover:text-white transition flex items-center gap-2">
+                <i class="fa-solid fa-layer-group"></i> <span class="hidden sm:inline">Editor</span>
+            </button>
+            <button onclick="toggleSettings()" class="text-gray-400 hover:text-white p-2 transition"><i class="fa-solid fa-gear text-lg"></i></button>
+            <button onclick="resetApp()" class="bg-red-600/10 text-red-500 border border-red-900/50 px-2 py-1.5 sm:px-3 rounded-lg text-xs font-bold hover:bg-red-600 hover:text-white transition flex items-center gap-2">
+                <i class="fa-solid fa-power-off"></i> <span class="hidden sm:inline">Reset</span>
+            </button>
+        </div>
+    </header>
+
+    <div class="flex-1 flex relative overflow-hidden">
+        
+        <!-- Sidebar (History) -->
+        <aside id="sidebar" class="w-0 overflow-hidden transition-all duration-300 bg-panel border-r border-border flex flex-col absolute md:relative z-30 h-full shadow-2xl">
+            <div class="p-4 border-b border-border text-xs font-bold text-gray-500 uppercase flex justify-between items-center bg-black/20">
+                <span>Activity Log</span>
+                <button onclick="toggleSidebar()" class="md:hidden text-gray-400"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div id="historyList" class="flex-1 overflow-y-auto scroll-hide p-2 space-y-1">
+                <!-- Items injected via JS -->
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 flex flex-col relative w-full">
+
+            <!-- 1. Editor Section -->
+            <div id="editorPanel" class="flex-1 flex flex-col relative bg-dark hidden transition-all border-b border-border">
+                
+                <!-- Editor Toolbar -->
+                <div class="h-14 border-b border-border flex items-center px-4 sm:px-6 justify-between bg-panel/80 backdrop-blur-sm">
+                    <div class="flex items-center gap-2 sm:gap-3">
+                        <button onclick="triggerUpload()" class="flex items-center gap-2 px-3 sm:px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white text-xs font-medium rounded-lg border border-gray-700 transition shadow-sm">
+                            <i class="fa-solid fa-upload"></i> Upload
+                        </button>
+                        <input type="file" id="imageInput" class="hidden" accept="image/*" onchange="handleUpload(event)">
+                        
+                        <div class="h-6 w-px bg-gray-800 mx-1 sm:mx-2"></div>
+
+                        <button onclick="undo()" class="w-9 h-9 flex items-center justify-center rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition border border-transparent hover:border-gray-700" title="Undo Last Edit">
+                            <i class="fa-solid fa-rotate-left"></i>
+                        </button>
+                        <button onclick="resetImage()" class="w-9 h-9 flex items-center justify-center rounded-lg text-red-400 hover:text-white hover:bg-red-600 transition border border-transparent hover:border-red-500" title="Reset to Original Image (Clear All Edits)">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </div>
+
+                    <div class="flex items-center gap-2 sm:gap-3">
+                        <button onclick="toggleAdjustments()" class="text-xs font-medium flex items-center gap-2 text-gray-300 hover:text-white bg-gray-800/50 hover:bg-gray-800 px-3 py-2 rounded-lg transition">
+                            <i class="fa-solid fa-sliders"></i> <span class="hidden sm:inline">Adjust</span>
+                        </button>
+                        <button onclick="toggleFilters()" class="text-xs font-medium flex items-center gap-2 text-gray-300 hover:text-white bg-gray-800/50 hover:bg-gray-800 px-3 py-2 rounded-lg transition">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i> <span class="hidden sm:inline">Tools</span>
+                        </button>
+                        <button onclick="downloadImage()" class="bg-green-600 text-white border border-green-500 px-3 sm:px-4 py-2 rounded-lg text-xs font-bold hover:bg-green-500 transition shadow-lg shadow-green-900/20">
+                            Download
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Adjustment Menu -->
+                <div id="adjustMenu" class="absolute top-16 right-6 w-72 glass p-5 rounded-xl z-20 hidden shadow-2xl ring-1 ring-white/10">
+                    <div class="flex justify-between items-center mb-5">
+                        <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Manual Control</span>
+                        <button onclick="toggleAdjustments()" class="text-gray-500 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                    <div class="space-y-5">
+                        <div class="group">
+                            <div class="flex justify-between text-[10px] text-gray-400 mb-2 group-hover:text-blue-400 transition"><span>Brightness</span><span id="val-bright" class="font-mono">100%</span></div>
+                            <input type="range" min="0" max="200" value="100" oninput="updateFilter('brightness', this.value)">
+                        </div>
+                        <div class="group">
+                            <div class="flex justify-between text-[10px] text-gray-400 mb-2 group-hover:text-blue-400 transition"><span>Contrast</span><span id="val-contrast" class="font-mono">100%</span></div>
+                            <input type="range" min="0" max="200" value="100" oninput="updateFilter('contrast', this.value)">
+                        </div>
+                        <div class="group">
+                            <div class="flex justify-between text-[10px] text-gray-400 mb-2 group-hover:text-blue-400 transition"><span>Saturation</span><span id="val-saturate" class="font-mono">100%</span></div>
+                            <input type="range" min="0" max="200" value="100" oninput="updateFilter('saturate', this.value)">
+                        </div>
+                        <button onclick="applyAdjustments()" class="w-full bg-blue-600 text-white text-xs font-bold py-2.5 rounded-lg mt-2 hover:bg-blue-500 shadow-lg shadow-blue-900/30 transition">Apply Changes</button>
+                    </div>
+                </div>
+
+                <!-- Filters & Upscale Menu -->
+                <div id="filterMenu" class="absolute top-16 right-6 w-64 glass p-3 rounded-xl z-20 hidden shadow-2xl ring-1 ring-white/10">
+                    
+                    <!-- Simplified Filters -->
+                    <div class="text-[10px] font-bold text-gray-500 uppercase px-2 py-1.5 mb-1">Tools</div>
+                    <button onclick="applyPreset('invert')" class="w-full text-left px-3 py-2.5 text-xs text-gray-300 hover:bg-white/10 rounded-lg flex justify-between items-center transition group">
+                        Invert Colors <i class="fa-solid fa-circle-half-stroke text-gray-600 group-hover:text-white"></i>
+                    </button>
+                    
+                    <div class="h-px bg-gray-800 my-2"></div>
+                    
+                    <!-- Upscale with Info -->
+                    <div class="text-[10px] font-bold text-gray-500 uppercase px-2 py-1.5 mb-1">AI Upscale</div>
+                    
+                    <button onclick="upscale(2)" class="w-full text-left px-3 py-2 text-xs text-gray-300 hover:bg-white/10 rounded-lg group mb-1 transition">
+                        <div class="flex justify-between items-center">
+                            <span class="font-bold text-blue-400 group-hover:text-blue-300">Upscale 2x</span>
+                            <span class="text-[9px] bg-blue-900/40 text-blue-300 px-1.5 rounded border border-blue-800">HD</span>
+                        </div>
+                        <div class="text-[10px] text-gray-500 mt-1 font-mono" id="info-2x">Calculating...</div>
+                    </button>
+
+                    <button onclick="upscale(4)" class="w-full text-left px-3 py-2 text-xs text-gray-300 hover:bg-white/10 rounded-lg group transition">
+                        <div class="flex justify-between items-center">
+                            <span class="font-bold text-purple-400 group-hover:text-purple-300">Upscale 4x</span>
+                            <span class="text-[9px] bg-purple-900/40 text-purple-300 px-1.5 rounded border border-purple-800">Ultra</span>
+                        </div>
+                        <div class="text-[10px] text-gray-500 mt-1 font-mono" id="info-4x">Calculating...</div>
+                    </button>
+                </div>
+
+                <!-- Canvas Area -->
+                <div class="flex-1 canvas-bg flex items-center justify-center overflow-auto relative p-8">
+                    <canvas id="mainCanvas" class="shadow-2xl max-w-full max-h-full object-contain hidden"></canvas>
+                    
+                    <div id="uploadPlaceholder" onclick="triggerUpload()" class="border-2 border-dashed border-gray-800 rounded-2xl p-12 flex flex-col items-center justify-center cursor-pointer hover:border-blue-500/50 hover:bg-blue-500/5 transition group">
+                        <div class="w-16 h-16 rounded-full bg-gray-800 flex items-center justify-center mb-4 group-hover:scale-110 transition duration-300 shadow-xl">
+                             <i class="fa-solid fa-cloud-arrow-up text-3xl text-gray-400 group-hover:text-blue-400"></i>
+                        </div>
+                        <span class="text-sm font-medium text-gray-300 group-hover:text-white">Click to Upload Image</span>
+                        <span class="text-xs text-gray-600 mt-2">JPG, PNG supported</span>
+                    </div>
+
+                    <div id="resBadge" class="absolute bottom-4 left-4 bg-black/80 backdrop-blur border border-gray-800 px-3 py-1.5 text-[10px] font-mono rounded-lg text-gray-300 hidden shadow-lg flex gap-2 items-center">
+                        <span id="resText">0x0</span>
+                        <span class="w-px h-3 bg-gray-700"></span>
+                        <span id="sizeText" class="text-gray-500">0 MB</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. AI Chat Section -->
+            <div id="chatContainer" class="flex-1 flex overflow-hidden relative">
+                <!-- Clear Chat Button -->
+                <button onclick="clearChat()" class="absolute top-3 right-3 z-10 bg-gray-900/90 hover:bg-red-900/90 text-gray-500 hover:text-white p-2 rounded-lg text-xs backdrop-blur transition border border-gray-800 hover:border-red-800 shadow-lg" title="Clear Conversation">
+                    <i class="fa-solid fa-trash-can"></i>
+                </button>
+
+                <!-- Gemini -->
+                <div class="flex-1 flex flex-col border-r border-border bg-[#0b0f19]">
+                    <div class="p-3 border-b border-white/5 flex justify-between items-center bg-black/40 backdrop-blur">
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid fa-gem text-blue-400 text-xs"></i>
+                            <span class="text-xs font-bold text-gray-300">Gemini</span>
+                        </div>
+                        <span class="text-[9px] bg-blue-500/10 text-blue-400 px-2 py-0.5 rounded-full border border-blue-500/20 font-medium">1.5 Pro</span>
+                    </div>
+                    <div id="geminiChat" class="flex-1 overflow-y-auto p-5 space-y-5 text-sm scroll-hide"></div>
+                </div>
+
+                <!-- ChatGPT -->
+                <div class="flex-1 flex flex-col bg-[#0f0f0f]">
+                    <div class="p-3 border-b border-white/5 flex justify-between items-center bg-black/40 backdrop-blur">
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid fa-robot text-green-400 text-xs"></i>
+                            <span class="text-xs font-bold text-gray-300">ChatGPT</span>
+                        </div>
+                        <span class="text-[9px] bg-green-500/10 text-green-400 px-2 py-0.5 rounded-full border border-green-500/20 font-medium">GPT-4o</span>
+                    </div>
+                    <div id="gptChat" class="flex-1 overflow-y-auto p-5 space-y-5 text-sm scroll-hide"></div>
+                </div>
+            </div>
+
+            <!-- 3. Prompt Bar -->
+            <div class="p-4 bg-dark border-t border-border z-30">
+                <div class="max-w-4xl mx-auto relative flex gap-3">
+                    <button onclick="triggerUpload()" class="w-11 h-11 flex items-center justify-center rounded-xl bg-gray-800 text-gray-400 hover:text-white hover:bg-gray-700 transition border border-gray-700 hover:border-gray-600">
+                        <i class="fa-solid fa-paperclip"></i>
+                    </button>
+                    <div class="flex-1 relative">
+                        <textarea id="promptBox" rows="1" class="w-full bg-[#151515] border border-border rounded-xl pl-5 pr-12 py-3 text-sm text-white focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 transition resize-none shadow-inner" placeholder="Ask both AIs about your image..."></textarea>
+                        <button onclick="sendPrompt()" class="absolute right-2 top-2 p-2 text-blue-500 hover:text-white hover:bg-blue-600 transition rounded-lg">
+                            <i class="fa-solid fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-[#111] border border-border rounded-2xl w-full max-w-sm p-8 shadow-2xl relative ring-1 ring-white/10">
+            <button onclick="toggleSettings()" class="absolute top-4 right-4 text-gray-500 hover:text-white transition"><i class="fa-solid fa-xmark text-lg"></i></button>
+            <h2 class="text-xl font-bold mb-2 text-white">API Configuration</h2>
+            <p class="text-xs text-gray-500 mb-6">Keys are stored securely in your browser's local storage.</p>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-[10px] uppercase font-bold text-gray-500 mb-1.5 ml-1">Gemini API Key</label>
+                    <input type="password" id="keyGemini" class="w-full bg-black border border-gray-800 rounded-lg p-3 text-xs text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition" placeholder="Paste key here...">
+                </div>
+                <div>
+                    <label class="block text-[10px] uppercase font-bold text-gray-500 mb-1.5 ml-1">OpenAI API Key</label>
+                    <input type="password" id="keyOpenAI" class="w-full bg-black border border-gray-800 rounded-lg p-3 text-xs text-white focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none transition" placeholder="Paste key here...">
+                </div>
+            </div>
+            <button onclick="saveSettings()" class="w-full mt-8 bg-white text-black text-xs font-bold py-3 rounded-lg hover:bg-gray-200 transition transform active:scale-[0.98]">Save Configuration</button>
+        </div>
+    </div>
+
+    <script>
+        // --- Core State ---
+        const state = {
+            geminiKey: localStorage.getItem('gemini_key') || '',
+            openaiKey: localStorage.getItem('openai_key') || '',
+            originalImg: null, // Image Object (Clean)
+            currentImg: null, // DataURL (Modified)
+            history: [], // Stack of DataURLs for Undo
+            historyLog: [], // Sidebar Items {id, text, time}
+            fileName: 'image.png',
+            filters: { brightness: 100, contrast: 100, saturate: 100 }
+        };
+
+        const canvas = document.getElementById('mainCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // --- Clock Logic (Robust) ---
+        function startClock() {
+            function update() {
+                const now = new Date();
+                const timeString = now.toLocaleTimeString('en-US', { 
+                    hour: 'numeric', 
+                    minute: '2-digit', 
+                    second: '2-digit', 
+                    hour12: true 
+                });
+                const clockEl = document.getElementById('clock');
+                if(clockEl) clockEl.textContent = timeString;
+            }
+            update(); // Run immediately
+            setInterval(update, 1000);
+        }
+        // Start the clock
+        startClock();
+
+        // Init sidebar based on screen size
+        if(window.innerWidth > 768) toggleSidebar(); 
+
+        // --- Sidebar Logic ---
+        function toggleSidebar() {
+            const sb = document.getElementById('sidebar');
+            if (sb.classList.contains('w-0')) {
+                sb.classList.remove('w-0');
+                sb.classList.add('w-72');
+            } else {
+                sb.classList.remove('w-72');
+                sb.classList.add('w-0');
+            }
+        }
+
+        // --- App Reset ---
+        function resetApp() {
+            if(!confirm("⚠️ RESET APP: Clear all images and chats?")) return;
+            state.originalImg = null;
+            state.history = [];
+            state.historyLog = [];
+            state.filters = { brightness: 100, contrast: 100, saturate: 100 };
+            
+            clearChat();
+            renderHistoryLog();
+            
+            canvas.classList.add('hidden');
+            document.getElementById('uploadPlaceholder').classList.remove('hidden');
+            document.getElementById('resBadge').classList.add('hidden');
+            document.getElementById('editorPanel').classList.remove('hidden');
+        }
+
+        function clearChat() {
+            document.getElementById('geminiChat').innerHTML = '';
+            document.getElementById('gptChat').innerHTML = '';
+            document.getElementById('promptBox').value = '';
+        }
+
+        // --- Editor Visibility ---
+        function toggleEditor() {
+            const panel = document.getElementById('editorPanel');
+            panel.classList.toggle('hidden');
+        }
+
+        // --- Settings ---
+        function toggleSettings() {
+            document.getElementById('settingsModal').classList.toggle('hidden');
+            if(!document.getElementById('settingsModal').classList.contains('hidden')) {
+                document.getElementById('keyGemini').value = state.geminiKey;
+                document.getElementById('keyOpenAI').value = state.openaiKey;
+            }
+        }
+        function saveSettings() {
+            state.geminiKey = document.getElementById('keyGemini').value;
+            state.openaiKey = document.getElementById('keyOpenAI').value;
+            localStorage.setItem('gemini_key', state.geminiKey);
+            localStorage.setItem('openai_key', state.openaiKey);
+            toggleSettings();
+        }
+
+        // --- Image Logic ---
+        function triggerUpload() { document.getElementById('imageInput').click(); }
+
+        function handleUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            state.fileName = file.name;
+
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                const img = new Image();
+                img.onload = () => {
+                    state.originalImg = img;
+                    state.history = []; // Reset Undo stack
+                    pushHistory(img.src); // Initial state
+                    renderImage(img);
+                    
+                    document.getElementById('editorPanel').classList.remove('hidden');
+                    document.getElementById('uploadPlaceholder').classList.add('hidden');
+                    addLog(`Uploaded: ${file.name}`);
+                };
+                img.src = ev.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function renderImage(imgSource, filters = null) {
+            let imgToDraw = imgSource;
+            if (typeof imgSource === 'string') {
+                imgToDraw = new Image();
+                imgToDraw.onload = () => {
+                    drawToCanvas(imgToDraw, filters);
+                }
+                imgToDraw.src = imgSource;
+            } else {
+                drawToCanvas(imgToDraw, filters);
+            }
+        }
+
+        function drawToCanvas(imgObj, filters) {
+            canvas.width = imgObj.width;
+            canvas.height = imgObj.height;
+            canvas.classList.remove('hidden');
+            
+            updateResBadge(canvas.width, canvas.height);
+
+            if(filters) {
+                ctx.filter = `brightness(${filters.brightness}%) contrast(${filters.contrast}%) saturate(${filters.saturate}%)`;
+            } else {
+                ctx.filter = 'none';
+            }
+            
+            ctx.drawImage(imgObj, 0, 0);
+            state.currentImg = canvas.toDataURL(); 
+        }
+
+        function updateResBadge(w, h) {
+            const badge = document.getElementById('resBadge');
+            badge.classList.remove('hidden');
+            document.getElementById('resText').innerText = `${w}x${h}`;
+            
+            const rawMB = (w * h * 4) / (1024 * 1024);
+            const estJpgMB = (rawMB * 0.15).toFixed(2);
+            document.getElementById('sizeText').innerText = `~${estJpgMB} MB`;
+        }
+
+        // --- Manual Controls ---
+        function toggleAdjustments() {
+            document.getElementById('adjustMenu').classList.toggle('hidden');
+            document.getElementById('filterMenu').classList.add('hidden');
+        }
+        function toggleFilters() {
+            const menu = document.getElementById('filterMenu');
+            menu.classList.toggle('hidden');
+            document.getElementById('adjustMenu').classList.add('hidden');
+            
+            if(!menu.classList.contains('hidden') && canvas.width > 0) {
+                const w = canvas.width;
+                const h = canvas.height;
+                const r2 = (w*h*4*2*2) / (1024*1024) * 0.15;
+                const r4 = (w*h*4*4*4) / (1024*1024) * 0.15;
+                
+                document.getElementById('info-2x').innerText = `${w*2}x${h*2} px (~${r2.toFixed(1)} MB)`;
+                document.getElementById('info-4x').innerText = `${w*4}x${h*4} px (~${r4.toFixed(1)} MB)`;
+            }
+        }
+
+        function updateFilter(type, value) {
+            state.filters[type] = value;
+            if(type === 'brightness') document.getElementById('val-bright').innerText = value + '%';
+            if(type === 'contrast') document.getElementById('val-contrast').innerText = value + '%';
+            if(type === 'saturate') document.getElementById('val-saturate').innerText = value + '%';
+
+            const baseSrc = state.history.length > 0 ? state.history[state.history.length-1] : state.originalImg.src;
+            renderImage(baseSrc, state.filters);
+        }
+
+        function applyAdjustments() {
+            pushHistory(canvas.toDataURL());
+            toggleAdjustments();
+            state.filters = { brightness: 100, contrast: 100, saturate: 100 };
+            document.querySelectorAll('input[type="range"]').forEach(i => i.value = 100);
+            document.getElementById('val-bright').innerText = '100%';
+            document.getElementById('val-contrast').innerText = '100%';
+            document.getElementById('val-saturate').innerText = '100%';
+        }
+
+        // --- History / Undo / Reset ---
+        function pushHistory(dataUrl) {
+            state.history.push(dataUrl);
+        }
+
+        function undo() {
+            if (state.history.length <= 1) return;
+            state.history.pop();
+            const prevSrc = state.history[state.history.length - 1];
+            renderImage(prevSrc);
+            ctx.filter = 'none';
+        }
+
+        function resetImage() {
+            if(!state.originalImg) return;
+            state.history = [];
+            pushHistory(state.originalImg.src);
+            renderImage(state.originalImg.src);
+            state.filters = { brightness: 100, contrast: 100, saturate: 100 };
+            addLog("Reset Image");
+        }
+
+        // --- Filter Presets ---
+        function applyPreset(type) {
+            const w = canvas.width;
+            const h = canvas.height;
+            const imgData = ctx.getImageData(0,0,w,h);
+            const data = imgData.data;
+
+            for(let i=0; i<data.length; i+=4) {
+                const r=data[i], g=data[i+1], b=data[i+2];
+                if(type === 'invert') {
+                    data[i]=255-r; data[i+1]=255-g; data[i+2]=255-b;
+                }
+            }
+            ctx.putImageData(imgData, 0, 0);
+            pushHistory(canvas.toDataURL());
+            toggleFilters();
+            addLog(`Applied Filter: ${type}`);
+        }
+
+        function upscale(factor) {
+            const tempImg = new Image();
+            tempImg.src = canvas.toDataURL();
+            
+            tempImg.onload = () => {
+                const oldW = canvas.width;
+                const oldH = canvas.height;
+                const newW = oldW * factor;
+                const newH = oldH * factor;
+
+                canvas.width = newW;
+                canvas.height = newH;
+                
+                ctx.imageSmoothingEnabled = true;
+                ctx.imageSmoothingQuality = 'high';
+                ctx.drawImage(tempImg, 0, 0, newW, newH);
+                
+                pushHistory(canvas.toDataURL());
+                updateResBadge(newW, newH);
+                toggleFilters();
+                addLog(`Upscaled ${factor}x`);
+            };
+        }
+
+        function downloadImage() {
+            if(!state.currentImg) return;
+            const a = document.createElement('a');
+            a.download = 'edited_' + state.fileName;
+            a.href = canvas.toDataURL('image/jpeg', 0.95);
+            a.click();
+        }
+
+        // --- Sidebar Log Management ---
+        function addLog(text) {
+            const id = Date.now();
+            state.historyLog.unshift({ id, text, time: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) });
+            renderHistoryLog();
+        }
+
+        function deleteLogItem(id) {
+            state.historyLog = state.historyLog.filter(item => item.id !== id);
+            renderHistoryLog();
+        }
+
+        function moveLogItem(index, direction) {
+            if (direction === -1 && index > 0) { 
+                [state.historyLog[index], state.historyLog[index - 1]] = [state.historyLog[index - 1], state.historyLog[index]];
+            } else if (direction === 1 && index < state.historyLog.length - 1) { 
+                [state.historyLog[index], state.historyLog[index + 1]] = [state.historyLog[index + 1], state.historyLog[index]];
+            }
+            renderHistoryLog();
+        }
+
+        function renderHistoryLog() {
+            const list = document.getElementById('historyList');
+            list.innerHTML = '';
+            
+            state.historyLog.forEach((item, index) => {
+                const div = document.createElement('div');
+                div.className = "history-item group flex justify-between items-center p-2.5 hover:bg-white/5 rounded-lg cursor-default border-b border-gray-800/50 transition";
+                div.innerHTML = `
+                    <div class="flex flex-col overflow-hidden">
+                        <span class="text-xs text-gray-300 truncate">${item.text}</span>
+                        <span class="text-[9px] text-gray-600 font-mono">${item.time}</span>
+                    </div>
+                    <div class="history-actions hidden items-center gap-1">
+                        <button onclick="moveLogItem(${index}, -1)" class="w-5 h-5 flex items-center justify-center rounded bg-gray-800 hover:bg-blue-600 text-gray-400 hover:text-white transition"><i class="fa-solid fa-angle-up text-[10px]"></i></button>
+                        <button onclick="moveLogItem(${index}, 1)" class="w-5 h-5 flex items-center justify-center rounded bg-gray-800 hover:bg-blue-600 text-gray-400 hover:text-white transition"><i class="fa-solid fa-angle-down text-[10px]"></i></button>
+                        <button onclick="deleteLogItem(${item.id})" class="w-5 h-5 flex items-center justify-center rounded bg-gray-800 hover:bg-red-600 text-gray-400 hover:text-white transition"><i class="fa-solid fa-xmark text-[10px]"></i></button>
+                    </div>
+                `;
+                list.appendChild(div);
+            });
+            
+            if(state.historyLog.length === 0) {
+                list.innerHTML = '<div class="text-center text-xs text-gray-600 mt-10 italic">No activity yet</div>';
+            }
+        }
+
+        // --- AI API ---
+        async function sendPrompt() {
+            const txt = document.getElementById('promptBox').value;
+            if(!txt) return;
+
+            document.getElementById('promptBox').value = '';
+            appendMsg('gemini', 'user', txt);
+            appendMsg('gpt', 'user', txt);
+
+            const imgData = state.currentImg ? state.currentImg.split(',')[1] : null;
+
+            Promise.allSettled([
+                callGemini(txt, imgData),
+                callGPT(txt, imgData)
+            ]);
+        }
+
+        async function callGemini(prompt, imgBase64) {
+            if(!state.geminiKey) return appendMsg('gemini','sys','Key missing');
+            appendMsg('gemini','load','Thinking...');
+            try {
+                const parts = [{ text: prompt }];
+                if(imgBase64) parts.push({ inline_data: { mime_type: "image/png", data: imgBase64 }});
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${state.geminiKey}`;
+                const req = await fetch(url, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ contents: [{ parts }] }) });
+                const res = await req.json();
+                removeLoad('gemini');
+                if(res.error) throw new Error(res.error.message);
+                const txt = res.candidates[0].content.parts[0].text;
+                appendMsg('gemini', 'ai', formatMD(txt));
+            } catch(e) {
+                removeLoad('gemini');
+                appendMsg('gemini', 'sys', 'Error: ' + e.message);
+            }
+        }
+
+        async function callGPT(prompt, imgBase64) {
+            if(!state.openaiKey) return appendMsg('gpt','sys','Key missing');
+            appendMsg('gpt','load','Thinking...');
+            try {
+                const msgs = [{ role: "user", content: [{ type: "text", text: prompt }] }];
+                if(imgBase64) msgs[0].content.push({ type: "image_url", image_url: { url: `data:image/png;base64,${imgBase64}` } });
+                const req = await fetch('https://api.openai.com/v1/chat/completions', { method: 'POST', headers: {'Content-Type': 'application/json', 'Authorization': `Bearer ${state.openaiKey}`}, body: JSON.stringify({ model: "gpt-4o", messages: msgs, max_tokens: 800 }) });
+                const res = await req.json();
+                removeLoad('gpt');
+                if(res.error) throw new Error(res.error.message);
+                const txt = res.choices[0].message.content;
+                appendMsg('gpt', 'ai', formatMD(txt));
+            } catch(e) {
+                removeLoad('gpt');
+                appendMsg('gpt', 'sys', 'Error: ' + e.message);
+            }
+        }
+
+        function appendMsg(who, role, txt) {
+            const div = document.getElementById(who === 'gemini' ? 'geminiChat' : 'gptChat');
+            const el = document.createElement('div');
+            if(role === 'user') {
+                el.className = "bg-gray-800 text-white p-3 rounded-lg rounded-tr-none self-end ml-4 mb-2 text-xs";
+                el.innerText = txt;
+            } else if(role === 'load') {
+                el.className = "loader text-xs text-gray-500 italic animate-pulse mb-2";
+                el.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> ${txt}`;
+            } else {
+                el.className = "text-gray-300 text-sm leading-relaxed mb-4 border-b border-gray-800 pb-2";
+                el.innerHTML = txt;
+            }
+            div.appendChild(el);
+            div.scrollTop = div.scrollHeight;
+        }
+
+        function removeLoad(who) {
+            const div = document.getElementById(who === 'gemini' ? 'geminiChat' : 'gptChat');
+            const l = div.querySelector('.loader');
+            if(l) l.remove();
+        }
+
+        function formatMD(text) {
+            return text.replace(/\*\*(.*?)\*\*/g, '<b class="text-white">$1</b>').replace(/### (.*)/g, '<h3 class="text-blue-400 font-bold mt-2">$1</h3>').replace(/\n/g, '<br>');
+        }
+
+        document.getElementById('promptBox').addEventListener('input', function() {
+            this.style.height = 'auto'; this.style.height = (this.scrollHeight) + 'px';
+        });
+        document.getElementById('promptBox').addEventListener('keydown', function(e) {
+            if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendPrompt(); }
+        });
+    </script>
+</body>
+</html>
