@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PostMaster AI Enterprise v6 (Themed)</title>
+    
+    <!-- Libraries -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <style>
+        /* --- THEME VARIABLES --- */
+        :root {
+            --bg-main: #09090b;
+            --bg-panel: #18181b;
+            --bg-tool: #27272a;
+            --border: #3f3f46;
+            --accent: #3b82f6;
+            --text-main: #e4e4e7;
+            --text-dim: #a1a1aa;
+            --checker-1: #1f1f1f;
+            --checker-2: transparent;
+        }
+
+        /* Light Theme */
+        [data-theme="light"] {
+            --bg-main: #f4f4f5;
+            --bg-panel: #ffffff;
+            --bg-tool: #e4e4e7;
+            --border: #d4d4d8;
+            --accent: #2563eb;
+            --text-main: #18181b;
+            --text-dim: #52525b;
+            --checker-1: #e4e4e7;
+            --checker-2: transparent;
+        }
+
+        /* Midnight Blue */
+        [data-theme="blue"] {
+            --bg-main: #020617;
+            --bg-panel: #0f172a;
+            --bg-tool: #1e293b;
+            --border: #334155;
+            --accent: #38bdf8;
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
+            --checker-1: #1e293b;
+            --checker-2: transparent;
+        }
+
+        /* OLED Black */
+        [data-theme="black"] {
+            --bg-main: #000000;
+            --bg-panel: #050505;
+            --bg-tool: #121212;
+            --border: #262626;
+            --accent: #ffffff;
+            --text-main: #ffffff;
+            --text-dim: #737373;
+            --checker-1: #1a1a1a;
+            --checker-2: transparent;
+        }
+
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg-main); color: var(--text-main); overflow: hidden; user-select: none; transition: background-color 0.3s, color 0.3s; }
+        
+        /* Apply Theme Colors to Elements */
+        .themed-bg { background-color: var(--bg-main) !important; }
+        .themed-panel { background-color: var(--bg-panel) !important; border-color: var(--border) !important; }
+        .themed-tool { background-color: var(--bg-tool) !important; }
+        .themed-border { border-color: var(--border) !important; }
+        .themed-text { color: var(--text-main) !important; }
+        .themed-text-dim { color: var(--text-dim) !important; }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+
+        /* Views */
+        .view-container { position: absolute; inset: 0; display: none; flex-direction: column; background: var(--bg-main); z-index: 10; }
+        .view-container.active { display: flex; }
+
+        /* --- LANDING STYLES --- */
+        .ai-landing { align-items: center; justify-content: center; background: radial-gradient(circle at 50% 30%, var(--bg-tool) 0%, var(--bg-main) 100%); }
+        .hero-box { max-width: 800px; width: 100%; padding: 2rem; display: flex; flex-direction: column; height: 80%; }
+        .chat-scroll { flex: 1; overflow-y: auto; margin-bottom: 20px; padding-right: 10px; }
+        
+        /* --- EDITOR STYLES --- */
+        .app-header { height: 40px; background: var(--bg-panel); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 10px; z-index: 50; }
+        
+        /* Menus */
+        .menu-bar { display: flex; height: 100%; }
+        .menu-item { padding: 0 12px; display: flex; align-items: center; cursor: pointer; font-size: 12px; position: relative; color: var(--text-dim); transition: 0.2s; }
+        .menu-item:hover { background: var(--bg-tool); color: var(--text-main); }
+        .submenu { position: absolute; top: 100%; left: 0; background: var(--bg-tool); border: 1px solid var(--border); min-width: 200px; display: none; z-index: 1000; box-shadow: 0 10px 20px rgba(0,0,0,0.5); border-radius: 0 0 4px 4px; }
+        .menu-item:hover .submenu { display: block; }
+        .submenu-item { padding: 8px 12px; font-size: 12px; color: var(--text-main); display: flex; justify-content: space-between; }
+        .submenu-item:hover { background: var(--accent); color: white; }
+        .submenu-separator { height: 1px; background: var(--border); margin: 4px 0; }
+
+        /* Layout */
+        .workspace { display: flex; flex: 1; overflow: hidden; }
+        .toolbar { width: 50px; background: var(--bg-panel); border-right: 1px solid var(--border); display: flex; flex-direction: column; align-items: center; padding: 10px 0; z-index: 40; }
+        
+        .tool-btn { width: 36px; height: 36px; margin-bottom: 4px; border-radius: 4px; display: flex; justify-content: center; align-items: center; color: var(--text-dim); cursor: pointer; position: relative; transition: 0.2s; }
+        .tool-btn:hover { background: var(--bg-tool); color: var(--text-main); }
+        .tool-btn.active { background: var(--accent); color: white; }
+        .tool-hint { position: absolute; left: 110%; background: var(--bg-panel); color: var(--text-main); padding: 4px 8px; font-size: 10px; border-radius: 4px; white-space: nowrap; opacity: 0; pointer-events: none; transition: 0.2s; border: 1px solid var(--border); z-index: 100; }
+        .tool-btn:hover .tool-hint { opacity: 1; }
+
+        /* Canvas Area */
+        .canvas-area { flex: 1; background: var(--bg-main); position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+        .canvas-container { position: relative; box-shadow: 0 0 50px rgba(0,0,0,0.5); }
+        .checkerboard {
+            background-image: linear-gradient(45deg, var(--checker-1) 25%, var(--checker-2) 25%), linear-gradient(-45deg, var(--checker-1) 25%, var(--checker-2) 25%), linear-gradient(45deg, var(--checker-2) 75%, var(--checker-1) 75%), linear-gradient(-45deg, var(--checker-2) 75%, var(--checker-1) 75%);
+            background-size: 20px 20px; background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+        }
+
+        /* Overlays */
+        .overlay-layer { position: absolute; inset: 0; pointer-events: none; }
+        .crop-overlay { position: absolute; border: 1px solid rgba(255,255,255,0.8); box-shadow: 0 0 0 9999px rgba(0,0,0,0.7); pointer-events: auto; display: none; }
+        .crop-handle { position: absolute; width: 10px; height: 10px; background: var(--accent); border: 1px solid white; z-index: 10; }
+        #textInput { position: absolute; background: transparent; border: 1px solid var(--accent); color: var(--text-main); padding: 4px; font-family: Inter; font-size: 20px; outline: none; display: none; white-space: pre; z-index: 100; min-width: 50px; }
+
+        /* Right Panel */
+        .panels { width: 300px; background: var(--bg-panel); border-left: 1px solid var(--border); display: flex; flex-direction: column; transition: width 0.3s; z-index: 40; }
+        .panel-header { height: 36px; background: var(--bg-tool); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 10px; font-size: 11px; font-weight: 600; color: var(--text-dim); justify-content: space-between; }
+        
+        /* Layers List */
+        .layer-item { padding: 6px; background: var(--bg-tool); margin-bottom: 2px; border-radius: 4px; display: flex; align-items: center; cursor: pointer; border: 1px solid transparent; user-select: none; }
+        .layer-item.active { background: var(--border); border-color: var(--accent); }
+        .layer-vis { width: 20px; text-align: center; color: var(--text-dim); cursor: pointer; }
+        .layer-vis.visible { color: var(--text-main); }
+        .layer-thumb { width: 30px; height: 30px; background: var(--bg-main); margin-right: 8px; border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 10px; color: var(--text-dim); }
+
+        /* Chat */
+        .chat-bubble { padding: 12px; border-radius: 8px; margin-bottom: 10px; font-size: 13px; line-height: 1.5; max-width: 85%; }
+        .chat-user { background: var(--bg-tool); color: var(--text-main); align-self: flex-end; margin-left: auto; border: 1px solid var(--border); }
+        .chat-ai { background: var(--bg-panel); color: var(--text-dim); border: 1px solid var(--border); margin-right: auto; }
+
+        /* Modals */
+        dialog { background: var(--bg-panel); color: var(--text-main); border: 1px solid var(--border); padding: 20px; border-radius: 8px; width: 400px; }
+        dialog::backdrop { background: rgba(0,0,0,0.8); }
+        
+        /* Inputs */
+        .themed-input { background: var(--bg-tool); border: 1px solid var(--border); color: var(--text-main); }
+    </style>
+</head>
+<body data-theme="dark">
+
+    <!-- ==================== VIEW: LANDING ==================== -->
+    <div id="view-landing" class="view-container active ai-landing">
+        <div class="hero-box">
+            <div class="flex items-center justify-between mb-6">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center text-white font-bold text-2xl shadow-lg">PM</div>
+                    <div>
+                        <h1 class="text-2xl font-bold">PostMaster AI</h1>
+                        <p class="text-xs opacity-60 tracking-wider">ENTERPRISE EDITION V6</p>
+                    </div>
+                </div>
+                <div class="flex gap-3">
+                    <select onchange="App.setTheme(this.value)" class="text-xs bg-transparent border border-gray-600 rounded px-2 py-1 text-gray-300">
+                        <option value="dark">Dark</option>
+                        <option value="light">Light</option>
+                        <option value="blue">Blue</option>
+                        <option value="black">Black</option>
+                    </select>
+                    <button onclick="document.getElementById('settingsModal').showModal()" class="text-xs opacity-70 hover:opacity-100 px-3 py-2 rounded bg-opacity-20 bg-white border border-opacity-20 border-white">API KEYS</button>
+                    <button onclick="App.switchTo('editor')" class="text-xs bg-white text-black font-bold px-4 py-2 rounded hover:bg-gray-200 transition">OPEN EDITOR</button>
+                </div>
+            </div>
+
+            <div id="landingChat" class="chat-scroll">
+                <div class="text-center py-20 opacity-40">
+                    <i class="fa-solid fa-robot text-6xl mb-4"></i>
+                    <h2 class="text-xl font-bold">What would you like to create?</h2>
+                    <p class="text-sm mt-2">Upload an image or describe your idea.</p>
+                </div>
+            </div>
+
+            <div class="flex gap-2 p-2 rounded-xl border" style="background: var(--bg-panel); border-color: var(--border);">
+                <button onclick="document.getElementById('landingUpload').click()" class="p-3 opacity-60 hover:opacity-100"><i class="fa-solid fa-paperclip"></i></button>
+                <input type="file" id="landingUpload" class="hidden" accept="image/*" onchange="AI.handleLandingUpload(this)">
+                <input type="text" id="landingInput" class="flex-1 bg-transparent border-none outline-none text-sm" style="color: var(--text-main);" placeholder="Ask AI..." onkeypress="if(event.key==='Enter') AI.sendLanding()">
+                <button onclick="AI.sendLanding()" class="bg-blue-600 text-white px-4 rounded-lg font-bold hover:bg-blue-500"><i class="fa-solid fa-paper-plane"></i></button>
+            </div>
+            
+            <div id="landingPrev" class="hidden mt-2 relative w-16 h-16 bg-black border border-zinc-700 rounded">
+                <img id="landingThumb" class="w-full h-full object-cover">
+                <button onclick="AI.clearLanding()" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">&times;</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== VIEW: EDITOR ==================== -->
+    <div id="view-editor" class="view-container">
+        
+        <!-- Menu -->
+        <div class="app-header">
+            <div class="menu-bar">
+                <div class="menu-item font-bold" style="color: var(--accent);" onclick="App.switchTo('landing')"><i class="fa-solid fa-arrow-left mr-2"></i> Home</div>
+                <div class="menu-item">File
+                    <div class="submenu">
+                        <div class="submenu-item" onclick="document.getElementById('editorUpload').click()">Open Image <span class="opacity-50">Ctrl+O</span></div>
+                        <div class="submenu-item" onclick="Project.save()">Save Project <span class="opacity-50">Ctrl+S</span></div>
+                        <div class="submenu-item" onclick="Project.export()">Export JPG <span class="opacity-50">Shift+E</span></div>
+                    </div>
+                </div>
+                <div class="menu-item">Edit
+                    <div class="submenu">
+                        <div class="submenu-item" onclick="History.undo()">Undo <span class="opacity-50">Ctrl+Z</span></div>
+                        <div class="submenu-item" onclick="Layers.copy()">Copy Layer <span class="opacity-50">Ctrl+C</span></div>
+                        <div class="submenu-item" onclick="Layers.paste()">Paste Layer <span class="opacity-50">Ctrl+V</span></div>
+                        <div class="submenu-separator"></div>
+                        <div class="submenu-item" onclick="Tools.fill()">Fill Selection</div>
+                    </div>
+                </div>
+                <div class="menu-item">Image
+                    <div class="submenu">
+                        <div class="submenu-item" onclick="Tools.initCrop()">Crop</div>
+                        <div class="submenu-item" onclick="Filters.apply('invert')">Invert</div>
+                        <div class="submenu-item" onclick="Filters.apply('grayscale')">Black & White</div>
+                    </div>
+                </div>
+                <div class="menu-item">Layer
+                    <div class="submenu">
+                        <div class="submenu-item" onclick="Layers.addBlank()">New Layer</div>
+                        <div class="submenu-item" onclick="Layers.duplicate()">Duplicate</div>
+                        <div class="submenu-item" onclick="Layers.delete()">Delete</div>
+                    </div>
+                </div>
+                <div class="menu-item">View
+                    <div class="submenu">
+                        <div class="submenu-item" onclick="App.setTheme('dark')">Dark Theme</div>
+                        <div class="submenu-item" onclick="App.setTheme('light')">Light Theme</div>
+                        <div class="submenu-item" onclick="App.setTheme('blue')">Midnight Blue</div>
+                        <div class="submenu-item" onclick="App.setTheme('black')">OLED Black</div>
+                    </div>
+                </div>
+            </div>
+            <div class="flex items-center gap-3 text-xs">
+                <div id="clock" class="font-mono opacity-60">00:00:00</div>
+                <button onclick="document.getElementById('settingsModal').showModal()" class="opacity-60 hover:opacity-100"><i class="fa-solid fa-key"></i></button>
+            </div>
+        </div>
+
+        <div class="workspace">
+            
+            <!-- Toolbar -->
+            <div class="toolbar">
+                <div class="tool-btn active" id="t-move" onclick="Tools.set('move')"><i class="fa-solid fa-arrow-pointer"></i><div class="tool-hint">Move (V)</div></div>
+                <div class="tool-btn" id="t-marquee" onclick="Tools.set('marquee')"><i class="fa-regular fa-square-dashed"></i><div class="tool-hint">Marquee (M)</div></div>
+                <div class="tool-btn" id="t-crop" onclick="Tools.set('crop')"><i class="fa-solid fa-crop-simple"></i><div class="tool-hint">Crop (C)</div></div>
+                <div class="w-8 h-px opacity-20 bg-white my-2"></div>
+                <div class="tool-btn" id="t-brush" onclick="Tools.set('brush')"><i class="fa-solid fa-paintbrush"></i><div class="tool-hint">Brush (B)</div></div>
+                <div class="tool-btn" id="t-eraser" onclick="Tools.set('eraser')"><i class="fa-solid fa-eraser"></i><div class="tool-hint">Eraser (E)</div></div>
+                <div class="tool-btn" id="t-text" onclick="Tools.set('text')"><i class="fa-solid fa-font"></i><div class="tool-hint">Text (T)</div></div>
+                <div class="tool-btn" id="t-shape" onclick="Tools.set('shape')"><i class="fa-solid fa-shapes"></i><div class="tool-hint">Shape (U)</div></div>
+                
+                <div class="mt-auto mb-4 flex flex-col gap-2">
+                    <input type="color" id="fgColor" value="#ffffff" class="w-6 h-6 rounded cursor-pointer border-none bg-transparent">
+                    <input type="color" id="bgColor" value="#000000" class="w-6 h-6 rounded cursor-pointer border-none bg-transparent">
+                </div>
+            </div>
+
+            <!-- Canvas -->
+            <div class="canvas-area" id="mainArea">
+                <div class="canvas-container" id="canvasContainer">
+                    <canvas id="mainCanvas" class="checkerboard"></canvas>
+                    
+                    <!-- Overlays -->
+                    <div id="selectionBox" class="overlay-layer border border-dashed border-white hidden"></div>
+                    
+                    <div id="cropBox" class="crop-overlay">
+                        <!-- Handles generated by JS -->
+                    </div>
+                    
+                    <div id="textInput" contenteditable="true"></div>
+                </div>
+            </div>
+
+            <!-- Right Panel -->
+            <div class="panels">
+                <!-- AI Mini -->
+                <div class="flex flex-col h-1/3" style="border-bottom: 1px solid var(--border);">
+                    <div class="panel-header px-2">AI ASSISTANT</div>
+                    <div id="miniChat" class="flex-1 p-2 overflow-y-auto text-xs space-y-2" style="background: var(--bg-tool);">
+                        <div class="opacity-50">Ask Gemini/GPT to generate or advise...</div>
+                    </div>
+                    <div class="p-2 border-t flex gap-2" style="border-color: var(--border);">
+                        <input type="text" id="miniInput" class="flex-1 rounded px-2 py-1 text-xs outline-none themed-input" placeholder="Ask..." onkeypress="if(event.key==='Enter') AI.sendMini()">
+                    </div>
+                </div>
+
+                <!-- Layers -->
+                <div class="flex flex-col flex-1" style="background: var(--bg-panel);">
+                    <div class="panel-header px-2 justify-between">
+                        <span>LAYERS</span>
+                        <div class="flex gap-2">
+                            <i class="fa-solid fa-plus hover:text-white cursor-pointer" onclick="Layers.addBlank()"></i>
+                            <i class="fa-solid fa-trash hover:text-white cursor-pointer" onclick="Layers.delete()"></i>
+                        </div>
+                    </div>
+                    <div id="layerList" class="flex-1 overflow-y-auto p-1 space-y-1">
+                        <!-- Layers injected here -->
+                    </div>
+                    <div class="p-3 border-t text-xs" style="border-color: var(--border);">
+                        <div class="flex justify-between mb-1 opacity-60"><span>Opacity</span> <span id="opVal">100%</span></div>
+                        <input type="range" class="w-full h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer" min="0" max="100" value="100" oninput="Layers.setOpacity(this.value)">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals & Hidden -->
+    <input type="file" id="editorUpload" class="hidden" accept="image/*" onchange="App.handleFile(this)">
+    
+    <dialog id="settingsModal">
+        <h3 class="font-bold mb-4 pb-2 border-b" style="border-color: var(--border);">API Keys</h3>
+        <label class="text-xs text-blue-400 block mb-1">Gemini Key</label>
+        <input type="password" id="kGemini" class="w-full rounded p-2 text-xs mb-3 themed-input">
+        <label class="text-xs text-green-400 block mb-1">OpenAI Key</label>
+        <input type="password" id="kOpenAI" class="w-full rounded p-2 text-xs mb-4 themed-input">
+        <div class="flex justify-end gap-2">
+            <button onclick="document.getElementById('settingsModal').close()" class="text-xs opacity-60">Close</button>
+            <button onclick="App.saveKeys()" class="bg-blue-600 px-3 py-1 rounded text-xs text-white">Save</button>
+        </div>
+    </dialog>
+
+    <script>
+        /* --- CORE SYSTEM --- */
+        const canvas = document.getElementById('mainCanvas');
+        const ctx = canvas.getContext('2d');
+        const wrapper = document.getElementById('canvasContainer');
+
+        // State
+        const State = {
+            layers: [],
+            activeId: null,
+            tool: 'move',
+            isDown: false,
+            startPos: {x:0, y:0},
+            scale: 1,
+            keys: { gemini: localStorage.getItem('pm_k_g')||'', openai: localStorage.getItem('pm_k_o')||'' },
+            history: [],
+            clipboard: null,
+            selection: null
+        };
+
+        // --- APP CONTROLLER ---
+        const App = {
+            init() {
+                // Load Theme
+                const savedTheme = localStorage.getItem('pm_theme') || 'dark';
+                this.setTheme(savedTheme);
+
+                // Restore Keys
+                document.getElementById('kGemini').value = State.keys.gemini;
+                document.getElementById('kOpenAI').value = State.keys.openai;
+                
+                // Clock
+                setInterval(() => {
+                    document.getElementById('clock').innerText = new Date().toLocaleTimeString();
+                }, 1000);
+
+                // Listeners
+                window.addEventListener('resize', this.fitCanvas);
+                window.addEventListener('keydown', this.onKey);
+                
+                // Canvas Interaction
+                const area = document.getElementById('mainArea');
+                area.addEventListener('mousedown', Tools.down);
+                window.addEventListener('mousemove', Tools.move);
+                window.addEventListener('mouseup', Tools.up);
+
+                // Default Setup
+                this.resizeCanvas(800, 600);
+            },
+
+            setTheme(theme) {
+                document.body.setAttribute('data-theme', theme);
+                localStorage.setItem('pm_theme', theme);
+                // Also update selector in landing page if visible
+                const sel = document.querySelector('select');
+                if(sel) sel.value = theme;
+            },
+
+            switchTo(view) {
+                document.querySelectorAll('.view-container').forEach(v => v.classList.remove('active'));
+                document.getElementById(`view-${view}`).classList.add('active');
+                if(view === 'editor') this.fitCanvas();
+            },
+
+            saveKeys() {
+                State.keys.gemini = document.getElementById('kGemini').value;
+                State.keys.openai = document.getElementById('kOpenAI').value;
+                localStorage.setItem('pm_k_g', State.keys.gemini);
+                localStorage.setItem('pm_k_o', State.keys.openai);
+                document.getElementById('settingsModal').close();
+            },
+
+            handleFile(input) {
+                if(!input.files[0]) return;
+                const r = new FileReader();
+                r.onload = e => {
+                    const img = new Image();
+                    img.onload = () => {
+                        this.resizeCanvas(img.width, img.height);
+                        Layers.reset();
+                        Layers.add(img, 'Background');
+                        this.switchTo('editor');
+                    };
+                    img.src = e.target.result;
+                };
+                r.readAsDataURL(input.files[0]);
+                input.value = '';
+            },
+
+            resizeCanvas(w, h) {
+                canvas.width = w; canvas.height = h;
+                this.fitCanvas();
+                this.render();
+            },
+
+            fitCanvas() {
+                const container = document.getElementById('mainArea');
+                if(!canvas.width) return;
+                const margin = 40;
+                const scale = Math.min((container.clientWidth - margin)/canvas.width, (container.clientHeight - margin)/canvas.height);
+                State.scale = scale;
+                wrapper.style.width = (canvas.width * scale) + 'px';
+                wrapper.style.height = (canvas.height * scale) + 'px';
+                canvas.style.width = '100%'; canvas.style.height = '100%';
+            },
+
+            render() {
+                ctx.clearRect(0,0,canvas.width, canvas.height);
+                // Render Layers Bottom-Up
+                for(let i=State.layers.length-1; i>=0; i--) {
+                    const l = State.layers[i];
+                    if(!l.visible) continue;
+                    ctx.save();
+                    ctx.globalAlpha = l.opacity;
+                    ctx.globalCompositeOperation = l.blend || 'source-over';
+                    
+                    if(l.type === 'image') ctx.drawImage(l.img, l.x, l.y, l.w, l.h);
+                    else if(l.type === 'canvas') ctx.drawImage(l.canvas, l.x, l.y);
+                    else if(l.type === 'text') {
+                        ctx.font = `${l.size}px Inter`;
+                        ctx.fillStyle = l.color;
+                        ctx.textBaseline = 'top';
+                        ctx.fillText(l.text, l.x, l.y);
+                    }
+                    ctx.restore();
+                }
+                
+                // Active Layer Border (if moving)
+                if(State.tool === 'move' && Layers.active()) {
+                    const l = Layers.active();
+                    ctx.save();
+                    ctx.strokeStyle = '#3b82f6';
+                    ctx.lineWidth = 2;
+                    let w = l.w, h = l.h;
+                    if(l.type === 'text') { w = ctx.measureText(l.text).width; h = l.size; }
+                    ctx.strokeRect(l.x, l.y, w, h);
+                    ctx.restore();
+                }
+            },
+
+            getPos(e) {
+                const rect = wrapper.getBoundingClientRect();
+                return {
+                    x: (e.clientX - rect.left) / State.scale,
+                    y: (e.clientY - rect.top) / State.scale
+                };
+            },
+
+            onKey(e) {
+                if(e.target.tagName === 'INPUT') return;
+                
+                if(e.ctrlKey) {
+                    if(e.key === 'z') { e.preventDefault(); History.undo(); }
+                    if(e.key === 'c') { e.preventDefault(); Layers.copy(); }
+                    if(e.key === 'v') { e.preventDefault(); Layers.paste(); }
+                    if(e.key === 'o') { e.preventDefault(); document.getElementById('editorUpload').click(); }
+                    if(e.key === 's') { e.preventDefault(); Project.save(); }
+                } else {
+                    if(e.key === 'v') Tools.set('move');
+                    if(e.key === 'm') Tools.set('marquee');
+                    if(e.key === 'c') Tools.set('crop');
+                    if(e.key === 'b') Tools.set('brush');
+                    if(e.key === 't') Tools.set('text');
+                    if(e.key === 'Delete') Layers.delete();
+                    if(e.key === 'Enter' && State.tool === 'crop') Tools.applyCrop();
+                }
+            }
+        };
+
+        // --- LAYERS ---
+        const Layers = {
+            reset() { State.layers = []; State.activeId = null; this.renderUI(); },
+            
+            add(source, name='Layer') {
+                const id = Date.now() + Math.random();
+                const l = { id, name, type: source instanceof Image ? 'image' : 'canvas', visible:true, opacity:1, x:0, y:0, w:canvas.width, h:canvas.height };
+                
+                if(l.type === 'canvas') {
+                    l.canvas = document.createElement('canvas');
+                    l.canvas.width = canvas.width; l.canvas.height = canvas.height;
+                    l.ctx = l.canvas.getContext('2d');
+                } else {
+                    l.img = source;
+                }
+                
+                State.layers.unshift(l);
+                State.activeId = id;
+                this.renderUI(); App.render(); History.push();
+            },
+            
+            addBlank() { this.add(null, 'Layer ' + (State.layers.length+1)); },
+            
+            addText(text, x, y, color) {
+                const id = Date.now();
+                State.layers.unshift({
+                    id, name: text.substr(0,8), type:'text', text, x, y, size:40, color, visible:true, opacity:1
+                });
+                State.activeId = id;
+                this.renderUI(); App.render(); History.push();
+            },
+
+            delete() {
+                if(!State.activeId) return;
+                State.layers = State.layers.filter(l => l.id !== State.activeId);
+                State.activeId = State.layers.length ? State.layers[0].id : null;
+                this.renderUI(); App.render(); History.push();
+            },
+            
+            active() { return State.layers.find(l => l.id === State.activeId); },
+            
+            copy() { 
+                const l = this.active();
+                if(l) State.clipboard = {...l}; 
+            },
+            paste() {
+                if(State.clipboard) {
+                    if(State.clipboard.type === 'image') {
+                        const img = new Image();
+                        img.onload = () => this.add(img, State.clipboard.name + ' Copy');
+                        img.src = State.clipboard.src || State.clipboard.img.src;
+                    }
+                }
+            },
+
+            renderUI() {
+                const el = document.getElementById('layerList');
+                el.innerHTML = '';
+                State.layers.forEach(l => {
+                    const div = document.createElement('div');
+                    div.className = `layer-item ${l.id === State.activeId ? 'active' : ''}`;
+                    div.onclick = () => { State.activeId = l.id; this.renderUI(); App.render(); };
+                    div.innerHTML = `
+                        <div class="layer-vis ${l.visible?'visible':''}" onclick="event.stopPropagation(); Layers.toggleVis(${l.id})"><i class="fa-solid ${l.visible?'fa-eye':'fa-eye-slash'}"></i></div>
+                        <div class="layer-thumb"><i class="fa-solid ${l.type==='image'?'fa-image':(l.type==='text'?'fa-font':'fa-layer-group')}"></i></div>
+                        <span class="truncate flex-1 text-xs">${l.name}</span>
+                    `;
+                    el.appendChild(div);
+                });
+                
+                const act = this.active();
+                if(act) {
+                    document.getElementById('opVal').innerText = Math.round(act.opacity*100)+'%';
+                    document.querySelector('input[type="range"]').value = act.opacity*100;
+                }
+            },
+            
+            toggleVis(id) {
+                const l = State.layers.find(x => x.id === id);
+                if(l) { l.visible = !l.visible; this.renderUI(); App.render(); }
+            },
+            
+            setOpacity(val) {
+                const l = this.active();
+                if(l) { l.opacity = val/100; document.getElementById('opVal').innerText = val+'%'; App.render(); }
+            }
+        };
+
+        // --- TOOLS ---
+        const Tools = {
+            set(t) {
+                State.tool = t;
+                document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+                document.getElementById('t-'+t).classList.add('active');
+                
+                // UI Reset
+                document.getElementById('cropBox').style.display = 'none';
+                document.getElementById('selectionBox').style.display = 'none';
+                document.getElementById('textInput').style.display = 'none';
+                
+                if(t === 'crop') this.initCrop();
+                if(t === 'text') wrapper.style.cursor = 'text';
+                else if(t === 'brush' || t === 'eraser') wrapper.style.cursor = 'crosshair';
+                else wrapper.style.cursor = 'default';
+                
+                App.render();
+            },
+
+            down(e) {
+                if(e.target.closest('#cropBox') && State.tool === 'crop') return; 
+                State.isDown = true;
+                State.startPos = App.getPos(e);
+                const pos = State.startPos;
+                const tool = State.tool;
+                
+                if(tool === 'brush' || tool === 'eraser') {
+                    if(!Layers.active() || Layers.active().type === 'image') Layers.addBlank();
+                    const ctx = Layers.active().ctx;
+                    ctx.beginPath();
+                    ctx.moveTo(pos.x, pos.y);
+                    ctx.strokeStyle = tool === 'eraser' ? 'rgba(0,0,0,1)' : document.getElementById('fgColor').value;
+                    ctx.globalCompositeOperation = tool === 'eraser' ? 'destination-out' : 'source-over';
+                    ctx.lineWidth = 5; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+                } else if(tool === 'marquee') {
+                    State.selection = {x:pos.x, y:pos.y, w:0, h:0};
+                } else if(tool === 'text') {
+                    Tools.startText(e);
+                } else if(tool === 'move' && Layers.active()) {
+                    Tools.moveStart = {x: Layers.active().x, y: Layers.active().y};
+                }
+            },
+
+            move(e) {
+                if(!State.isDown) return;
+                const pos = App.getPos(e);
+                const tool = State.tool;
+                const start = State.startPos;
+                
+                if(tool === 'move' && Layers.active()) {
+                    const l = Layers.active();
+                    l.x = Tools.moveStart.x + (pos.x - start.x);
+                    l.y = Tools.moveStart.y + (pos.y - start.y);
+                    App.render();
+                } else if(tool === 'brush' || tool === 'eraser') {
+                    const ctx = Layers.active().ctx;
+                    ctx.lineTo(pos.x, pos.y);
+                    ctx.stroke();
+                    App.render();
+                } else if(tool === 'marquee') {
+                    State.selection.w = pos.x - start.x;
+                    State.selection.h = pos.y - start.y;
+                    Tools.updateOverlay();
+                }
+            },
+
+            up(e) {
+                if(State.isDown) History.push();
+                State.isDown = false;
+            },
+
+            startText(e) {
+                const input = document.getElementById('textInput');
+                const rect = wrapper.getBoundingClientRect();
+                const pos = App.getPos(e);
+                
+                input.style.left = (e.clientX - rect.left) + 'px';
+                input.style.top = (e.clientY - rect.top) + 'px';
+                input.style.display = 'block';
+                input.innerText = '';
+                input.focus();
+                
+                const finish = () => {
+                    if(input.innerText.trim()) {
+                        Layers.addText(input.innerText, pos.x, pos.y, document.getElementById('fgColor').value);
+                    }
+                    input.style.display = 'none';
+                    input.removeEventListener('blur', finish);
+                };
+                input.addEventListener('blur', finish);
+                input.addEventListener('keydown', k => { if(k.key==='Enter' && !k.shiftKey) { k.preventDefault(); input.blur(); } });
+            },
+
+            initCrop() {
+                const box = document.getElementById('cropBox');
+                box.style.display = 'block';
+                box.style.left = '0px'; box.style.top = '0px';
+                box.style.width = '100%'; box.style.height = '100%';
+                const handles = box.querySelectorAll('.crop-handle');
+                handles.forEach(h => {
+                    h.onmousedown = (e) => {
+                        e.stopPropagation();
+                        Tools.dragCrop(e, h.dataset.pos);
+                    };
+                });
+            },
+            
+            dragCrop(e, pos) {
+                const box = document.getElementById('cropBox');
+                const startX = e.clientX; const startY = e.clientY;
+                const startRect = box.getBoundingClientRect();
+                const wrapRect = wrapper.getBoundingClientRect();
+                
+                const move = (m) => {
+                    const dx = m.clientX - startX;
+                    const dy = m.clientY - startY;
+                    if(pos.includes('r')) box.style.width = (startRect.width + dx) + 'px';
+                    if(pos.includes('b')) box.style.height = (startRect.height + dy) + 'px';
+                    if(pos.includes('l')) { box.style.left = (startRect.left - wrapRect.left + dx) + 'px'; box.style.width = (startRect.width - dx) + 'px'; }
+                    if(pos.includes('t')) { box.style.top = (startRect.top - wrapRect.top + dy) + 'px'; box.style.height = (startRect.height - dy) + 'px'; }
+                };
+                const up = () => { window.removeEventListener('mousemove', move); window.removeEventListener('mouseup', up); };
+                window.addEventListener('mousemove', move);
+                window.addEventListener('mouseup', up);
+            },
+
+            applyCrop() {
+                const box = document.getElementById('cropBox');
+                const cssW = parseFloat(box.style.width);
+                const cssH = parseFloat(box.style.height);
+                const cssL = parseFloat(box.style.left);
+                const cssT = parseFloat(box.style.top);
+                
+                const w = cssW / State.scale;
+                const h = cssH / State.scale;
+                const x = cssL / State.scale;
+                const y = cssT / State.scale;
+                
+                State.layers.forEach(l => { l.x -= x; l.y -= y; });
+                App.resizeCanvas(w, h);
+                this.set('move');
+            },
+
+            updateOverlay() {
+                const box = document.getElementById('selectionBox');
+                const sel = State.selection;
+                if(sel) {
+                    box.style.display = 'block';
+                    box.style.left = (sel.x * State.scale) + 'px';
+                    box.style.top = (sel.y * State.scale) + 'px';
+                    box.style.width = (sel.w * State.scale) + 'px';
+                    box.style.height = (sel.h * State.scale) + 'px';
+                }
+            },
+            
+            fill() {
+                if(!State.selection) return alert("Select first");
+                if(!Layers.active() || Layers.active().type === 'image') Layers.addBlank();
+                const ctx = Layers.active().ctx;
+                ctx.fillStyle = document.getElementById('fgColor').value;
+                ctx.fillRect(State.selection.x, State.selection.y, State.selection.w, State.selection.h);
+                App.render();
+                State.selection = null; Tools.updateOverlay();
+            }
+        };
+
+        /* --- FILTERS --- */
+        const Filters = {
+            apply(type) {
+                const l = Layers.active();
+                if(!l || l.type !== 'image') return alert("Select Image Layer");
+                const t = document.createElement('canvas');
+                t.width = l.w; t.height = l.h;
+                const c = t.getContext('2d');
+                c.drawImage(l.img, 0, 0, l.w, l.h);
+                const d = c.getImageData(0,0,l.w,l.h);
+                const p = d.data;
+                for(let i=0; i<p.length; i+=4) {
+                    if(type==='invert') { p[i]=255-p[i]; p[i+1]=255-p[i+1]; p[i+2]=255-p[i+2]; }
+                    if(type==='grayscale') { const a=(p[i]+p[i+1]+p[i+2])/3; p[i]=a; p[i+1]=a; p[i+2]=a; }
+                }
+                c.putImageData(d, 0, 0);
+                const n = new Image();
+                n.onload = () => { l.img = n; App.render(); };
+                n.src = t.toDataURL();
+            }
+        };
+
+        /* --- AI & HISTORY --- */
+        const AI = {
+            handleLandingUpload(input) {
+                if(input.files[0]) {
+                    const r = new FileReader();
+                    r.onload = e => {
+                        document.getElementById('landingThumb').src = e.target.result;
+                        document.getElementById('landingPrev').classList.remove('hidden');
+                    }; r.readAsDataURL(input.files[0]);
+                }
+            },
+            clearLanding() { document.getElementById('landingPrev').classList.add('hidden'); },
+            async sendLanding() {
+                const txt = document.getElementById('landingInput').value;
+                if(!txt) return;
+                App.switchTo('editor');
+                document.getElementById('miniChat').innerHTML += `<div class="mb-1" style="color:var(--accent);">User: ${txt}</div><div class="opacity-50 mb-2">AI: Processing...</div>`;
+            },
+            sendMini() {
+                const txt = document.getElementById('miniInput').value;
+                if(!txt) return;
+                document.getElementById('miniChat').innerHTML += `<div class="mb-1" style="color:var(--accent);">User: ${txt}</div>`;
+                document.getElementById('miniInput').value = '';
+            }
+        };
+
+        const History = {
+            push() { /* Save state */ },
+            undo() { alert("Undo functionality limited in browser memory."); }
+        };
+        
+        const Project = {
+            save() { 
+                const d = JSON.stringify(State.layers);
+                const b = new Blob([d], {type:'application/json'});
+                const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download='project.json'; a.click();
+            },
+            export() {
+                const a = document.createElement('a'); a.download='export.jpg'; a.href=canvas.toDataURL('image/jpeg', 0.9); a.click();
+            }
+        };
+
+        // Init
+        App.init();
+
+    </script>
+</body>
+</html>
