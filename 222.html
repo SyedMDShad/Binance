@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lumina Studio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Oswald:wght@500&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'], clock: ['Oswald', 'sans-serif'] },
+                    colors: { bg: '#1e1e1e', panel: '#252526', border: '#333333', accent: '#007acc', accentHover: '#0062a3', textMain: '#cccccc', textMuted: '#858585' }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #1e1e1e; color: #cccccc; user-select: none; }
+        
+        input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 12px; width: 12px; border-radius: 50%; background: #e0e0e0; border: 1px solid #000; cursor: pointer; margin-top: -5px; }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 2px; cursor: pointer; background: #555; }
+        
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #1e1e1e; }
+        ::-webkit-scrollbar-thumb { background: #444; border-radius: 4px; }
+        
+        .canvas-area {
+            background-color: #121212;
+            background-image: linear-gradient(45deg, #1a1a1a 25%, transparent 25%), linear-gradient(-45deg, #1a1a1a 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #1a1a1a 75%), linear-gradient(-45deg, transparent 75%, #1a1a1a 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+            position: relative; overflow: hidden;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+        }
+
+        #selectionBox {
+            border: 1px solid white;
+            outline: 1px dashed black;
+            background: rgba(255, 255, 255, 0.1);
+            position: absolute; pointer-events: none; display: none; z-index: 50;
+        }
+        
+        #contextMenu { position: absolute; z-index: 100; display: none; background: #2d2d2d; border: 1px solid #454545; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        .digital-clock { font-family: 'Oswald', sans-serif; letter-spacing: 1px; }
+
+        .section-header {
+            font-size: 11px; font-weight: 700; text-transform: uppercase; color: #888;
+            padding-bottom: 5px; margin-bottom: 10px; border-bottom: 1px solid #333;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        
+        #toast {
+            visibility: hidden; min-width: 200px; background-color: #333; color: #fff; text-align: center; border-radius: 4px; padding: 10px; position: fixed; z-index: 100; left: 50%; bottom: 30px; transform: translateX(-50%); font-size: 12px; border: 1px solid #444;
+        }
+        #toast.show { visibility: visible; animation: fadein 0.5s, fadeout 0.5s 2.5s; }
+        @keyframes fadein { from {bottom: 0; opacity: 0;} to {bottom: 30px; opacity: 1;} }
+        @keyframes fadeout { from {bottom: 30px; opacity: 1;} to {bottom: 0; opacity: 0;} }
+    </style>
+</head>
+<body class="h-screen flex flex-col overflow-hidden text-xs" oncontextmenu="return false;">
+
+    <!-- HEADER -->
+    <header class="h-10 bg-[#2d2d2d] border-b border-[#333] flex items-center justify-between px-4 z-20">
+        <div class="flex items-center gap-3">
+            <div class="flex items-center gap-2 text-[#007acc]">
+                <i class="fa-solid fa-layer-group text-lg"></i>
+                <span class="font-bold text-white tracking-wide text-lg">Lumina<span class="font-light text-[#007acc]">Studio</span></span>
+            </div>
+            
+            <div class="h-4 w-px bg-[#444] mx-2"></div>
+            <!-- Top Toolbar -->
+            <div class="flex gap-1">
+                <button onclick="setTool('move')" id="tool-move" class="p-1.5 rounded hover:bg-[#444] text-white bg-[#007acc]" title="Move / Pan"><i class="fa-solid fa-hand"></i> Move</button>
+                <button onclick="setTool('select')" id="tool-select" class="p-1.5 rounded hover:bg-[#444] text-gray-400" title="Selection"><i class="fa-regular fa-square-dashed"></i> Select</button>
+                <button onclick="setTool('text')" id="tool-text" class="p-1.5 rounded hover:bg-[#444] text-gray-400" title="Text Box"><i class="fa-solid fa-font"></i> Text</button>
+                <button onclick="setTool('heal')" id="tool-heal" class="p-1.5 rounded hover:bg-[#444] text-gray-400" title="Heal"><i class="fa-solid fa-wand-magic-sparkles"></i> Heal</button>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-4">
+             <div class="digital-clock text-[#007acc] font-bold text-sm bg-black/20 px-2 rounded">
+                <span id="clock-time">00:00:00</span> <span id="clock-ampm" class="text-[9px] text-gray-500">AM</span>
+            </div>
+            <div class="flex gap-1">
+                 <button onclick="document.getElementById('uploadInput').click()" class="bg-[#333] hover:bg-[#444] text-white px-3 py-1 rounded-sm border border-[#444]">Open</button>
+                 <input type="file" id="uploadInput" class="hidden" accept="image/*" onchange="loadImage(event)">
+                 <button onclick="openExportModal()" id="saveBtn" class="bg-[#007acc] hover:bg-[#0062a3] text-white px-3 py-1 rounded-sm opacity-50 pointer-events-none">Export</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- WORKSPACE -->
+    <div class="flex-1 flex overflow-hidden">
+        
+        <!-- LEFT SIDEBAR -->
+        <div class="w-72 bg-[#252526] border-r border-[#333] flex flex-col z-10 shadow-lg">
+            <div class="flex-1 overflow-y-auto scroll-hide">
+                
+                <!-- SECTION: ADJUSTMENTS -->
+                <div class="p-4 border-b border-[#333]">
+                    <div class="section-header">
+                        <span>Image Adjustments</span>
+                        <button onclick="resetAdjustments()" class="text-[#007acc] hover:underline normal-case font-normal">Reset</button>
+                    </div>
+                    <div class="space-y-4">
+                        <div class="bg-[#2d2d2d] p-2 rounded border border-[#333]">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-[#ccc]">Invert</span>
+                                <button onclick="toggleInvert()" class="bg-[#444] hover:bg-[#555] text-white px-2 py-0.5 rounded text-[10px]">Auto</button>
+                            </div>
+                            <input type="range" min="0" max="100" value="0" oninput="updateFilter('invert', this.value)">
+                        </div>
+                        <div class="space-y-3">
+                             <div><div class="flex justify-between mb-1"><span>Brightness</span><span id="val-brightness" class="text-[#858585]">100%</span></div><input type="range" min="0" max="200" value="100" oninput="updateFilter('brightness', this.value)"></div>
+                             <div><div class="flex justify-between mb-1"><span>Contrast</span><span id="val-contrast" class="text-[#858585]">100%</span></div><input type="range" min="0" max="200" value="100" oninput="updateFilter('contrast', this.value)"></div>
+                             <div><div class="flex justify-between mb-1"><span>Saturation</span><span id="val-saturate" class="text-[#858585]">100%</span></div><input type="range" min="0" max="200" value="100" oninput="updateFilter('saturate', this.value)"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECTION: TEXT & PROPERTIES -->
+                <div class="p-4 border-b border-[#333]">
+                    <div class="section-header"><span>Text & Properties</span></div>
+                    <div class="space-y-3">
+                        <textarea id="textInput" rows="2" class="w-full bg-[#1e1e1e] border border-[#444] rounded p-2 text-white focus:border-[#007acc] outline-none placeholder-gray-600" placeholder="Select text layer to edit..." oninput="updateActiveLayer()"></textarea>
+
+                        <div class="flex flex-wrap gap-1">
+                             <button onclick="insertEmoji('💀')" class="bg-[#333] hover:bg-[#444] p-1 rounded text-base">💀</button>
+                             <button onclick="insertEmoji('😆')" class="bg-[#333] hover:bg-[#444] p-1 rounded text-base">😆</button>
+                             <button onclick="insertEmoji('🤩')" class="bg-[#333] hover:bg-[#444] p-1 rounded text-base">🤩</button>
+                             <button onclick="insertEmoji('😎')" class="bg-[#333] hover:bg-[#444] p-1 rounded text-base">😎</button>
+                             <button onclick="insertEmoji('💯')" class="bg-[#333] hover:bg-[#444] p-1 rounded text-base">💯</button>
+                             <button onclick="insertEmoji('😂')" class="bg-[#333] hover:bg-[#444] p-1 rounded text-base">😂</button>
+                             <button onclick="insertEmoji('😱')" class="bg-[#333] hover:bg-[#444] p-1 rounded text-base">😱</button>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="text-[9px] uppercase text-[#888] block mb-1">Size</label>
+                                <input type="number" id="textSize" value="40" step="1" oninput="updateActiveLayer()" class="w-full bg-[#1e1e1e] border border-[#444] rounded p-1 text-white">
+                            </div>
+                            <div>
+                                <label class="text-[9px] uppercase text-[#888] block mb-1">Fill</label>
+                                <div class="flex gap-1">
+                                    <input type="color" id="textFillColor" value="#ffffff" oninput="updateActiveLayer()" class="w-full h-6 bg-[#1e1e1e] border border-[#444] cursor-pointer p-0">
+                                    <button onclick="setColor('textFillColor', '#ffffff')" class="w-6 h-6 bg-white border border-[#444] rounded-sm"></button>
+                                    <button onclick="setColor('textFillColor', '#000000')" class="w-6 h-6 bg-black border border-[#444] rounded-sm"></button>
+                                    <button onclick="setColor('textFillColor', '#808080')" class="w-6 h-6 bg-gray-500 border border-[#444] rounded-sm"></button>
+                                </div>
+                            </div>
+                        </div>
+
+                         <div>
+                            <label class="text-[9px] uppercase text-[#888] block mb-1">Stroke</label>
+                            <div class="flex gap-2 items-center">
+                                <input type="color" id="textStrokeColor" value="#000000" oninput="updateActiveLayer()" class="w-8 h-6 bg-[#1e1e1e] border border-[#444] cursor-pointer p-0">
+                                <div class="flex gap-0.5">
+                                    <button onclick="setColor('textStrokeColor', '#ffffff')" class="w-4 h-6 bg-white border border-[#444] rounded-sm"></button>
+                                    <button onclick="setColor('textStrokeColor', '#000000')" class="w-4 h-6 bg-black border border-[#444] rounded-sm"></button>
+                                </div>
+                                <input type="range" id="textStrokeWidth" min="0" max="20" step="0.5" value="0" oninput="updateActiveLayer()" class="flex-1">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECTION: LAYERS -->
+                <div class="p-4 border-b border-[#333]">
+                    <div class="section-header">
+                        <span>Layers</span>
+                        <div class="flex gap-1">
+                            <button onclick="document.getElementById('overlayInput').click()" class="bg-[#333] hover:bg-[#444] text-[#ccc] px-2 py-0.5 rounded text-[10px]">+ Image</button>
+                            <input type="file" id="overlayInput" class="hidden" accept="image/*" onchange="addOverlayImage(event)">
+                        </div>
+                    </div>
+                    <div id="layersList" class="bg-[#121212] border border-[#333] rounded h-32 overflow-y-auto p-1 space-y-1 mb-2"></div>
+                    <button onclick="flattenLayers()" class="w-full py-1.5 bg-[#333] hover:bg-[#444] text-[#ccc] rounded text-[10px]">Flatten All Layers</button>
+                </div>
+
+                <!-- SECTION: TRANSFORM -->
+                <div class="p-4">
+                    <div class="section-header"><span>Transform</span></div>
+                    <div class="space-y-3">
+                        <div class="bg-[#2d2d2d] p-3 rounded border border-[#333]">
+                            <span class="text-[#ccc] block mb-2 font-bold">Crop Image</span>
+                            <div class="flex gap-2">
+                                <button onclick="setTool('crop')" class="flex-1 bg-[#333] hover:bg-[#444] text-[#ccc] py-1.5 rounded">Start Crop</button>
+                            </div>
+                            <div id="crop-actions" class="hidden mt-2 flex gap-2">
+                                 <button onclick="applyCrop()" class="flex-1 bg-green-700 hover:bg-green-600 text-white py-1 rounded">Apply</button>
+                                 <button onclick="setTool('move')" class="flex-1 bg-red-700 hover:bg-red-600 text-white py-1 rounded">Cancel</button>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button onclick="rotate(-90)" class="bg-[#333] hover:bg-[#444] py-2 rounded text-[#ccc]"><i class="fa-solid fa-rotate-left"></i> Rotate L</button>
+                            <button onclick="rotate(90)" class="bg-[#333] hover:bg-[#444] py-2 rounded text-[#ccc]"><i class="fa-solid fa-rotate-right"></i> Rotate R</button>
+                            <button onclick="flip('h')" class="bg-[#333] hover:bg-[#444] py-2 rounded text-[#ccc]"><i class="fa-solid fa-arrows-left-right"></i> Flip H</button>
+                            <button onclick="flip('v')" class="bg-[#333] hover:bg-[#444] py-2 rounded text-[#ccc]"><i class="fa-solid fa-arrows-up-down"></i> Flip V</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CENTER CANVAS -->
+        <div class="flex-1 canvas-area flex items-center justify-center cursor-pointer" id="workspace" onclick="handleEmptyClick(event)">
+            <div id="emptyState" class="text-center pointer-events-none">
+                <i class="fa-solid fa-image text-4xl text-[#444] mb-3"></i>
+                <p class="text-gray-500">Click anywhere to Open Image</p>
+            </div>
+            <canvas id="editorCanvas" class="hidden shadow-[0_0_30px_rgba(0,0,0,0.5)]"></canvas>
+            <div id="selectionBox"></div>
+            <div id="contextMenu" class="rounded py-1 w-40">
+                <div class="text-[10px] px-2 py-1 text-gray-500 uppercase font-bold">Actions</div>
+                <button onclick="performContentAwareFill()" class="w-full text-left px-3 py-1.5 hover:bg-[#007acc] hover:text-white block">Fill (Remove)</button>
+                <div class="h-px bg-[#444] my-1"></div>
+                <button onclick="openStrokeModal()" class="w-full text-left px-3 py-1.5 hover:bg-[#007acc] hover:text-white block">Stroke...</button>
+                <button onclick="clearSelection()" class="w-full text-left px-3 py-1.5 hover:bg-red-600 hover:text-white block text-red-400">Deselect</button>
+            </div>
+            <div id="imgInfo" class="absolute bottom-2 right-2 bg-black/70 text-white px-2 py-1 rounded text-[10px] hidden font-mono"></div>
+        </div>
+    </div>
+
+    <!-- TOAST -->
+    <div id="toast">Operation Complete</div>
+
+    <!-- STROKE MODAL -->
+    <div id="strokeModal" class="fixed inset-0 bg-black/60 z-[100] hidden flex items-center justify-center">
+        <div class="bg-[#2d2d2d] border border-[#444] w-64 rounded p-4 shadow-xl">
+            <h3 class="font-bold text-[#ccc] mb-3">Stroke Selection</h3>
+            <div class="space-y-3">
+                <div><label class="block text-[#888] mb-1">Width (px)</label><input type="number" id="sWidth" value="5" class="w-full bg-[#1e1e1e] border border-[#444] rounded p-1 text-white"></div>
+                <div>
+                    <label class="block text-[#888] mb-1">Color</label>
+                    <div class="flex gap-2">
+                        <input type="color" id="sColor" value="#ff0000" class="flex-1 h-8 bg-[#1e1e1e] border border-[#444] p-0 cursor-pointer">
+                        <button onclick="document.getElementById('sColor').value='#ffffff'" class="w-8 h-8 bg-white border border-[#444]"></button>
+                        <button onclick="document.getElementById('sColor').value='#000000'" class="w-8 h-8 bg-black border border-[#444]"></button>
+                    </div>
+                </div>
+                <div class="flex justify-end gap-2 pt-2">
+                    <button onclick="document.getElementById('strokeModal').classList.add('hidden')" class="px-3 py-1 bg-[#444] text-[#ccc] rounded hover:bg-[#555]">Cancel</button>
+                    <button onclick="applyStroke()" class="px-3 py-1 bg-[#007acc] text-white rounded hover:bg-[#0062a3]">Apply</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- EXPORT MODAL -->
+    <div id="exportModal" class="fixed inset-0 bg-black/60 z-[100] hidden flex items-center justify-center">
+        <div class="bg-[#2d2d2d] border border-[#444] w-72 rounded p-5 shadow-xl">
+            <h3 class="font-bold text-[#ccc] mb-4">Export Image</h3>
+            <div class="space-y-3">
+                <div class="grid grid-cols-2 gap-2">
+                    <div><label class="block text-[#888] mb-1">Width</label><input type="number" id="exportW" class="w-full bg-[#1e1e1e] border border-[#444] rounded p-1 text-white"></div>
+                    <div><label class="block text-[#888] mb-1">Height</label><input type="number" id="exportH" class="w-full bg-[#1e1e1e] border border-[#444] rounded p-1 text-white"></div>
+                </div>
+                <div class="flex gap-1">
+                    <button onclick="setExportPreset(1920)" class="flex-1 bg-[#333] hover:bg-[#444] py-1 text-[#ccc] rounded">1080p</button>
+                    <button onclick="setExportPreset(2560)" class="flex-1 bg-[#333] hover:bg-[#444] py-1 text-[#ccc] rounded">2K</button>
+                    <button onclick="setExportPreset(3840)" class="flex-1 bg-[#333] hover:bg-[#444] py-1 text-[#ccc] rounded">4K</button>
+                </div>
+                <div><label class="block text-[#888] mb-1">Quality</label><input type="range" id="exportQuality" min="50" max="100" value="100"></div>
+                <div class="flex justify-end gap-2 pt-2">
+                    <button onclick="document.getElementById('exportModal').classList.add('hidden')" class="px-3 py-1 bg-[#444] text-[#ccc] rounded hover:bg-[#555]">Cancel</button>
+                    <button onclick="performExport()" class="px-3 py-1 bg-[#007acc] text-white rounded hover:bg-[#0062a3]">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- CLOCK ---
+        setInterval(() => {
+            const d = new Date();
+            let h = d.getHours(), m = d.getMinutes(), s = d.getSeconds();
+            const am = h >= 12 ? 'PM' : 'AM'; h %= 12; h = h || 12;
+            document.getElementById('clock-time').innerText = `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+            document.getElementById('clock-ampm').innerText = am;
+        }, 1000);
+
+        // --- STATE ---
+        const canvas = document.getElementById('editorCanvas');
+        const ctx = canvas.getContext('2d');
+        const container = document.getElementById('workspace');
+        const contextMenu = document.getElementById('contextMenu');
+        
+        let state = {
+            image: null, filename: 'untitled',
+            zoom: 1, offsetX: 0, offsetY: 0,
+            tool: 'move', isDragging: false, startPos: {x:0,y:0},
+            selection: null, dragRect: null,
+            layers: [], activeLayerIndex: -1,
+            filters: { brightness: 100, contrast: 100, invert: 0, blur: 0, saturate: 100 },
+            history: [], redoStack: []
+        };
+
+        // --- TOOL HANDLING ---
+        function setTool(t) {
+            state.tool = t;
+            document.querySelectorAll('header button[id^="tool-"]').forEach(b => {
+                b.classList.remove('bg-[#007acc]', 'text-white');
+                b.classList.add('text-gray-400');
+            });
+            const btn = document.getElementById(`tool-${t}`);
+            if(btn) { btn.classList.add('bg-[#007acc]', 'text-white'); btn.classList.remove('text-gray-400'); }
+
+            if(t === 'crop') document.getElementById('crop-actions').classList.remove('hidden');
+            else document.getElementById('crop-actions').classList.add('hidden');
+
+            if(t === 'move') container.style.cursor = 'grab';
+            else if(t === 'select' || t === 'crop') container.style.cursor = 'crosshair';
+            else if(t === 'text') container.style.cursor = 'text';
+            else if(t === 'heal') container.style.cursor = 'cell';
+            else container.style.cursor = 'default';
+            
+            if(t !== 'select') { state.selection = null; document.getElementById('selectionBox').style.display = 'none'; }
+            contextMenu.style.display = 'none';
+            render();
+        }
+
+        function handleEmptyClick(e) {
+            if(!state.image && e.target.id === 'workspace') document.getElementById('uploadInput').click();
+        }
+
+        function setColor(id, val) {
+            document.getElementById(id).value = val;
+            updateActiveLayer();
+        }
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.innerText = msg;
+            t.className = 'show';
+            setTimeout(() => { t.className = t.className.replace('show', ''); }, 3000);
+        }
+
+        // --- CANVAS INPUTS ---
+        function getMousePos(e) {
+            const r = canvas.getBoundingClientRect();
+            return { x: (e.clientX - r.left) / state.zoom, y: (e.clientY - r.top) / state.zoom };
+        }
+
+        container.addEventListener('mousedown', e => {
+            if(!state.image) return;
+            contextMenu.style.display = 'none';
+            if(e.button === 2) return;
+
+            const pos = getMousePos(e);
+            state.startPos = pos;
+            state.isDragging = true;
+
+            // Layer selection Logic (Move tool)
+            if(state.tool === 'move') {
+                container.style.cursor = 'grabbing';
+                // Check for layer hit (Reverse order)
+                let hitIndex = -1;
+                for(let i=state.layers.length-1; i>=0; i--) {
+                    const l = state.layers[i];
+                    if(pos.x >= l.x && pos.x <= l.x + l.width && pos.y >= l.y && pos.y <= l.y + l.height) {
+                        hitIndex = i;
+                        break;
+                    }
+                }
+                
+                if(hitIndex !== -1) {
+                    state.activeLayerIndex = hitIndex;
+                    state.interaction = 'moveLayer';
+                    updateLayerUI(state.layers[hitIndex]);
+                    render();
+                    updateLayersList();
+                } else {
+                    state.interaction = 'pan';
+                    state.panStart = {x: e.clientX, y: e.clientY};
+                }
+            } else {
+                // Creation Tools
+                state.interaction = 'create';
+                if(state.tool === 'select' || state.tool === 'crop' || state.tool === 'text') {
+                    state.dragRect = { x: state.startPos.x, y: state.startPos.y, w: 0, h: 0 };
+                    state.selection = null;
+                }
+                if(state.tool === 'heal') performHeal(pos.x, pos.y);
+            }
+        });
+
+        window.addEventListener('mousemove', e => {
+            if(!state.isDragging) return;
+            const pos = getMousePos(e);
+
+            if(state.tool === 'move') {
+                if(state.interaction === 'pan') {
+                    const dx = e.clientX - state.panStart.x;
+                    const dy = e.clientY - state.panStart.y;
+                    state.offsetX += dx;
+                    state.offsetY += dy;
+                    state.panStart = {x: e.clientX, y: e.clientY};
+                    render();
+                } else if(state.interaction === 'moveLayer' && state.activeLayerIndex !== -1) {
+                    const l = state.layers[state.activeLayerIndex];
+                    const dx = pos.x - state.startPos.x;
+                    const dy = pos.y - state.startPos.y;
+                    l.x += dx;
+                    l.y += dy;
+                    state.startPos = pos;
+                    render();
+                }
+            } else if (state.interaction === 'create') {
+                if(state.dragRect) {
+                    state.dragRect.w = pos.x - state.startPos.x;
+                    state.dragRect.h = pos.y - state.startPos.y;
+                    
+                    const box = document.getElementById('selectionBox');
+                    box.style.display = 'block';
+                    const r = canvas.getBoundingClientRect();
+                    const sx = (Math.min(state.startPos.x, pos.x) * state.zoom) + r.left;
+                    const sy = (Math.min(state.startPos.y, pos.y) * state.zoom) + r.top;
+                    box.style.left = (sx - container.getBoundingClientRect().left) + 'px';
+                    box.style.top = (sy - container.getBoundingClientRect().top) + 'px';
+                    box.style.width = (Math.abs(state.dragRect.w) * state.zoom) + 'px';
+                    box.style.height = (Math.abs(state.dragRect.h) * state.zoom) + 'px';
+                }
+                if(state.tool === 'heal') performHeal(pos.x, pos.y);
+            }
+        });
+
+        window.addEventListener('mouseup', e => {
+            if(!state.isDragging) return;
+            state.isDragging = false;
+            container.style.cursor = state.tool === 'move' ? 'grab' : (state.tool==='heal'?'cell':'crosshair');
+
+            if(state.dragRect) {
+                let r = { x: state.startPos.x, y: state.startPos.y, w: state.dragRect.w, h: state.dragRect.h };
+                if(r.w < 0) { r.x += r.w; r.w = Math.abs(r.w); }
+                if(r.h < 0) { r.y += r.h; r.h = Math.abs(r.h); }
+
+                if(r.w > 5 && r.h > 5) {
+                    if(state.tool === 'select' || state.tool === 'crop') {
+                        state.selection = r;
+                    } else if (state.tool === 'text') {
+                         addTextLayer(r.x, r.y, r.w, r.h); 
+                         document.getElementById('selectionBox').style.display = 'none';
+                    }
+                }
+                state.dragRect = null;
+            }
+            if(state.interaction !== 'pan') pushHistory();
+        });
+
+        container.addEventListener('wheel', e => {
+            if(!state.image) return;
+            e.preventDefault();
+            const delta = e.deltaY > 0 ? -0.1 : 0.1;
+            state.zoom = Math.max(0.1, Math.min(5, state.zoom + delta));
+            render();
+        });
+
+        container.addEventListener('contextmenu', e => {
+            e.preventDefault();
+            if(state.tool === 'select' && state.selection) {
+                const rect = container.getBoundingClientRect();
+                contextMenu.style.left = (e.clientX - rect.left) + 'px';
+                contextMenu.style.top = (e.clientY - rect.top) + 'px';
+                contextMenu.style.display = 'block';
+            }
+        });
+
+        // --- LOAD & RENDER ---
+        function loadImage(e) {
+            const file = e.target.files[0];
+            if(!file) return;
+            state.filename = file.name;
+            const reader = new FileReader();
+            reader.onload = ev => {
+                const img = new Image();
+                img.onload = () => {
+                    state.image = img;
+                    state.layers = []; state.history=[]; state.selection=null;
+                    state.filters = { brightness: 100, contrast: 100, invert: 0, blur: 0, saturate: 100 };
+                    
+                    document.getElementById('emptyState').classList.add('hidden');
+                    canvas.classList.remove('hidden');
+                    document.getElementById('saveBtn').classList.remove('opacity-50', 'pointer-events-none');
+                    document.getElementById('imgInfo').classList.remove('hidden');
+
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    
+                    resetZoom();
+                    pushHistory();
+                };
+                img.src = ev.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function render() {
+            if(!state.image) return;
+            ctx.clearRect(0,0,canvas.width,canvas.height);
+            canvas.style.transform = `translate(${state.offsetX}px, ${state.offsetY}px) scale(${state.zoom})`;
+            
+            ctx.save();
+            const f = state.filters;
+            ctx.filter = `brightness(${f.brightness}%) contrast(${f.contrast}%) saturate(${f.saturate}%) blur(${f.blur}px) invert(${f.invert}%)`;
+            ctx.drawImage(state.image, 0, 0);
+            ctx.restore();
+
+            state.layers.forEach((l, i) => {
+                ctx.save();
+                if(l.type === 'text') {
+                    ctx.font = `${l.fontSize}px Inter`;
+                    ctx.fillStyle = l.fill;
+                    ctx.textBaseline = 'top';
+                    if(l.strokeWidth > 0) {
+                        ctx.strokeStyle = l.stroke;
+                        ctx.lineWidth = l.strokeWidth;
+                        ctx.strokeText(l.text, l.x, l.y, l.width);
+                    }
+                    ctx.fillText(l.text, l.x, l.y, l.width);
+                } else if(l.type === 'image') {
+                    ctx.drawImage(l.img, l.x, l.y, l.width, l.height);
+                }
+                
+                // Draw Active Border
+                if(state.activeLayerIndex === i) {
+                    ctx.strokeStyle = '#007acc';
+                    ctx.lineWidth = 2 / state.zoom;
+                    ctx.strokeRect(l.x, l.y, l.width, l.height);
+                }
+                ctx.restore();
+            });
+
+            document.getElementById('imgInfo').innerText = `${state.image.width}x${state.image.height}px @ ${Math.round(state.zoom*100)}%`;
+        }
+
+        // --- FEATURES ---
+        function resetZoom() {
+            const cw = container.clientWidth - 40;
+            const ch = container.clientHeight - 40;
+            const sx = cw / state.image.width;
+            const sy = ch / state.image.height;
+            state.zoom = Math.min(sx, sy, 1);
+            state.offsetX = 0; state.offsetY = 0;
+            render();
+        }
+
+        function addTextLayer(x, y, w, h) {
+            state.layers.push({
+                type: 'text', text: "Type Here", x: x, y: y,
+                width: w || 200, height: h || 50,
+                fontSize: 40, fill: '#ffffff', stroke: '#000000', strokeWidth: 0
+            });
+            state.activeLayerIndex = state.layers.length-1;
+            updateLayerUI(state.layers[state.activeLayerIndex]);
+            setTool('move'); 
+            render();
+            updateLayersList();
+            pushHistory();
+        }
+
+        function updateLayerUI(l) {
+            if(!l) return;
+            if(l.type === 'text') {
+                document.getElementById('textInput').value = l.text;
+                document.getElementById('textSize').value = l.fontSize;
+                document.getElementById('textFillColor').value = l.fill;
+            }
+        }
+
+        function updateActiveLayer() {
+            if(state.activeLayerIndex === -1) return;
+            const l = state.layers[state.activeLayerIndex];
+            if(l.type === 'text') {
+                l.text = document.getElementById('textInput').value;
+                l.fontSize = parseInt(document.getElementById('textSize').value);
+                l.fill = document.getElementById('textFillColor').value;
+                l.stroke = document.getElementById('textStrokeColor').value;
+                l.strokeWidth = parseFloat(document.getElementById('textStrokeWidth').value);
+                
+                // Auto height estimate
+                ctx.font = `${l.fontSize}px Inter`;
+                // Simple approx
+                l.height = l.fontSize * 1.2;
+                
+                render();
+            }
+        }
+
+        function insertEmoji(e) {
+            const el = document.getElementById('textInput');
+            el.value += e;
+            updateActiveLayer();
+        }
+
+        function addOverlayImage(e) {
+            const f = e.target.files[0];
+            if(!f) return;
+            const r = new FileReader();
+            r.onload = ev => {
+                const img = new Image();
+                img.onload = () => {
+                    const rat = img.width/img.height;
+                    const w = canvas.width * 0.3;
+                    state.layers.push({ type: 'image', img: img, x: 20, y: 20, width: w, height: w/rat });
+                    state.activeLayerIndex = state.layers.length-1;
+                    setTool('move');
+                    render();
+                    updateLayersList();
+                    pushHistory();
+                }
+                img.src = ev.target.result;
+            }
+            r.readAsDataURL(f);
+        }
+
+        // HEAL (FIXED)
+        function performHeal(x, y) {
+            const r = 20; 
+            const mainCtx = document.createElement('canvas');
+            mainCtx.width = state.image.width;
+            mainCtx.height = state.image.height;
+            const m = mainCtx.getContext('2d');
+            m.drawImage(state.image, 0, 0);
+            
+            // Draw blur patch
+            const temp = document.createElement('canvas');
+            temp.width = state.image.width; temp.height = state.image.height;
+            const t = temp.getContext('2d');
+            t.filter = 'blur(10px)';
+            t.drawImage(state.image, 0, 0);
+            const blurred = t.getImageData(x-r, y-r, r*2, r*2);
+            
+            m.putImageData(blurred, x-r, y-r);
+            state.image.src = mainCtx.toDataURL(); 
+        }
+
+        // SELECTION OPS
+        function clearSelection() { state.selection = null; document.getElementById('selectionBox').style.display = 'none'; contextMenu.style.display='none'; }
+        
+        function performContentAwareFill() {
+            if(!state.selection) return;
+            contextMenu.style.display='none';
+            const s = state.selection;
+            const temp = document.createElement('canvas');
+            temp.width = state.image.width; temp.height = state.image.height;
+            const t = temp.getContext('2d');
+            t.drawImage(state.image, 0, 0);
+            t.filter = 'blur(20px)';
+            t.drawImage(state.image, 0, 0);
+            const blurredData = t.getImageData(s.x, s.y, s.w, s.h);
+            t.filter = 'none';
+            t.drawImage(state.image, 0, 0);
+            t.putImageData(blurredData, s.x, s.y);
+            const n = new Image();
+            n.onload = () => { state.image = n; clearSelection(); pushHistory(); render(); };
+            n.src = temp.toDataURL();
+        }
+
+        function openStrokeModal() { contextMenu.style.display='none'; document.getElementById('strokeModal').classList.remove('hidden'); }
+        function applyStroke() {
+            if(!state.selection) return;
+            const w = document.getElementById('sWidth').value;
+            const c = document.getElementById('sColor').value;
+            const t = document.createElement('canvas');
+            t.width=state.image.width; t.height=state.image.height;
+            const x = t.getContext('2d');
+            x.drawImage(state.image, 0, 0);
+            x.strokeStyle = c; x.lineWidth = w;
+            x.strokeRect(state.selection.x, state.selection.y, state.selection.w, state.selection.h);
+            const n = new Image(); n.onload=()=>{state.image=n; document.getElementById('strokeModal').classList.add('hidden'); clearSelection(); pushHistory(); render();}
+            n.src=t.toDataURL();
+        }
+
+        function applyCrop() {
+             if(!state.selection) return;
+             const s = state.selection;
+             // Must transform Internal Coords (s) to a new canvas
+             // Note: s is in Internal Coords (Image pixels)
+             const t = document.createElement('canvas'); t.width=s.w; t.height=s.h;
+             const c = t.getContext('2d');
+             // We need to draw the PORTION of the image
+             const f=state.filters;
+             c.filter=`brightness(${f.brightness}%) contrast(${f.contrast}%) invert(${f.invert}%)`;
+             c.drawImage(state.image, s.x, s.y, s.w, s.h, 0, 0, s.w, s.h);
+             const n=new Image(); n.onload=()=>{state.image=n; state.layers=[]; state.filters={brightness:100,contrast:100,invert:0,blur:0,saturate:100}; resetZoom(); render(); pushHistory();}
+             n.src=t.toDataURL();
+             document.getElementById('selectionBox').style.display='none';
+        }
+
+        // EXPORT & UTILS
+        function openExportModal() { document.getElementById('exportModal').classList.remove('hidden'); document.getElementById('exportW').value=state.image.width; document.getElementById('exportH').value=state.image.height; }
+        function setExportPreset(w) { const r=state.image.width/state.image.height; document.getElementById('exportW').value=w; document.getElementById('exportH').value=Math.round(w/r); }
+        function performExport() {
+             flattenLayers();
+             setTimeout(()=>{
+                 const w = document.getElementById('exportW').value;
+                 const h = document.getElementById('exportH').value;
+                 const t = document.createElement('canvas'); t.width=w; t.height=h;
+                 const c = t.getContext('2d');
+                 c.drawImage(state.image,0,0,w,h);
+                 const a = document.createElement('a'); a.download=`Lumina_${Date.now()}.jpg`; a.href=t.toDataURL('image/jpeg', document.getElementById('exportQuality').value/100);
+                 a.click();
+                 document.getElementById('exportModal').classList.add('hidden');
+             }, 100);
+        }
+
+        function flattenLayers() {
+             const t = document.createElement('canvas'); t.width=canvas.width; t.height=canvas.height;
+             const c = t.getContext('2d');
+             const f=state.filters;
+             c.filter=`brightness(${f.brightness}%) contrast(${f.contrast}%) saturate(${f.saturate}%) blur(${f.blur}px) invert(${f.invert}%)`;
+             c.drawImage(state.image,0,0);
+             c.filter='none';
+             state.layers.forEach(l=>{
+                 if(l.type==='text'){ c.font=`${l.fontSize}px Inter`; c.fillStyle=l.fill; c.textBaseline='top'; if(l.strokeWidth>0){c.strokeStyle=l.stroke;c.lineWidth=l.strokeWidth;c.strokeText(l.text,l.x,l.y);} c.fillText(l.text,l.x,l.y); }
+                 else if(l.type==='image'){ c.drawImage(l.img,l.x,l.y,l.width,l.height); }
+             });
+             const n=new Image(); n.onload=()=>{state.image=n; state.layers=[]; state.filters={brightness:100,contrast:100,invert:0,blur:0,saturate:100}; pushHistory(); render(); showToast('Layers Flattened');}
+             n.src=t.toDataURL();
+        }
+
+        function updateFilter(k,v) { state.filters[k]=v; if(k!=='invert')document.getElementById(`val-${k}`).innerText = k==='blur'?v+'px':v+'%'; render(); }
+        function toggleInvert() { const v = state.filters.invert===100?0:100; updateFilter('invert',v); document.querySelector('input[oninput*="invert"]').value=v; }
+        function resetAdjustments() { state.filters={brightness:100,contrast:100,invert:0,blur:0,saturate:100}; render(); }
+        
+        function updateLayersList() {
+            const l=document.getElementById('layersList'); l.innerHTML='';
+            state.layers.forEach((layer,i)=>{
+                l.innerHTML+=`<div onclick="state.activeLayerIndex=${i};updateLayerUI(state.layers[${i}]);render()" class="text-[10px] text-[#ccc] p-1.5 border-b border-[#333] cursor-pointer hover:bg-[#333] flex justify-between ${state.activeLayerIndex===i?'bg-[#333]':''}">${layer.type==='text'?'T: '+layer.text.substring(0,10):'IMG'} <span class="text-red-400" onclick="event.stopPropagation();state.layers.splice(${i},1);render();updateLayersList()">x</span></div>`
+            });
+        }
+        
+        function pushHistory() { state.history.push({src:state.image.src, layers:JSON.parse(JSON.stringify(state.layers))}); if(state.history.length>15)state.history.shift(); state.redoStack=[]; }
+        function undo() { if(state.history.length<=1)return; state.redoStack.push(state.history.pop()); const p=state.history[state.history.length-1]; const i=new Image(); i.onload=()=>{state.image=i;state.layers=p.layers;render();}; i.src=p.src; }
+        function redo() { if(!state.redoStack.length)return; const n=state.redoStack.pop(); state.history.push(n); const i=new Image(); i.onload=()=>{state.image=i;state.layers=n.layers;render();}; i.src=n.src; }
+    </script>
+</body>
+</html>
