@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="bn" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <!-- Fixes the Zoom and PC view issue on Mobile -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>⚡ Advanced Home Power System OS</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* ================= THEME & VARIABLES ================= */
+        :root {
+            --bg-main: #f0f2f5; --bg-card: #ffffff; --bg-glass: rgba(255, 255, 255, 0.85);
+            --text-main: #1c1e21; --text-muted: #65676b; --border: #ced0d4;
+            --primary: #1877f2; --primary-hover: #166fe5; --secondary: #e4e6eb;
+            --accent: #00a400; --danger: #fa383e; --warning: #f5a623;
+            --shadow: 0 4px 12px rgba(0,0,0,0.05); --glass-blur: blur(10px);
+            --radius: 12px;
+        }
+        [data-theme="dark"] {
+            --bg-main: #18191a; --bg-card: #242526; --bg-glass: rgba(36, 37, 38, 0.85);
+            --text-main: #e4e6eb; --text-muted: #b0b3b8; --border: #3e4042;
+            --primary: #2d88ff; --primary-hover: #1877f2; --secondary: #3a3b3c;
+            --shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        /* ================= BASE STYLES ================= */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background-color: var(--bg-main); color: var(--text-main); transition: background-color 0.3s, color 0.3s; padding-bottom: 70px; }
+        
+        /* ================= LAYOUT ================= */
+        .app-container { max-width: 1200px; margin: 0 auto; display: flex; flex-direction: column; min-height: 100vh; }
+        @media(min-width: 768px) { .app-container { flex-direction: row; padding: 20px; gap: 20px; } body { padding-bottom: 0; } }
+
+        /* ================= NAVIGATION ================= */
+        .nav-bar { background: var(--bg-glass); backdrop-filter: var(--glass-blur); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: var(--shadow); }
+        .nav-menus { display: none; }
+        @media(min-width: 768px) { 
+            .nav-bar { display: none; }
+            .nav-menus { display: flex; flex-direction: column; width: 250px; background: var(--bg-card); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); position: sticky; top: 20px; height: calc(100vh - 40px); overflow-y: auto; }
+        }
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg-card); border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding: 10px 5px; z-index: 100; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); }
+        @media(min-width: 768px) { .bottom-nav { display: none; } }
+        
+        .nav-item { display: flex; flex-direction: column; align-items: center; gap: 5px; color: var(--text-muted); cursor: pointer; padding: 8px 12px; border-radius: 8px; transition: 0.2s; font-size: 0.75rem; font-weight: 600; text-align: center; }
+        @media(min-width: 768px) { .nav-item { flex-direction: row; font-size: 1rem; padding: 12px 15px; margin-bottom: 5px; } .nav-item i { width: 24px; font-size: 1.2rem; } }
+        .nav-item:hover { background: var(--secondary); color: var(--text-main); }
+        .nav-item.active { color: var(--primary); background: rgba(45, 136, 255, 0.1); }
+
+        /* ================= CONTENT AREA ================= */
+        .main-content { flex: 1; padding: 15px; width: 100%; }
+        @media(min-width: 768px) { .main-content { padding: 0; } }
+        .tab-pane { display: none; animation: fadeIn 0.3s ease-in-out; }
+        .tab-pane.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* ================= CARDS & UI ELEMENTS ================= */
+        .card { background: var(--bg-card); border-radius: var(--radius); padding: 20px; margin-bottom: 20px; box-shadow: var(--shadow); border: 1px solid var(--border); }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 10px; cursor: pointer; user-select: none; }
+        .card-title { font-size: 1.1rem; font-weight: bold; color: var(--text-main); display: flex; align-items: center; gap: 10px; }
+        
+        .grid-2 { display: grid; grid-template-columns: 1fr; gap: 15px; }
+        @media(min-width: 600px) { .grid-2 { grid-template-columns: 1fr 1fr; } }
+        .grid-3 { display: grid; grid-template-columns: 1fr; gap: 15px; }
+        @media(min-width: 768px) { .grid-3 { grid-template-columns: repeat(3, 1fr); } }
+
+        .form-group { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; }
+        .form-group label { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; }
+        .form-control { background: var(--secondary); border: 1px solid var(--border); color: var(--text-main); padding: 10px 12px; border-radius: 8px; font-size: 0.95rem; outline: none; transition: 0.2s; width: 100%; appearance: none; }
+        .form-control:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(45, 136, 255, 0.2); }
+        select.form-control { cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2365676b' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 30px; }
+        [data-theme="dark"] select.form-control { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23b0b3b8' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E"); }
+
+        .btn { padding: 10px 16px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.9rem; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-hover); }
+        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-main); }
+        .btn-outline:hover { background: var(--secondary); }
+        .btn-danger { background: rgba(250, 56, 62, 0.1); color: var(--danger); }
+        .btn-danger:hover { background: var(--danger); color: white; }
+        .btn-sm { padding: 6px 10px; font-size: 0.8rem; }
+
+        .preset-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px; }
+        .preset-chip { background: var(--secondary); border: 1px solid var(--border); padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; cursor: pointer; transition: 0.2s; color: var(--text-main); }
+        .preset-chip:hover { background: var(--primary); color: white; border-color: var(--primary); }
+
+        .item-row { background: var(--bg-main); border-radius: 8px; padding: 12px; margin-bottom: 10px; display: grid; grid-template-columns: 1fr; gap: 10px; border: 1px solid var(--border); }
+        @media(min-width: 600px) { .item-row { grid-template-columns: 2fr 1fr 1fr 1fr auto; align-items: center; } }
+        .item-name { font-weight: 600; color: var(--text-main); display: flex; align-items: center; gap: 8px; }
+        
+        .result-box { background: rgba(45, 136, 255, 0.05); border: 1px solid rgba(45, 136, 255, 0.2); border-radius: 8px; padding: 15px; margin-top: 15px; }
+        .result-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+        .result-row:last-child { border-bottom: none; }
+        .result-row.bold { font-weight: bold; font-size: 1.05rem; color: var(--primary); }
+        .result-row.success { color: var(--accent); font-weight: bold; }
+
+        .theme-switch { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--secondary); cursor: pointer; border: 1px solid var(--border); color: var(--text-main); transition: 0.3s; }
+        .theme-switch:hover { transform: rotate(15deg); }
+
+        /* Fancy Live Indicator */
+        .live-badge { display: inline-flex; align-items: center; gap: 5px; font-size: 0.75rem; background: rgba(0, 164, 0, 0.1); color: var(--accent); padding: 4px 10px; border-radius: 15px; font-weight: bold; }
+        .live-dot { width: 8px; height: 8px; background: var(--accent); border-radius: 50%; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(0,164,0, 0.4); } 70% { box-shadow: 0 0 0 6px rgba(0,164,0, 0); } 100% { box-shadow: 0 0 0 0 rgba(0,164,0, 0); } }
+
+        /* Graph Bars */
+        .stat-bar-container { width: 100%; height: 8px; background: var(--secondary); border-radius: 4px; overflow: hidden; margin-top: 5px; }
+        .stat-bar { height: 100%; background: var(--primary); border-radius: 4px; transition: width 0.5s ease; }
+    </style>
+</head>
+<body>
+
+    <!-- Mobile Top Bar -->
+    <div class="nav-bar">
+        <div style="font-weight: bold; font-size: 1.2rem; display: flex; align-items: center; gap: 10px;">
+            <i class="fa-solid fa-bolt text-primary" style="color: var(--primary)"></i> PowerOS
+        </div>
+        <div style="display: flex; gap: 10px; align-items: center;">
+            <div class="live-badge"><div class="live-dot"></div> Live</div>
+            <div class="theme-switch" onclick="toggleTheme()"><i class="fa-solid fa-moon" id="themeIcon"></i></div>
+        </div>
+    </div>
+
+    <div class="app-container">
+        <!-- PC Sidebar / Navigation -->
+        <div class="nav-menus">
+            <div style="font-weight: 800; font-size: 1.5rem; margin-bottom: 20px; color: var(--primary); display: flex; align-items: center; gap: 10px;">
+                <i class="fa-solid fa-bolt"></i> PowerOS
+            </div>
+            <div style="margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+                <div class="live-badge"><div class="live-dot"></div> Auto Calculating</div>
+            </div>
+            <div class="nav-item active" onclick="switchTab('dashboard', this)"><i class="fa-solid fa-chart-pie"></i> ড্যাশবোর্ড</div>
+            <div class="nav-item" onclick="switchTab('load', this)"><i class="fa-solid fa-plug"></i> লোড ক্যালকুলেটর</div>
+            <div class="nav-item" onclick="switchTab('ips', this)"><i class="fa-solid fa-car-battery"></i> প্রো IPS/ব্যাটারি</div>
+            <div class="nav-item" onclick="switchTab('solar', this)"><i class="fa-solid fa-solar-panel"></i> অ্যাডভান্সড সোলার</div>
+            <div class="nav-item" onclick="switchTab('bill', this)"><i class="fa-solid fa-file-invoice-dollar"></i> বিদ্যুৎ বিল / TOU</div>
+            <div class="nav-item" onclick="switchTab('engineering', this)"><i class="fa-solid fa-microchip"></i> ইঞ্জিনিয়ারিং টুলস</div>
+            
+            <div style="margin-top: auto; padding-top: 20px;">
+                <button class="btn btn-outline" style="width: 100%; margin-bottom: 10px;" onclick="toggleTheme()">
+                    <i class="fa-solid fa-circle-half-stroke"></i> থিম পরিবর্তন
+                </button>
+                <button class="btn btn-outline" style="width: 100%;" onclick="window.print()">
+                    <i class="fa-solid fa-print"></i> রিপোর্ট প্রিন্ট
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="main-content" id="app-body">
+            
+            <!-- ================= DASHBOARD TAB ================= -->
+            <div id="tab-dashboard" class="tab-pane active">
+                <div class="card">
+                    <h2 class="card-title"><i class="fa-solid fa-chart-line"></i> সিস্টেম ওভারভিউ</h2>
+                    <div class="grid-3" style="margin-top: 15px;">
+                        <div class="result-box" style="margin-top:0; border-left: 4px solid var(--primary);">
+                            <div style="color: var(--text-muted); font-size: 0.9rem;">মোট পিক লোড</div>
+                            <div style="font-size: 1.8rem; font-weight: bold; color: var(--text-main);" id="dashTotalW">0 W</div>
+                            <div style="font-size: 0.8rem; color: var(--text-muted);">এসি ব্রেকার সাইজ: <span id="dashBreaker" style="color:var(--primary); font-weight:bold;">0A</span></div>
+                        </div>
+                        <div class="result-box" style="margin-top:0; border-left: 4px solid var(--warning);">
+                            <div style="color: var(--text-muted); font-size: 0.9rem;">দৈনিক বিদ্যুৎ খরচ</div>
+                            <div style="font-size: 1.8rem; font-weight: bold; color: var(--text-main);" id="dashDailyKWh">0.00 kWh</div>
+                            <div style="font-size: 0.8rem; color: var(--text-muted);">মাসিক: <span id="dashMonthlyKWh">0.00</span> kWh</div>
+                        </div>
+                        <div class="result-box" style="margin-top:0; border-left: 4px solid var(--accent);">
+                            <div style="color: var(--text-muted); font-size: 0.9rem;">আনুমানিক মাসিক বিল</div>
+                            <div style="font-size: 1.8rem; font-weight: bold; color: var(--text-main);" id="dashMonthlyBill">৳ 0</div>
+                            <div style="font-size: 0.8rem; color: var(--text-muted);">গড় রেট: ৳<span id="dashAvgRate">0.00</span>/Unit</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid-2">
+                    <div class="card">
+                        <h3 class="card-title"><i class="fa-solid fa-leaf text-accent" style="color: var(--accent);"></i> ইকো এবং কার্বন ফুটপ্রিন্ট</h3>
+                        <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:15px;">সোলার ব্যবহারের ফলে পরিবেশের যে উপকার হচ্ছে:</p>
+                        <div class="result-row"><span>বার্ষিক CO2 সাশ্রয়:</span><span id="dashCO2">0 kg</span></div>
+                        <div class="result-row"><span>সমপরিমাণ গাছ লাগানো:</span><span id="dashTrees" class="success">0 টি গাছ 🌳</span></div>
+                        <div class="result-row"><span>কয়লা পোড়ানো সাশ্রয়:</span><span id="dashCoal">0 kg</span></div>
+                    </div>
+                    
+                    <div class="card">
+                        <h3 class="card-title"><i class="fa-solid fa-battery-full text-warning" style="color: var(--warning);"></i> সিস্টেম হেলথ</h3>
+                        <div style="margin-bottom: 10px;">
+                            <div style="display:flex; justify-content:space-between; font-size:0.85rem;"><span>ব্যাটারি ব্যাকআপ ক্যাপাসিটি</span><span id="healthBat">0%</span></div>
+                            <div class="stat-bar-container"><div class="stat-bar" id="healthBatBar" style="width: 0%; background: var(--warning);"></div></div>
+                        </div>
+                        <div>
+                            <div style="display:flex; justify-content:space-between; font-size:0.85rem;"><span>সোলার কভারেজ (Self-sufficiency)</span><span id="healthSolar">0%</span></div>
+                            <div class="stat-bar-container"><div class="stat-bar" id="healthSolarBar" style="width: 0%; background: var(--accent);"></div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================= LOAD TAB ================= -->
+            <div id="tab-load" class="tab-pane">
+                <div class="card">
+                    <div class="card-header" onclick="toggleContent('addLoadSection')">
+                        <h2 class="card-title"><i class="fa-solid fa-plus-circle text-primary"></i> নতুন লোড যোগ করুন</h2>
+                        <i class="fa-solid fa-chevron-down" id="addLoadSectionIcon"></i>
+                    </div>
+                    <div id="addLoadSection">
+                        <div class="preset-grid">
+                            <span class="preset-chip" onclick="addCustomLoad('সিলিং ফ্যান', 75, 'fan')"><i class="fa-solid fa-fan"></i> ফ্যান 75W</span>
+                            <span class="preset-chip" onclick="addCustomLoad('LED বাল্ব', 15, 'light')"><i class="fa-solid fa-lightbulb"></i> লাইট 15W</span>
+                            <span class="preset-chip" onclick="addCustomLoad('Inverter AC 1.5T', 1200, 'ac')"><i class="fa-solid fa-snowflake"></i> এসি 1.5T</span>
+                            <span class="preset-chip" onclick="addCustomLoad('ফ্রিজ Refrigerator', 150, 'fridge')"><i class="fa-solid fa-icicles"></i> ফ্রিজ 150W</span>
+                            <span class="preset-chip" onclick="addCustomLoad('Smart TV 55"', 100, 'tv')"><i class="fa-solid fa-tv"></i> টিভি 100W</span>
+                            <span class="preset-chip" onclick="addCustomLoad('Water Pump 1HP', 746, 'motor')"><i class="fa-solid fa-water"></i> পাম্প 1HP</span>
+                            <span class="preset-chip" onclick="addCustomLoad('Desktop PC', 250, 'pc')"><i class="fa-solid fa-desktop"></i> পিসি 250W</span>
+                            <span class="preset-chip" onclick="addCustomLoad('Microwave', 1000, 'kitchen')"><i class="fa-solid fa-fire-burner"></i> ওভেন 1000W</span>
+                        </div>
+                        
+                        <div class="grid-3" style="background: var(--secondary); padding: 15px; border-radius: 8px;">
+                            <div class="form-group"><label>ডিভাইসের নাম</label><input type="text" id="customLoadName" class="form-control" placeholder="যেমন: আয়রন মেশিন"></div>
+                            <div class="form-group"><label>ওয়াট (W)</label><input type="number" id="customLoadWatt" class="form-control" placeholder="1000"></div>
+                            <div class="form-group" style="justify-content: flex-end;"><button class="btn btn-primary" onclick="submitCustomLoad()"><i class="fa-solid fa-plus"></i> যোগ করুন</button></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2 class="card-title" style="margin-bottom: 15px;"><i class="fa-solid fa-list-check"></i> আমার বাসার লোড লিস্ট</h2>
+                    <div id="loadListContainer">
+                        <!-- Items rendered via JS -->
+                    </div>
+                    <div class="result-box">
+                        <div class="result-row bold"><span>মোট কানেক্টেড লোড:</span><span id="loadTotalW">0 W</span></div>
+                        <div class="result-row"><span>দৈনিক মোট ব্যবহার:</span><span id="loadTotalDaily">0.00 kWh</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================= IPS/BATTERY TAB ================= -->
+            <div id="tab-ips" class="tab-pane">
+                <div class="card">
+                    <h2 class="card-title"><i class="fa-solid fa-car-battery text-warning"></i> প্রো-লেভেল IPS ও ব্যাটারি ক্যালকুলেটর</h2>
+                    <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:15px;">Peukert's Law এবং Battery Chemistry ভিত্তিক নিখুঁত হিসাব।</p>
+                    
+                    <div class="grid-3">
+                        <div class="form-group">
+                            <label>ব্যাটারির ধরন (Chemistry)</label>
+                            <select id="batType" class="form-control">
+                                <option value="tubular">Tubular Lead Acid (Deep Cycle)</option>
+                                <option value="flat">Flat Plate Lead Acid (Standard)</option>
+                                <option value="lifepo4">LiFePO4 (Lithium Iron Phosphate)</option>
+                                <option value="gel">GEL / AGM</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>প্রতি ব্যাটারির ক্যাপাসিটি (Ah)</label>
+                            <input type="number" id="batAh" class="form-control" value="100" min="10">
+                        </div>
+                        <div class="form-group">
+                            <label>ব্যাটারির সংখ্যা (Pcs)</label>
+                            <input type="number" id="batCount" class="form-control" value="1" min="1">
+                        </div>
+                        <div class="form-group">
+                            <label>সিস্টেম ভোল্টেজ (V)</label>
+                            <select id="batVolt" class="form-control">
+                                <option value="12">12V (1 ব্যাটারি)</option>
+                                <option value="24">24V (2 ব্যাটারি সিরিজ)</option>
+                                <option value="48">48V (4 ব্যাটারি সিরিজ)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>IPS/Inverter Efficiency (%)</label>
+                            <input type="number" id="invEff" class="form-control" value="85" max="100">
+                        </div>
+                        <div class="form-group">
+                            <label>DoD (Depth of Discharge) %</label>
+                            <input type="number" id="batDod" class="form-control" value="70" max="100" title="কতটুকু চার্জ শেষ করবেন">
+                        </div>
+                    </div>
+
+                    <div style="margin-top:20px; padding:15px; background:var(--secondary); border-radius:8px;">
+                        <h4 style="margin-bottom:10px;">IPS এ কত লোড চালাবেন?</h4>
+                        <div class="grid-2">
+                            <div class="form-group">
+                                <label>কাস্টম লোড (Watts)</label>
+                                <input type="number" id="ipsTargetLoad" class="form-control" value="300">
+                            </div>
+                            <div style="display:flex; align-items:flex-end;">
+                                <button class="btn btn-outline" style="width:100%" onclick="document.getElementById('ipsTargetLoad').value = document.getElementById('loadTotalW').innerText.replace(' W',''); triggerCalc();">
+                                    <i class="fa-solid fa-arrow-down"></i> মোট লোড বসান
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="result-box" id="ipsResults">
+                        <div class="result-row"><span>মোট স্টোরেজ ক্যাপাসিটি:</span><span id="resBatWh">0 Wh</span></div>
+                        <div class="result-row"><span>ব্যবহারযোগ্য (Usable) স্টোরেজ:</span><span id="resBatUsable">0 Wh</span></div>
+                        <div class="result-row bold" style="color:var(--warning)"><span>⏱️ রিয়েল ব্যাকআপ টাইম:</span><span id="resBatTime">0 ঘণ্টা 0 মিনিট</span></div>
+                        <div class="result-row" style="font-size:0.8rem; color:var(--text-muted);"><span colspan="2">* Peukert Effect (Heavy load penalty) হিসাব করা হয়েছে।</span></div>
+                        
+                        <hr style="border:0; border-top:1px solid var(--border); margin:10px 0;">
+                        <div class="result-row"><span>ব্যাটারি ফুল চার্জ হতে সময় (10A রেট):</span><span id="resBatChargeTime">0 ঘণ্টা</span></div>
+                        <div class="result-row"><span>ডিসি ক্যাবল সাইজ (Inverter to Battery):</span><span id="resBatCable" class="success">16 mm² (6 AWG)</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================= SOLAR TAB ================= -->
+            <div id="tab-solar" class="tab-pane">
+                <div class="card">
+                    <h2 class="card-title"><i class="fa-solid fa-solar-panel text-accent"></i> অ্যাডভান্সড সোলার ডিজাইন</h2>
+                    <div class="grid-3">
+                        <div class="form-group">
+                            <label>প্যানেল সাইজ (Watts)</label>
+                            <select id="solarPanelW" class="form-control">
+                                <option value="100">100W</option> <option value="150">150W</option>
+                                <option value="250">250W</option> <option value="320">320W</option>
+                                <option value="450">450W</option> <option value="550" selected>550W (Half-cut)</option>
+                                <option value="650">650W</option> <option value="700">700W (Bifacial)</option>
+                                <option value="custom">Custom...</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>প্যানেল সংখ্যা (Pcs)</label>
+                            <input type="number" id="solarCount" class="form-control" value="4" min="1">
+                        </div>
+                        <div class="form-group">
+                            <label>সূর্যের আলো (Peak Sun Hours)</label>
+                            <input type="number" id="solarSun" class="form-control" value="4.5" step="0.1">
+                        </div>
+                        <div class="form-group">
+                            <label>সোলার চার্জ কন্ট্রোলার</label>
+                            <select id="solarController" class="form-control">
+                                <option value="mppt" selected>MPPT (High Efficiency ~98%)</option>
+                                <option value="pwm">PWM (Low Efficiency ~75%)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>সিস্টেম লস (ধুলা, তারের লস %)</label>
+                            <input type="number" id="solarLoss" class="form-control" value="15" max="50">
+                        </div>
+                        <div class="form-group">
+                            <label>নেট মিটারিং আছে?</label>
+                            <select id="solarNetMeter" class="form-control">
+                                <option value="no">না (Off-Grid / Hybrid)</option>
+                                <option value="yes">হ্যাঁ (On-Grid)</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="result-box" style="border-color: var(--accent); background: rgba(0, 164, 0, 0.05);">
+                        <div class="result-row"><span>সিস্টেম ক্যাপাসিটি (kWp):</span><span id="resSolarKwp">0 kWp</span></div>
+                        <div class="result-row bold" style="color:var(--accent)"><span>☀️ দৈনিক গড় উৎপাদন:</span><span id="resSolarDaily">0 kWh</span></div>
+                        <div class="result-row"><span>মাসিক উৎপাদন:</span><span id="resSolarMonthly">0 kWh</span></div>
+                        <div class="result-row"><span>বার্ষিক উৎপাদন:</span><span id="resSolarYearly">0 kWh</span></div>
+                        <hr style="border:0; border-top:1px solid var(--border); margin:10px 0;">
+                        <div class="result-row"><span>প্রয়োজনীয় ইনভার্টার সাইজ:</span><span id="resSolarInv">0 kVA</span></div>
+                        <div class="result-row"><span>প্যানেলের টিল্ট অ্যাঙ্গেল (বাংলাদেশ):</span><span class="success">23° (South Facing)</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================= BILL TAB ================= -->
+            <div id="tab-bill" class="tab-pane">
+                <div class="card">
+                    <h2 class="card-title"><i class="fa-solid fa-file-invoice-dollar text-primary"></i> বিদ্যুৎ বিল ও ট্যারিফ</h2>
+                    <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:15px;">BPDB এর লেটেস্ট স্ল্যাব অনুযায়ী স্বয়ংক্রিয় হিসাব।</p>
+                    
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label>মাসিক ব্যবহৃত ইউনিট (kWh)</label>
+                            <input type="number" id="billUnits" class="form-control" value="0">
+                            <span style="font-size:0.75rem; color:var(--primary); cursor:pointer;" onclick="document.getElementById('billUnits').value = State.totals.monthlyKWh.toFixed(0); triggerCalc();">অটো ফিল করুন (লোড থেকে)</span>
+                        </div>
+                        <div class="form-group">
+                            <label>কানেক্টেড লোড (kW) - ডিমান্ড চার্জের জন্য</label>
+                            <input type="number" id="billKw" class="form-control" value="2" step="0.5">
+                        </div>
+                    </div>
+
+                    <div class="grid-3" style="margin-top:10px;">
+                        <div class="form-group"><label>ডিমান্ড চার্জ (৳/kW)</label><input type="number" id="billDemandRate" class="form-control" value="42"></div>
+                        <div class="form-group"><label>মিটার ভাড়া (৳)</label><input type="number" id="billMeter" class="form-control" value="40"></div>
+                        <div class="form-group"><label>ভ্যাট (%)</label><input type="number" id="billVat" class="form-control" value="5"></div>
+                    </div>
+
+                    <div class="result-box">
+                        <div id="slabBreakdown" style="margin-bottom: 15px; font-size:0.85rem; color:var(--text-muted);">
+                            <!-- Dynamic Slabs -->
+                        </div>
+                        <hr style="border:0; border-top:1px dashed var(--border); margin:10px 0;">
+                        <div class="result-row"><span>এনার্জি চার্জ:</span><span id="resBillEnergy">৳ 0</span></div>
+                        <div class="result-row"><span>ডিমান্ড চার্জ + মিটার ভাড়া:</span><span id="resBillFixed">৳ 0</span></div>
+                        <div class="result-row"><span>ভ্যাট:</span><span id="resBillVatAmt">৳ 0</span></div>
+                        <div class="result-row bold" style="font-size: 1.3rem;"><span>সর্বমোট বিল:</span><span id="resBillTotal">৳ 0</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================= ENGINEERING TAB ================= -->
+            <div id="tab-engineering" class="tab-pane">
+                <div class="card">
+                    <h2 class="card-title"><i class="fa-solid fa-microchip text-primary"></i> ইঞ্জিনিয়ারিং টুলস (AWG, MCB)</h2>
+                    
+                    <h4 style="margin: 15px 0 10px;">১. এসি ক্যাবল ও ব্রেকার সিলেকশন</h4>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label>লোড (Watts) 220V AC</label>
+                            <input type="number" id="engLoad" class="form-control" value="2000">
+                        </div>
+                        <div class="result-box" style="margin-top:0; padding:10px;">
+                            <div class="result-row"><span>কারেন্ট (Amps):</span><span id="engAmp">9.1A</span></div>
+                            <div class="result-row"><span>MCB ব্রেকার সাইজ:</span><span id="engMcb" class="success">16A</span></div>
+                            <div class="result-row"><span>তারের সাইজ (rm/mm²):</span><span id="engWire">1.5 mm²</span></div>
+                        </div>
+                    </div>
+
+                    <h4 style="margin: 25px 0 10px;">২. ডিসি ভোল্টেজ ড্রপ (সোলার থেকে ব্যাটারি)</h4>
+                    <div class="grid-3">
+                        <div class="form-group"><label>ডিসি ভোল্টেজ (V)</label><input type="number" id="vdVolt" class="form-control" value="24"></div>
+                        <div class="form-group"><label>কারেন্ট (A)</label><input type="number" id="vdAmp" class="form-control" value="20"></div>
+                        <div class="form-group"><label>তারের দৈর্ঘ্য (মিটার)</label><input type="number" id="vdLen" class="form-control" value="10"></div>
+                        <div class="form-group"><label>তারের সাইজ (mm²)</label><input type="number" id="vdMm" class="form-control" value="6"></div>
+                    </div>
+                    <div class="result-box" style="padding:10px;">
+                        <div class="result-row"><span>ভোল্টেজ ড্রপ:</span><span id="vdDrop">0V</span></div>
+                        <div class="result-row"><span>লস (%):</span><span id="vdPct">0%</span> (৩% এর নিচে রাখা উচিত)</div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Mobile Bottom Navigation -->
+    <div class="bottom-nav">
+        <div class="nav-item active" onclick="switchTab('dashboard', this)"><i class="fa-solid fa-chart-pie"></i><span>ড্যাশবোর্ড</span></div>
+        <div class="nav-item" onclick="switchTab('load', this)"><i class="fa-solid fa-plug"></i><span>লোড</span></div>
+        <div class="nav-item" onclick="switchTab('ips', this)"><i class="fa-solid fa-car-battery"></i><span>IPS</span></div>
+        <div class="nav-item" onclick="switchTab('solar', this)"><i class="fa-solid fa-solar-panel"></i><span>সোলার</span></div>
+        <div class="nav-item" onclick="switchTab('bill', this)"><i class="fa-solid fa-file-invoice-dollar"></i><span>বিল</span></div>
+    </div>
+
+    <script>
+        // ================= STATE MANAGEMENT =================
+        const State = {
+            loads: [
+                { id: '1', name: 'সিলিং ফ্যান', watt: 75, qty: 3, hours: 12 },
+                { id: '2', name: 'LED বাল্ব', watt: 15, qty: 5, hours: 6 }
+            ],
+            totals: { watt: 0, dailyKWh: 0, monthlyKWh: 0 },
+            slabs: [
+                { limit: 75, rate: 4.63 }, { limit: 200, rate: 6.70 },
+                { limit: 300, rate: 7.12 }, { limit: 400, rate: 7.58 },
+                { limit: 600, rate: 11.96 }, { limit: 9999, rate: 13.68 }
+            ]
+        };
+
+        // ================= UI FUNCTIONS =================
+        function switchTab(tabId, el) {
+            document.querySelectorAll('.tab-pane').forEach(t => t.classList.remove('active'));
+            document.getElementById('tab-' + tabId).classList.add('active');
+            
+            document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
+            // Activate both Mobile and PC nav items with same onclick
+            let allBtns = document.querySelectorAll(`[onclick="switchTab('${tabId}', this)"]`);
+            allBtns.forEach(b => b.classList.add('active'));
+        }
+
+        function toggleTheme() {
+            const html = document.documentElement;
+            const current = html.getAttribute('data-theme');
+            const target = current === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', target);
+            document.getElementById('themeIcon').className = target === 'dark' ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+            localStorage.setItem('poweros_theme', target);
+        }
+
+        function toggleContent(id) {
+            const el = document.getElementById(id);
+            const icon = document.getElementById(id + 'Icon');
+            if (el.style.display === 'none') {
+                el.style.display = 'block';
+                icon.classList.replace('fa-chevron-down', 'fa-chevron-up');
+            } else {
+                el.style.display = 'none';
+                icon.classList.replace('fa-chevron-up', 'fa-chevron-down');
+            }
+        }
+
+        // ================= LOAD MANAGEMENT =================
+        function renderLoads() {
+            const container = document.getElementById('loadListContainer');
+            container.innerHTML = '';
+            State.loads.forEach(item => {
+                container.innerHTML += `
+                    <div class="item-row" id="item_${item.id}">
+                        <div class="item-name"><i class="fa-solid fa-circle-check text-primary"></i> ${item.name}</div>
+                        <div class="form-group"><label>সংখ্যা</label><input type="number" class="form-control custom-input" data-id="${item.id}" data-field="qty" value="${item.qty}" min="1"></div>
+                        <div class="form-group"><label>ওয়াট</label><input type="number" class="form-control custom-input" data-id="${item.id}" data-field="watt" value="${item.watt}" min="1"></div>
+                        <div class="form-group"><label>ঘণ্টা/দিন</label><input type="number" class="form-control custom-input" data-id="${item.id}" data-field="hours" value="${item.hours}" max="24" step="0.5"></div>
+                        <div style="display:flex; align-items:center; justify-content:center;">
+                            <button class="btn btn-danger btn-sm" onclick="removeLoad('${item.id}')"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    </div>`;
+            });
+        }
+
+        function addCustomLoad(name, watt, icon) {
+            State.loads.push({ id: Date.now().toString(), name: name, watt: watt, qty: 1, hours: 5 });
+            renderLoads(); triggerCalc();
+        }
+
+        function submitCustomLoad() {
+            const name = document.getElementById('customLoadName').value || 'Custom Device';
+            const watt = parseInt(document.getElementById('customLoadWatt').value) || 100;
+            addCustomLoad(name, watt, 'plug');
+            document.getElementById('customLoadName').value = '';
+            document.getElementById('customLoadWatt').value = '';
+        }
+
+        function removeLoad(id) {
+            State.loads = State.loads.filter(l => l.id !== id);
+            renderLoads(); triggerCalc();
+        }
+
+        // ================= CORE CALCULATIONS (LIVE) =================
+        function calculateAll() {
+            // 1. Load Calc
+            let totW = 0, totWh = 0;
+            State.loads.forEach(l => {
+                totW += l.watt * l.qty;
+                totWh += l.watt * l.qty * l.hours;
+            });
+            State.totals.watt = totW;
+            State.totals.dailyKWh = totWh / 1000;
+            State.totals.monthlyKWh = State.totals.dailyKWh * 30;
+
+            document.getElementById('loadTotalW').innerText = totW + ' W';
+            document.getElementById('loadTotalDaily').innerText = State.totals.dailyKWh.toFixed(2) + ' kWh';
+            
+            // Dashboard Updates
+            document.getElementById('dashTotalW').innerText = totW + ' W';
+            document.getElementById('dashDailyKWh').innerText = State.totals.dailyKWh.toFixed(2) + ' kWh';
+            document.getElementById('dashMonthlyKWh').innerText = State.totals.monthlyKWh.toFixed(1);
+            
+            // MCB Sizing for main house (220V)
+            let mainAmp = totW / 220;
+            let mcb = mainAmp * 1.25; // 25% safety factor
+            let finalMcb = [6, 10, 16, 20, 25, 32, 40, 63, 100].find(a => a >= mcb) || 100;
+            document.getElementById('dashBreaker').innerText = finalMcb + 'A';
+
+            // 2. IPS/Battery Calc (Advanced)
+            let bType = document.getElementById('batType').value;
+            let bAh = parseFloat(document.getElementById('batAh').value) || 100;
+            let bQty = parseFloat(document.getElementById('batCount').value) || 1;
+            let bVolt = parseFloat(document.getElementById('batVolt').value) || 12;
+            let invEff = parseFloat(document.getElementById('invEff').value)/100 || 0.85;
+            let dod = parseFloat(document.getElementById('batDod').value)/100 || 0.7;
+            let ipsLoad = parseFloat(document.getElementById('ipsTargetLoad').value) || 0;
+
+            // Chemistry tweaks
+            let peukert = 1.2; // Default lead acid
+            if(bType === 'lifepo4') { peukert = 1.02; document.getElementById('batDod').value = 95; dod = 0.95; } // Lithium ignores Peukert mostly
+            if(bType === 'tubular') peukert = 1.15;
+
+            let totalWh = bAh * bQty * bVolt; // Simplified. Assumes series logic if 24V/48V selected with qty=1
+            if(bVolt === 12 && bQty > 1) totalWh = bAh * bQty * 12; // parallel
+
+            let usableWh = totalWh * dod;
+            
+            // Real Backup using Modified Peukert
+            let backupHrs = 0;
+            if (ipsLoad > 0) {
+                let loadAmp = ipsLoad / bVolt;
+                let actualCapacity = bAh / Math.pow((loadAmp / (bAh/20)), peukert - 1); // Capacity derating based on C20 rate
+                backupHrs = (actualCapacity * dod * bVolt * invEff) / ipsLoad;
+            }
+
+            document.getElementById('resBatWh').innerText = totalWh.toFixed(0) + ' Wh';
+            document.getElementById('resBatUsable').innerText = usableWh.toFixed(0) + ' Wh';
+            let hrs = Math.floor(backupHrs);
+            let mins = Math.round((backupHrs - hrs) * 60);
+            document.getElementById('resBatTime').innerText = `${hrs} ঘণ্টা ${mins} মিনিট`;
+            
+            let chargeCurrent = bType === 'lifepo4' ? (bAh * 0.3) : (bAh * 0.1); // 0.3C for Li, 0.1C for LA
+            document.getElementById('resBatChargeTime').innerText = (bAh / chargeCurrent * 1.1).toFixed(1) + ' ঘণ্টা (@ '+chargeCurrent+'A)';
+            
+            // Cable size (DC)
+            let maxBatAmp = totW / bVolt;
+            let cable = "16 mm²";
+            if(maxBatAmp > 100) cable = "35 mm² (2 AWG)";
+            if(maxBatAmp > 150) cable = "50 mm² (1/0 AWG)";
+            document.getElementById('resBatCable').innerText = cable;
+
+            // 3. Solar Calc
+            let pWStr = document.getElementById('solarPanelW').value;
+            let pW = pWStr === 'custom' ? 100 : parseFloat(pWStr); // simplified
+            let pQty = parseFloat(document.getElementById('solarCount').value) || 1;
+            let sun = parseFloat(document.getElementById('solarSun').value) || 4.5;
+            let ctrl = document.getElementById('solarController').value;
+            let ctrlEff = ctrl === 'mppt' ? 0.98 : 0.75;
+            let sLoss = parseFloat(document.getElementById('solarLoss').value)/100 || 0.15;
+
+            let systemKwp = (pW * pQty) / 1000;
+            let dailyGen = systemKwp * sun * ctrlEff * (1 - sLoss);
+            
+            document.getElementById('resSolarKwp').innerText = systemKwp.toFixed(2) + ' kWp';
+            document.getElementById('resSolarDaily').innerText = dailyGen.toFixed(2) + ' kWh';
+            document.getElementById('resSolarMonthly').innerText = (dailyGen * 30).toFixed(1) + ' kWh';
+            document.getElementById('resSolarYearly').innerText = (dailyGen * 365).toFixed(0) + ' kWh';
+            document.getElementById('resSolarInv').innerText = (systemKwp * 1.2).toFixed(1) + ' kVA';
+
+            // Health Bars
+            let solCov = State.totals.dailyKWh > 0 ? (dailyGen / State.totals.dailyKWh)*100 : 0;
+            document.getElementById('healthSolar').innerText = Math.min(solCov, 100).toFixed(0) + '%';
+            document.getElementById('healthSolarBar').style.width = Math.min(solCov, 100) + '%';
+
+            let batCov = State.totals.dailyKWh > 0 ? ((usableWh/1000) / State.totals.dailyKWh)*100 : 0;
+            document.getElementById('healthBat').innerText = Math.min(batCov, 100).toFixed(0) + '%';
+            document.getElementById('healthBatBar').style.width = Math.min(batCov, 100) + '%';
+
+            // Eco Calc
+            let co2Saved = dailyGen * 365 * 0.7; // Approx 0.7kg CO2 per kWh grid mix
+            document.getElementById('dashCO2').innerText = co2Saved.toFixed(0) + ' kg';
+            document.getElementById('dashTrees').innerText = (co2Saved / 21).toFixed(1) + ' টি গাছ 🌳'; // 1 tree ~ 21kg CO2/yr
+            document.getElementById('dashCoal').innerText = (dailyGen * 365 * 0.4).toFixed(0) + ' kg';
+
+            // 4. Bill Calc
+            let autoUnits = parseFloat(document.getElementById('billUnits').value);
+            if(autoUnits === 0 && State.totals.monthlyKWh > 0) {
+                // Initial fill if user hasn't typed
+                document.getElementById('billUnits').value = State.totals.monthlyKWh.toFixed(0);
+                autoUnits = State.totals.monthlyKWh;
+            }
+            let bKw = parseFloat(document.getElementById('billKw').value) || 2;
+            let dRate = parseFloat(document.getElementById('billDemandRate').value) || 42;
+            let mRent = parseFloat(document.getElementById('billMeter').value) || 40;
+            let vatPct = parseFloat(document.getElementById('billVat').value)/100 || 0.05;
+
+            let remaining = autoUnits;
+            let energyCharge = 0;
+            let slabHtml = '';
+            
+            State.slabs.forEach((s, i) => {
+                if (remaining <= 0) return;
+                let prevLimit = i === 0 ? 0 : State.slabs[i-1].limit;
+                let slabSize = s.limit - prevLimit;
+                let unitsInSlab = Math.min(remaining, slabSize);
+                
+                let cost = unitsInSlab * s.rate;
+                energyCharge += cost;
+                remaining -= unitsInSlab;
+                
+                slabHtml += `<div style="display:flex; justify-content:space-between; padding:2px 0;"><span>Slab ${i+1} (${s.rate}৳): ${unitsInSlab.toFixed(0)} u</span><span>৳ ${cost.toFixed(2)}</span></div>`;
+            });
+
+            let fixed = (bKw * dRate) + mRent;
+            let vatAmt = (energyCharge + fixed) * vatPct;
+            let grandTot = energyCharge + fixed + vatAmt;
+
+            document.getElementById('slabBreakdown').innerHTML = slabHtml;
+            document.getElementById('resBillEnergy').innerText = '৳ ' + energyCharge.toFixed(2);
+            document.getElementById('resBillFixed').innerText = '৳ ' + fixed.toFixed(2);
+            document.getElementById('resBillVatAmt').innerText = '৳ ' + vatAmt.toFixed(2);
+            document.getElementById('resBillTotal').innerText = '৳ ' + grandTot.toFixed(0);
+            
+            document.getElementById('dashMonthlyBill').innerText = '৳ ' + grandTot.toFixed(0);
+            document.getElementById('dashAvgRate').innerText = autoUnits > 0 ? (grandTot/autoUnits).toFixed(2) : '0.00';
+
+            // 5. Engineering Calc
+            let eLoad = parseFloat(document.getElementById('engLoad').value) || 2000;
+            let eAmp = eLoad / 220;
+            document.getElementById('engAmp').innerText = eAmp.toFixed(1) + ' A';
+            let m2 = eAmp * 1.25;
+            document.getElementById('engMcb').innerText = ([6,10,16,20,25,32,40,63].find(a=>a>=m2)||63) + 'A';
+            let wSize = eAmp < 10 ? '1.5 mm²' : eAmp < 16 ? '2.5 mm²' : eAmp < 25 ? '4.0 mm²' : '6.0 mm²';
+            document.getElementById('engWire').innerText = wSize;
+
+            let vVolt = parseFloat(document.getElementById('vdVolt').value) || 24;
+            let vAmp = parseFloat(document.getElementById('vdAmp').value) || 20;
+            let vLen = parseFloat(document.getElementById('vdLen').value) || 10;
+            let vMm = parseFloat(document.getElementById('vdMm').value) || 6;
+            // Copper resistivity ~ 0.0175 ohm mm²/m. Vdrop = (2 * L * I * p) / A
+            let vDrop = (2 * vLen * vAmp * 0.0175) / vMm;
+            let vDropPct = (vDrop / vVolt) * 100;
+            document.getElementById('vdDrop').innerText = vDrop.toFixed(2) + ' V';
+            let pctEl = document.getElementById('vdPct');
+            pctEl.innerText = vDropPct.toFixed(1) + '%';
+            pctEl.style.color = vDropPct > 3 ? 'var(--danger)' : 'var(--accent)';
+        }
+
+        function triggerCalc() {
+            calculateAll();
+        }
+
+        // ================= EVENT LISTENERS (LIVE UPDATE LOGIC) =================
+        // Attach a single global input listener for instant updates as you type
+        document.addEventListener('input', (e) => {
+            // Handle dynamic load inputs
+            if (e.target.classList.contains('custom-input')) {
+                let id = e.target.getAttribute('data-id');
+                let field = e.target.getAttribute('data-field');
+                let val = parseFloat(e.target.value) || 0;
+                let item = State.loads.find(l => l.id === id);
+                if(item) item[field] = val;
+            }
+            triggerCalc();
+        });
+
+        // For select dropdowns
+        document.addEventListener('change', (e) => {
+            if (e.target.tagName === 'SELECT') triggerCalc();
+        });
+
+        // ================= INIT =================
+        window.onload = () => {
+            // Check Theme
+            const savedTheme = localStorage.getItem('poweros_theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            document.getElementById('themeIcon').className = savedTheme === 'dark' ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+            
+            renderLoads();
+            triggerCalc();
+        };
+    </script>
+</body>
+</html>
