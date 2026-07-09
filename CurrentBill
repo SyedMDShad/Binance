@@ -1,0 +1,1257 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🏠 বাসার ইলেকট্রিক লোড ক্যালকুলেটর</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Segoe UI',Tahoma,sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh;}
+.container{max-width:800px;margin:0 auto;padding:10px;}
+h1{text-align:center;padding:15px;background:linear-gradient(135deg,#1e40af,#7c3aed);border-radius:15px;margin-bottom:15px;font-size:1.3em;color:#fff;text-shadow:1px 1px 3px rgba(0,0,0,.5);}
+.section{background:#1e293b;border-radius:12px;padding:15px;margin-bottom:12px;border:1px solid #334155;}
+.section-title{font-size:1.1em;font-weight:bold;color:#60a5fa;margin-bottom:10px;display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none;}
+.section-title .toggle-icon{transition:transform .3s;}
+.section-title .toggle-icon.collapsed{transform:rotate(-90deg);}
+.section-content{overflow:hidden;transition:max-height .3s ease;}
+.item-row{background:#0f172a;border-radius:8px;padding:10px;margin-bottom:8px;border:1px solid #334155;}
+.item-header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:5px;}
+.item-name{color:#fbbf24;font-weight:bold;font-size:.95em;}
+.item-watts{color:#34d399;font-size:.85em;}
+.input-group{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px;}
+.input-group label{font-size:.8em;color:#94a3b8;}
+.input-group input,.input-group select{background:#1e293b;border:1px solid #475569;color:#e2e8f0;border-radius:6px;padding:6px 8px;width:70px;font-size:.85em;text-align:center;}
+.input-group input:focus,.input-group select:focus{outline:none;border-color:#60a5fa;box-shadow:0 0 5px rgba(96,165,250,.3);}
+.item-result{text-align:right;color:#fb923c;font-weight:bold;font-size:.9em;margin-top:5px;}
+.btn{padding:8px 16px;border:none;border-radius:8px;cursor:pointer;font-size:.85em;font-weight:bold;transition:all .2s;}
+.btn-add{background:#22c55e;color:#fff;}
+.btn-add:hover{background:#16a34a;}
+.btn-remove{background:#ef4444;color:#fff;padding:5px 10px;font-size:.75em;}
+.btn-remove:hover{background:#dc2626;}
+.btn-print{background:linear-gradient(135deg,#2563eb,#7c3aed);color:#fff;width:100%;padding:12px;font-size:1em;margin-top:10px;}
+.btn-print:hover{opacity:.9;}
+.btn-reset{background:#64748b;color:#fff;width:100%;padding:10px;font-size:.9em;margin-top:5px;}
+.summary-box{background:linear-gradient(135deg,#1e3a5f,#1e293b);border:2px solid #3b82f6;border-radius:12px;padding:15px;margin-top:15px;}
+.summary-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #334155;font-size:.9em;}
+.summary-row:last-child{border-bottom:none;}
+.summary-row.total{font-size:1.1em;color:#fbbf24;font-weight:bold;border-top:2px solid #fbbf24;margin-top:5px;padding-top:10px;}
+.summary-row.grand-total{font-size:1.2em;color:#22c55e;font-weight:bold;border-top:2px solid #22c55e;margin-top:5px;padding-top:10px;}
+.custom-section{border:2px dashed #475569;border-radius:12px;padding:15px;margin-bottom:12px;}
+.custom-input-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;}
+.custom-input-row input,.custom-input-row select{flex:1;min-width:60px;background:#1e293b;border:1px solid #475569;color:#e2e8f0;border-radius:6px;padding:8px;font-size:.85em;}
+.slab-row{display:flex;gap:5px;align-items:center;margin-bottom:5px;flex-wrap:wrap;}
+.slab-row input{background:#1e293b;border:1px solid #475569;color:#e2e8f0;border-radius:6px;padding:6px;width:80px;font-size:.85em;text-align:center;}
+.slab-row span{font-size:.8em;color:#94a3b8;white-space:nowrap;}
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:.7em;font-weight:bold;}
+.badge-fan{background:#3b82f6;color:#fff;}
+.badge-light{background:#eab308;color:#000;}
+.badge-ac{background:#06b6d4;color:#fff;}
+.badge-fridge{background:#8b5cf6;color:#fff;}
+.badge-other{background:#64748b;color:#fff;}
+.ips-box{background:#1a1a2e;border:1px solid #7c3aed;border-radius:10px;padding:12px;margin-top:8px;}
+.solar-box{background:#1a2e1a;border:1px solid #22c55e;border-radius:10px;padding:12px;margin-top:8px;}
+.tab-bar{display:flex;gap:5px;overflow-x:auto;padding-bottom:8px;margin-bottom:10px;}
+.tab-btn{padding:8px 14px;border:1px solid #475569;background:#1e293b;color:#94a3b8;border-radius:20px;font-size:.8em;cursor:pointer;white-space:nowrap;transition:all .2s;}
+.tab-btn.active{background:#3b82f6;color:#fff;border-color:#3b82f6;}
+.hidden{display:none;}
+.preset-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:5px;margin-bottom:10px;}
+.preset-btn{padding:6px;background:#0f172a;border:1px solid #475569;color:#e2e8f0;border-radius:6px;font-size:.75em;cursor:pointer;text-align:center;transition:all .2s;}
+.preset-btn:hover{border-color:#60a5fa;background:#1e293b;}
+.info-text{font-size:.75em;color:#64748b;margin-top:3px;}
+.highlight{animation:glow 1s ease-in-out;}
+@keyframes glow{0%,100%{box-shadow:none;}50%{box-shadow:0 0 15px rgba(59,130,246,.5);}}
+.collapsible{overflow:hidden;transition:max-height .4s ease-out;max-height:2000px;}
+.collapsible.collapsed{max-height:0;}
+.category-total{background:#334155;border-radius:8px;padding:8px 12px;margin-top:8px;display:flex;justify-content:space-between;font-size:.85em;color:#fbbf24;}
+
+@media print{
+body{background:#fff!important;color:#000!important;font-size:12px;}
+.container{max-width:100%;}
+.section{background:#fff!important;border:1px solid #ccc!important;break-inside:avoid;}
+.section-title{color:#1e40af!important;}
+.item-row{background:#f8f8f8!important;border:1px solid #ddd!important;}
+.item-name{color:#b45309!important;}
+.item-watts{color:#047857!important;}
+.item-result{color:#c2410c!important;}
+.input-group input,.input-group select{background:#fff!important;border:1px solid #999!important;color:#000!important;}
+.summary-box{background:#f0f7ff!important;border:2px solid #2563eb!important;}
+.summary-row{color:#000!important;}
+.summary-row.total{color:#b45309!important;}
+.summary-row.grand-total{color:#047857!important;}
+h1{background:#2563eb!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+.btn-print,.btn-reset,.btn-add,.btn-remove,.tab-bar,.preset-grid,.no-print{display:none!important;}
+.custom-input-row{display:none!important;}
+.collapsible{max-height:none!important;}
+.category-total{background:#eee!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+.slab-row input{background:#fff!important;border:1px solid #999!important;color:#000!important;}
+}
+</style>
+</head>
+<body>
+<div class="container" id="mainContainer">
+
+<h1>🏠 বাসার ইলেকট্রিক লোড ক্যালকুলেটর</h1>
+
+<!-- TAB BAR -->
+<div class="tab-bar no-print">
+<button class="tab-btn active" onclick="showTab('load')">⚡ লোড হিসাব</button>
+<button class="tab-btn" onclick="showTab('ips')">🔋 IPS/ব্যাটারি</button>
+<button class="tab-btn" onclick="showTab('solar')">☀️ সোলার</button>
+<button class="tab-btn" onclick="showTab('bill')">💰 বিল হিসাব</button>
+<button class="tab-btn" onclick="showTab('summary')">📊 সামারি</button>
+</div>
+
+<!-- ==================== LOAD TAB ==================== -->
+<div id="tab-load">
+
+<!-- FAN SECTION -->
+<div class="section" id="fanSection">
+<div class="section-title" onclick="toggleSection('fanContent')">
+<span class="toggle-icon" id="fanContentIcon">▼</span>
+🌀 ফ্যান (Fan)
+</div>
+<div class="collapsible" id="fanContent">
+<div class="preset-grid no-print">
+<button class="preset-btn" onclick="addItem('fan','সিলিং ফ্যান 35W',35)">সিলিং 35W</button>
+<button class="preset-btn" onclick="addItem('fan','সিলিং ফ্যান 50W',50)">সিলিং 50W</button>
+<button class="preset-btn" onclick="addItem('fan','সিলিং ফ্যান 75W',75)">সিলিং 75W</button>
+<button class="preset-btn" onclick="addItem('fan','সিলিং ফ্যান 100W',100)">সিলিং 100W</button>
+<button class="preset-btn" onclick="addItem('fan','টেবিল ফ্যান 40W',40)">টেবিল 40W</button>
+<button class="preset-btn" onclick="addItem('fan','এক্সহস্ট ফ্যান 30W',30)">এক্সহস্ট 30W</button>
+<button class="preset-btn" onclick="addItem('fan','স্ট্যান্ড ফ্যান 55W',55)">স্ট্যান্ড 55W</button>
+</div>
+<div id="fanItems"></div>
+<div class="category-total">
+<span>ফ্যান মোট:</span>
+<span id="fanTotalW">0W | 0 kWh/দিন</span>
+</div>
+</div>
+</div>
+
+<!-- LIGHT SECTION -->
+<div class="section" id="lightSection">
+<div class="section-title" onclick="toggleSection('lightContent')">
+<span class="toggle-icon" id="lightContentIcon">▼</span>
+💡 লাইট (Light)
+</div>
+<div class="collapsible" id="lightContent">
+<div class="preset-grid no-print">
+<button class="preset-btn" onclick="addItem('light','LED বাল্ব 5W',5)">LED 5W</button>
+<button class="preset-btn" onclick="addItem('light','LED বাল্ব 7W',7)">LED 7W</button>
+<button class="preset-btn" onclick="addItem('light','LED বাল্ব 9W',9)">LED 9W</button>
+<button class="preset-btn" onclick="addItem('light','LED বাল্ব 12W',12)">LED 12W</button>
+<button class="preset-btn" onclick="addItem('light','LED বাল্ব 15W',15)">LED 15W</button>
+<button class="preset-btn" onclick="addItem('light','LED বাল্ব 18W',18)">LED 18W</button>
+<button class="preset-btn" onclick="addItem('light','LED টিউব 20W',20)">LED টিউব 20W</button>
+<button class="preset-btn" onclick="addItem('light','এনার্জি 20W',20)">এনার্জি 20W</button>
+<button class="preset-btn" onclick="addItem('light','এনার্জি 25W',25)">এনার্জি 25W</button>
+<button class="preset-btn" onclick="addItem('light','নাইট ল্যাম্প 1W',1)">নাইট ল্যাম্প 1W</button>
+</div>
+<div id="lightItems"></div>
+<div class="category-total">
+<span>লাইট মোট:</span>
+<span id="lightTotalW">0W | 0 kWh/দিন</span>
+</div>
+</div>
+</div>
+
+<!-- AC SECTION -->
+<div class="section" id="acSection">
+<div class="section-title" onclick="toggleSection('acContent')">
+<span class="toggle-icon" id="acContentIcon">▼</span>
+❄️ এসি (AC)
+</div>
+<div class="collapsible" id="acContent">
+<div class="preset-grid no-print">
+<button class="preset-btn" onclick="addItem('ac','1 টন Non-Inverter',1400)">1 টন 1400W</button>
+<button class="preset-btn" onclick="addItem('ac','1.5 টন Non-Inverter',1800)">1.5 টন 1800W</button>
+<button class="preset-btn" onclick="addItem('ac','2 টন Non-Inverter',2400)">2 টন 2400W</button>
+<button class="preset-btn" onclick="addItem('ac','1 টন Inverter',800)">1T Inv 800W</button>
+<button class="preset-btn" onclick="addItem('ac','1.5 টন Inverter',1100)">1.5T Inv 1100W</button>
+<button class="preset-btn" onclick="addItem('ac','2 টন Inverter',1500)">2T Inv 1500W</button>
+</div>
+<div id="acItems"></div>
+<div class="category-total">
+<span>এসি মোট:</span>
+<span id="acTotalW">0W | 0 kWh/দিন</span>
+</div>
+</div>
+</div>
+
+<!-- FRIDGE SECTION -->
+<div class="section" id="fridgeSection">
+<div class="section-title" onclick="toggleSection('fridgeContent')">
+<span class="toggle-icon" id="fridgeContentIcon">▼</span>
+🧊 ফ্রিজ (Refrigerator)
+</div>
+<div class="collapsible" id="fridgeContent">
+<div class="preset-grid no-print">
+<button class="preset-btn" onclick="addItem('fridge','ছোট ফ্রিজ 80W',80)">ছোট 80W</button>
+<button class="preset-btn" onclick="addItem('fridge','মিডিয়াম ফ্রিজ 120W',120)">মিডিয়াম 120W</button>
+<button class="preset-btn" onclick="addItem('fridge','বড় ফ্রিজ 180W',180)">বড় 180W</button>
+<button class="preset-btn" onclick="addItem('fridge','ডিপ ফ্রিজ 250W',250)">ডিপ ফ্রিজ 250W</button>
+<button class="preset-btn" onclick="addItem('fridge','Inverter ফ্রিজ 60W',60)">Inverter 60W</button>
+</div>
+<div id="fridgeItems"></div>
+<div class="category-total">
+<span>ফ্রিজ মোট:</span>
+<span id="fridgeTotalW">0W | 0 kWh/দিন</span>
+</div>
+</div>
+</div>
+
+<!-- TV & ENTERTAINMENT -->
+<div class="section" id="tvSection">
+<div class="section-title" onclick="toggleSection('tvContent')">
+<span class="toggle-icon" id="tvContentIcon">▼</span>
+📺 টিভি ও বিনোদন
+</div>
+<div class="collapsible" id="tvContent">
+<div class="preset-grid no-print">
+<button class="preset-btn" onclick="addItem('tv','LED TV 32\" 40W',40)">LED 32\" 40W</button>
+<button class="preset-btn" onclick="addItem('tv','LED TV 43\" 60W',60)">LED 43\" 60W</button>
+<button class="preset-btn" onclick="addItem('tv','LED TV 55\" 80W',80)">LED 55\" 80W</button>
+<button class="preset-btn" onclick="addItem('tv','ডিশ রিসিভার 20W',20)">রিসিভার 20W</button>
+<button class="preset-btn" onclick="addItem('tv','সাউন্ডবার 50W',50)">সাউন্ডবার 50W</button>
+<button class="preset-btn" onclick="addItem('tv','গেমিং কনসোল 150W',150)">গেমিং 150W</button>
+</div>
+<div id="tvItems"></div>
+<div class="category-total">
+<span>টিভি মোট:</span>
+<span id="tvTotalW">0W | 0 kWh/দিন</span>
+</div>
+</div>
+</div>
+
+<!-- COMPUTER -->
+<div class="section" id="computerSection">
+<div class="section-title" onclick="toggleSection('computerContent')">
+<span class="toggle-icon" id="computerContentIcon">▼</span>
+💻 কম্পিউটার ও নেটওয়ার্ক
+</div>
+<div class="collapsible" id="computerContent">
+<div class="preset-grid no-print">
+<button class="preset-btn" onclick="addItem('computer','ডেস্কটপ PC 250W',250)">ডেস্কটপ 250W</button>
+<button class="preset-btn" onclick="addItem('computer','ল্যাপটপ 65W',65)">ল্যাপটপ 65W</button>
+<button class="preset-btn" onclick="addItem('computer','মনিটর 30W',30)">মনিটর 30W</button>
+<button class="preset-btn" onclick="addItem('computer','WiFi রাউটার 12W',12)">রাউটার 12W</button>
+<button class="preset-btn" onclick="addItem('computer','প্রিন্টার 50W',50)">প্রিন্টার 50W</button>
+<button class="preset-btn" onclick="addItem('computer','মোবাইল চার্জ 10W',10)">মোবাইল 10W</button>
+</div>
+<div id="computerItems"></div>
+<div class="category-total">
+<span>কম্পিউটার মোট:</span>
+<span id="computerTotalW">0W | 0 kWh/দিন</span>
+</div>
+</div>
+</div>
+
+<!-- KITCHEN -->
+<div class="section" id="kitchenSection">
+<div class="section-title" onclick="toggleSection('kitchenContent')">
+<span class="toggle-icon" id="kitchenContentIcon">▼</span>
+🍳 রান্নাঘর (Kitchen)
+</div>
+<div class="collapsible" id="kitchenContent">
+<div class="preset-grid no-print">
+<button class="preset-btn" onclick="addItem('kitchen','রাইস কুকার 700W',700)">রাইস কুকার 700W</button>
+<button class="preset-btn" onclick="addItem('kitchen','ইলেকট্রিক কেটলি 1500W',1500)">কেটলি 1500W</button>
+<button class="preset-btn" onclick="addItem('kitchen','মাইক্রোওয়েভ 800W',800)">মাইক্রোওয়েভ 800W</button>
+<button class="preset-btn" onclick="addItem('kitchen','ব্লেন্ডার 350W',350)">ব্লেন্ডার 350W</button>
+<button class="preset-btn" onclick="addItem('kitchen','ওভেন 1200W',1200)">ওভেন 1200W</button>
+<button class="preset-btn" onclick="addItem('kitchen','টোস্টার 800W',800)">টোস্টার 800W</button>
+<button class="preset-btn" onclick="addItem('kitchen','ওয়াটার পিউরিফায়ার 60W',60)">পিউরিফায়ার 60W</button>
+<button class="preset-btn" onclick="addItem('kitchen','ইন্ডাকশন কুকার 2000W',2000)">ইন্ডাকশন 2000W</button>
+</div>
+<div id="kitchenItems"></div>
+<div class="category-total">
+<span>রান্নাঘর মোট:</span>
+<span id="kitchenTotalW">0W | 0 kWh/দিন</span>
+</div>
+</div>
+</div>
+
+<!-- WASHING & CLEANING -->
+<div class="section" id="washSection">
+<div class="section-title" onclick="toggleSection('washContent')">
+<span class="toggle-icon" id="washContentIcon">▼</span>
+🧺 ওয়াশিং ও ক্লিনিং
+</div>
+<div class="collapsible" id="washContent">
+<div class="preset-grid no-print">
+<button class="preset-btn" onclick="addItem('wash','ওয়াশিং মেশিন 500W',500)">ওয়াশিং 500W</button>
+<button class="preset-btn" onclick="addItem('wash','ভ্যাকুয়াম ক্লিনার 1000W',1000)">ভ্যাকুয়াম 1000W</button>
+<button class="preset-btn" onclick="addItem('wash','আয়রন 1000W',1000)">আয়রন 1000W</button>
+<button class="preset-btn" onclick="addItem('wash','হেয়ার ড্রায়ার 1200W',1200)">ড্রায়ার 1200W</button>
+</div>
+<div id="washItems"></div>
+<div class="category-total">
+<span>ওয়াশিং মোট:</span>
+<span id="washTotalW">0W | 0 kWh/দিন</span>
+</div>
+</div>
+</div>
+
+<!-- PUMP & MOTOR -->
+<div class="section" id="pumpSection">
+<div class="section-title" onclick="toggleSection('pumpContent')">
+<span class="toggle-icon" id="pumpContentIcon">▼</span>
+💧 পাম্প ও মোটর
+</div>
+<div class="collapsible" id="pumpContent">
+<div class="preset-grid no-print">
+<button class="preset-btn" onclick="addItem('pump','0.5 HP পাম্প 370W',370)">0.5HP 370W</button>
+<button class="preset-btn" onclick="addItem('pump','1 HP পাম্প 750W',750)">1HP 750W</button>
+<button class="preset-btn" onclick="addItem('pump','1.5 HP পাম্প 1100W',1100)">1.5HP 1100W</button>
+<button class="preset-btn" onclick="addItem('pump','বুস্টার পাম্প 200W',200)">বুস্টার 200W</button>
+</div>
+<div id="pumpItems"></div>
+<div class="category-total">
+<span>পাম্প মোট:</span>
+<span id="pumpTotalW">0W | 0 kWh/দিন</span>
+</div>
+</div>
+</div>
+
+<!-- HEATER/GEYSER -->
+<div class="section" id="heaterSection">
+<div class="section-title" onclick="toggleSection('heaterContent')">
+<span class="toggle-icon" id="heaterContentIcon">▼</span>
+🔥 হিটার ও গিজার
+</div>
+<div class="collapsible" id="heaterContent">
+<div class="preset-grid no-print">
+<button class="preset-btn" onclick="addItem('heater','ইলেকট্রিক গিজার 1500W',1500)">গিজার 1500W</button>
+<button class="preset-btn" onclick="addItem('heater','ইন্সট্যান্ট গিজার 3000W',3000)">ইন্সট্যান্ট 3000W</button>
+<button class="preset-btn" onclick="addItem('heater','রুম হিটার 1000W',1000)">হিটার 1000W</button>
+<button class="preset-btn" onclick="addItem('heater','রুম হিটার 2000W',2000)">হিটার 2000W</button>
+</div>
+<div id="heaterItems"></div>
+<div class="category-total">
+<span>হিটার মোট:</span>
+<span id="heaterTotalW">0W | 0 kWh/দিন</span>
+</div>
+</div>
+</div>
+
+<!-- SECURITY -->
+<div class="section" id="securitySection">
+<div class="section-title" onclick="toggleSection('securityContent')">
+<span class="toggle-icon" id="securityContentIcon">▼</span>
+🔒 সিকিউরিটি ও অন্যান্য
+</div>
+<div class="collapsible" id="securityContent">
+<div class="preset-grid no-print">
+<button class="preset-btn" onclick="addItem('security','CCTV ক্যামেরা 15W',15)">CCTV 15W</button>
+<button class="preset-btn" onclick="addItem('security','DVR/NVR 30W',30)">DVR 30W</button>
+<button class="preset-btn" onclick="addItem('security','ডোরবেল 5W',5)">ডোরবেল 5W</button>
+<button class="preset-btn" onclick="addItem('security','ইমার্জেন্সি লাইট 10W',10)">ইমার্জেন্সি 10W</button>
+<button class="preset-btn" onclick="addItem('security','মশা মারার বাতি 15W',15)">মশা বাতি 15W</button>
+</div>
+<div id="securityItems"></div>
+<div class="category-total">
+<span>সিকিউরিটি মোট:</span>
+<span id="securityTotalW">0W | 0 kWh/দিন</span>
+</div>
+</div>
+</div>
+
+<!-- CUSTOM SECTION -->
+<div class="section custom-section" id="customSection">
+<div class="section-title" onclick="toggleSection('customContent')">
+<span class="toggle-icon" id="customContentIcon">▼</span>
+➕ কাস্টম আইটেম যোগ করুন
+</div>
+<div class="collapsible" id="customContent">
+<div class="custom-input-row no-print">
+<input type="text" id="customName" placeholder="নাম লিখুন">
+<input type="number" id="customWatt" placeholder="ওয়াট" min="0">
+<select id="customCategory">
+<option value="fan">ফ্যান</option>
+<option value="light">লাইট</option>
+<option value="ac">এসি</option>
+<option value="fridge">ফ্রিজ</option>
+<option value="tv">টিভি</option>
+<option value="computer">কম্পিউটার</option>
+<option value="kitchen">রান্নাঘর</option>
+<option value="wash">ওয়াশিং</option>
+<option value="pump">পাম্প</option>
+<option value="heater">হিটার</option>
+<option value="security">সিকিউরিটি</option>
+<option value="custom" selected>অন্যান্য</option>
+</select>
+<button class="btn btn-add" onclick="addCustomItem()">যোগ ➕</button>
+</div>
+<div id="customItems"></div>
+<div class="category-total">
+<span>কাস্টম মোট:</span>
+<span id="customTotalW">0W | 0 kWh/দিন</span>
+</div>
+</div>
+</div>
+
+</div>
+
+<!-- ==================== IPS/BATTERY TAB ==================== -->
+<div id="tab-ips" class="hidden">
+<div class="section">
+<div class="section-title">🔋 IPS/UPS ব্যাটারি চার্জিং ক্যালকুলেটর</div>
+
+<div class="ips-box">
+<h3 style="color:#a78bfa;margin-bottom:10px;">ব্যাটারি সেটআপ</h3>
+<div class="input-group" style="flex-wrap:wrap;gap:10px;">
+<div>
+<label>ব্যাটারি ক্যাপাসিটি (Ah):</label>
+<select id="batteryAh" onchange="calcIPS()" style="width:100px;">
+<option value="60">60 Ah</option>
+<option value="80">80 Ah</option>
+<option value="100" selected>100 Ah</option>
+<option value="130">130 Ah</option>
+<option value="150">150 Ah</option>
+<option value="180">180 Ah</option>
+<option value="200">200 Ah</option>
+</select>
+</div>
+<div>
+<label>ব্যাটারি সংখ্যা:</label>
+<input type="number" id="batteryCount" value="1" min="1" max="20" onchange="calcIPS()" style="width:60px;">
+</div>
+<div>
+<label>ব্যাটারি ভোল্টেজ:</label>
+<select id="batteryVolt" onchange="calcIPS()" style="width:80px;">
+<option value="12" selected>12V</option>
+<option value="24">24V</option>
+<option value="48">48V</option>
+</select>
+</div>
+<div>
+<label>কানেকশন:</label>
+<select id="batteryConnection" onchange="calcIPS()" style="width:100px;">
+<option value="parallel">প্যারালেল</option>
+<option value="series">সিরিজ</option>
+</select>
+</div>
+<div>
+<label>চার্জিং কারেন্ট (A):</label>
+<select id="chargingAmp" onchange="calcIPS()" style="width:80px;">
+<option value="5">5A</option>
+<option value="10" selected>10A</option>
+<option value="15">15A</option>
+<option value="20">20A</option>
+<option value="25">25A</option>
+<option value="30">30A</option>
+</select>
+</div>
+<div>
+<label>IPS Efficiency:</label>
+<select id="ipsEfficiency" onchange="calcIPS()" style="width:80px;">
+<option value="0.7">70%</option>
+<option value="0.75">75%</option>
+<option value="0.8" selected>80%</option>
+<option value="0.85">85%</option>
+<option value="0.9">90%</option>
+</select>
+</div>
+<div>
+<label>DoD (Depth of Discharge):</label>
+<select id="ipsDOD" onchange="calcIPS()" style="width:80px;">
+<option value="0.5" selected>50%</option>
+<option value="0.6">60%</option>
+<option value="0.7">70%</option>
+<option value="0.8">80%</option>
+</select>
+</div>
+</div>
+</div>
+
+<div class="ips-box" style="margin-top:10px;">
+<h3 style="color:#a78bfa;margin-bottom:10px;">IPS লোড</h3>
+<p class="info-text">উপরে লোড ট্যাবে যোগ করা মোট লোড থেকে IPS এ কত লোড দিবেন:</p>
+<div class="input-group" style="margin-top:8px;">
+<label>IPS লোড (W):</label>
+<input type="number" id="ipsLoad" value="200" min="0" onchange="calcIPS()" style="width:100px;">
+<span class="info-text">বা মোট লোডের %:</span>
+<input type="number" id="ipsLoadPercent" value="" min="0" max="100" placeholder="%" onchange="calcIPSFromPercent()" style="width:60px;">
+</div>
+</div>
+
+<div id="ipsResult" style="margin-top:15px;"></div>
+</div>
+</div>
+
+<!-- ==================== SOLAR TAB ==================== -->
+<div id="tab-solar" class="hidden">
+<div class="section">
+<div class="section-title">☀️ সোলার প্যানেল ক্যালকুলেটর</div>
+
+<div class="solar-box">
+<h3 style="color:#4ade80;margin-bottom:10px;">সোলার সিস্টেম সেটআপ</h3>
+<div class="input-group" style="flex-wrap:wrap;gap:10px;">
+<div>
+<label>প্রতি প্যানেল ওয়াট:</label>
+<select id="solarPanelWatt" onchange="calcSolar()" style="width:100px;">
+<option value="100">100W</option>
+<option value="150">150W</option>
+<option value="200">200W</option>
+<option value="250">250W</option>
+<option value="300">300W</option>
+<option value="350">350W</option>
+<option value="400">400W</option>
+<option value="500">500W</option>
+<option value="550">550W</option>
+</select>
+</div>
+<div>
+<label>প্যানেল সংখ্যা:</label>
+<input type="number" id="solarPanelCount" value="1" min="1" max="50" onchange="calcSolar()" style="width:60px;">
+</div>
+<div>
+<label>পিক সানলাইট (ঘণ্টা/দিন):</label>
+<select id="solarPeakHours" onchange="calcSolar()" style="width:80px;">
+<option value="3">3 hrs</option>
+<option value="3.5">3.5 hrs</option>
+<option value="4" selected>4 hrs</option>
+<option value="4.5">4.5 hrs</option>
+<option value="5">5 hrs</option>
+<option value="5.5">5.5 hrs</option>
+<option value="6">6 hrs</option>
+</select>
+</div>
+<div>
+<label>সিস্টেম লস:</label>
+<select id="solarLoss" onchange="calcSolar()" style="width:80px;">
+<option value="0.15">15%</option>
+<option value="0.2" selected>20%</option>
+<option value="0.25">25%</option>
+<option value="0.3">30%</option>
+</select>
+</div>
+<div>
+<label>নেট মিটারিং:</label>
+<select id="netMetering" onchange="calcSolar()" style="width:80px;">
+<option value="no" selected>না</option>
+<option value="yes">হ্যাঁ</option>
+</select>
+</div>
+</div>
+</div>
+
+<div class="solar-box" style="margin-top:10px;">
+<h3 style="color:#4ade80;margin-bottom:10px;">সোলার ব্যাটারি (Optional)</h3>
+<div class="input-group" style="flex-wrap:wrap;gap:10px;">
+<div>
+<label>ব্যাটারি আছে?</label>
+<select id="solarBattery" onchange="calcSolar()" style="width:80px;">
+<option value="no" selected>না</option>
+<option value="yes">হ্যাঁ</option>
+</select>
+</div>
+<div>
+<label>ব্যাটারি Ah:</label>
+<input type="number" id="solarBatteryAh" value="100" min="0" onchange="calcSolar()" style="width:70px;">
+</div>
+<div>
+<label>ব্যাটারি সংখ্যা:</label>
+<input type="number" id="solarBatteryCount" value="1" min="1" onchange="calcSolar()" style="width:60px;">
+</div>
+</div>
+</div>
+
+<div class="solar-box" style="margin-top:10px;">
+<h3 style="color:#4ade80;margin-bottom:10px;">💰 সোলার ROI (Return on Investment)</h3>
+<div class="input-group" style="flex-wrap:wrap;gap:10px;">
+<div>
+<label>মোট ইনভেস্টমেন্ট (৳):</label>
+<input type="number" id="solarInvestment" value="50000" min="0" onchange="calcSolar()" style="width:100px;">
+</div>
+<div>
+<label>বর্তমান ইউনিট রেট (৳):</label>
+<input type="number" id="solarUnitRate" value="8" min="0" step="0.5" onchange="calcSolar()" style="width:70px;">
+</div>
+</div>
+</div>
+
+<div id="solarResult" style="margin-top:15px;"></div>
+</div>
+</div>
+
+<!-- ==================== BILL TAB ==================== -->
+<div id="tab-bill" class="hidden">
+<div class="section">
+<div class="section-title">💰 বিদ্যুৎ বিল ক্যালকুলেটর (Unit Slab System)</div>
+
+<div style="margin-bottom:15px;">
+<h3 style="color:#fbbf24;margin-bottom:8px;">📋 ইউনিট স্ল্যাব সেটআপ</h3>
+<p class="info-text">বাংলাদেশ বিদ্যুৎ বোর্ডের রেট অনুযায়ী (অথবা নিজে কাস্টমাইজ করুন):</p>
+
+<div id="slabContainer" style="margin-top:10px;">
+<!-- Slabs will be generated here -->
+</div>
+<button class="btn btn-add no-print" onclick="addSlab()" style="margin-top:8px;">+ স্ল্যাব যোগ</button>
+</div>
+
+<div style="margin-bottom:15px;">
+<h3 style="color:#fbbf24;margin-bottom:8px;">📊 অন্যান্য চার্জ</h3>
+<div class="input-group" style="flex-wrap:wrap;gap:10px;">
+<div>
+<label>ডিমান্ড চার্জ (৳/kW):</label>
+<input type="number" id="demandCharge" value="45" min="0" step="1" onchange="calcBill()" style="width:80px;">
+</div>
+<div>
+<label>সংযোগ লোড (kW):</label>
+<input type="number" id="connectedLoad" value="5" min="0" step="0.5" onchange="calcBill()" style="width:70px;">
+</div>
+<div>
+<label>মিটার ভাড়া (৳/মাস):</label>
+<input type="number" id="meterRent" value="40" min="0" onchange="calcBill()" style="width:70px;">
+</div>
+<div>
+<label>সার্ভিস চার্জ (৳):</label>
+<input type="number" id="serviceCharge" value="0" min="0" onchange="calcBill()" style="width:70px;">
+</div>
+</div>
+</div>
+
+<div style="margin-bottom:15px;">
+<h3 style="color:#fbbf24;margin-bottom:8px;">🏷️ ট্যাক্স ও ভ্যাট</h3>
+<div class="input-group" style="flex-wrap:wrap;gap:10px;">
+<div>
+<label>ভ্যাট (%):</label>
+<input type="number" id="vatPercent" value="5" min="0" step="0.5" onchange="calcBill()" style="width:60px;">
+</div>
+<div>
+<label>সারচার্জ (%):</label>
+<input type="number" id="surchargePercent" value="0" min="0" step="0.5" onchange="calcBill()" style="width:60px;">
+</div>
+<div>
+<label>ট্যাক্স/ডিউটি (%):</label>
+<input type="number" id="taxPercent" value="0" min="0" step="0.5" onchange="calcBill()" style="width:60px;">
+</div>
+<div>
+<label>রিবেট/ছাড় (৳):</label>
+<input type="number" id="rebateAmount" value="0" min="0" onchange="calcBill()" style="width:70px;">
+</div>
+</div>
+</div>
+
+<div style="margin-bottom:15px;">
+<h3 style="color:#fbbf24;margin-bottom:8px;">📅 বিলিং পিরিয়ড</h3>
+<div class="input-group" style="flex-wrap:wrap;gap:10px;">
+<div>
+<label>বিলিং দিন:</label>
+<input type="number" id="billingDays" value="30" min="1" max="60" onchange="calcBill()" style="width:60px;">
+</div>
+<div>
+<label>ম্যানুয়াল ইউনিট (খালি রাখলে অটো):</label>
+<input type="number" id="manualUnits" value="" min="0" placeholder="অটো" onchange="calcBill()" style="width:80px;">
+</div>
+</div>
+</div>
+
+<div id="billResult" style="margin-top:15px;"></div>
+</div>
+</div>
+
+<!-- ==================== SUMMARY TAB ==================== -->
+<div id="tab-summary" class="hidden">
+<div id="summaryContent"></div>
+</div>
+
+<!-- PRINT & ACTIONS -->
+<div style="margin-top:15px;">
+<button class="btn btn-print no-print" onclick="showTab('summary');setTimeout(()=>window.print(),300);">🖨️ প্রিন্ট / স্ক্রিনশট</button>
+<button class="btn btn-reset no-print" onclick="if(confirm('সব ডাটা মুছে ফেলবেন?')){localStorage.clear();location.reload();}">🗑️ সব রিসেট করুন</button>
+<button class="btn no-print" style="background:#0ea5e9;color:#fff;width:100%;padding:10px;margin-top:5px;font-size:.9em;" onclick="saveData()">💾 সেভ করুন</button>
+<button class="btn no-print" style="background:#f97316;color:#fff;width:100%;padding:10px;margin-top:5px;font-size:.9em;" onclick="loadData()">📂 লোড করুন</button>
+</div>
+
+<p style="text-align:center;margin-top:15px;font-size:.7em;color:#475569;">
+🏠 বাসার ইলেকট্রিক লোড ক্যালকুলেটর v2.0 | তৈরি: ২০২৫
+</p>
+
+</div>
+
+<script>
+// ==================== DATA STORE ====================
+let allItems = {};
+const categories = ['fan','light','ac','fridge','tv','computer','kitchen','wash','pump','heater','security','custom'];
+const catNames = {fan:'ফ্যান',light:'লাইট',ac:'এসি',fridge:'ফ্রিজ',tv:'টিভি',computer:'কম্পিউটার',kitchen:'রান্নাঘর',wash:'ওয়াশিং',pump:'পাম্প',heater:'হিটার',security:'সিকিউরিটি',custom:'কাস্টম'};
+const catIcons = {fan:'🌀',light:'💡',ac:'❄️',fridge:'🧊',tv:'📺',computer:'💻',kitchen:'🍳',wash:'🧺',pump:'💧',heater:'🔥',security:'🔒',custom:'➕'};
+let itemCounter = 0;
+
+categories.forEach(c => allItems[c] = []);
+
+// ==================== SLAB INIT ====================
+let slabs = [
+{from:0,to:75,rate:4.19},
+{from:76,to:200,rate:5.72},
+{from:201,to:300,rate:6.00},
+{from:301,to:400,rate:6.34},
+{from:401,to:500,rate:9.94},
+{from:501,to:600,rate:10.40},
+{from:601,to:99999,rate:12.57}
+];
+
+function initSlabs(){
+let c = document.getElementById('slabContainer');
+c.innerHTML = '';
+slabs.forEach((s,i) => {
+c.innerHTML += `
+<div class="slab-row" id="slab-${i}">
+<span>স্ল্যাব ${i+1}:</span>
+<input type="number" value="${s.from}" onchange="slabs[${i}].from=+this.value;calcBill();" placeholder="থেকে">
+<span>-</span>
+<input type="number" value="${s.to}" onchange="slabs[${i}].to=+this.value;calcBill();" placeholder="পর্যন্ত">
+<span>ইউনিট @</span>
+<input type="number" value="${s.rate}" step="0.01" onchange="slabs[${i}].rate=+this.value;calcBill();" placeholder="৳/unit">
+<span>৳</span>
+<button class="btn btn-remove no-print" onclick="slabs.splice(${i},1);initSlabs();calcBill();">✕</button>
+</div>`;
+});
+}
+
+function addSlab(){
+let last = slabs.length > 0 ? slabs[slabs.length-1].to + 1 : 0;
+slabs.push({from:last, to:last+100, rate:8.00});
+initSlabs();
+}
+
+// ==================== ITEM MANAGEMENT ====================
+function addItem(cat, name, watt){
+let id = 'item_' + (++itemCounter);
+allItems[cat].push({id, name, watt, qty:1, hours:8});
+renderItems(cat);
+recalcAll();
+}
+
+function addCustomItem(){
+let name = document.getElementById('customName').value.trim();
+let watt = parseInt(document.getElementById('customWatt').value) || 0;
+let cat = document.getElementById('customCategory').value;
+if(!name){alert('নাম লিখুন!');return;}
+if(watt <= 0){alert('ওয়াট দিন!');return;}
+addItem(cat, name, watt);
+document.getElementById('customName').value = '';
+document.getElementById('customWatt').value = '';
+}
+
+function removeItem(cat, id){
+allItems[cat] = allItems[cat].filter(i => i.id !== id);
+renderItems(cat);
+recalcAll();
+}
+
+function updateItem(cat, id, field, val){
+let item = allItems[cat].find(i => i.id === id);
+if(item){
+item[field] = field === 'name' ? val : parseFloat(val) || 0;
+}
+recalcAll();
+}
+
+function renderItems(cat){
+let container = document.getElementById(cat + 'Items');
+if(!container) return;
+let html = '';
+allItems[cat].forEach(item => {
+let daily = (item.watt * item.qty * item.hours) / 1000;
+let monthly = daily * 30;
+html += `
+<div class="item-row highlight" id="${item.id}">
+<div class="item-header">
+<span class="item-name">${item.name}</span>
+<span class="item-watts">${item.watt}W × ${item.qty} = ${item.watt * item.qty}W</span>
+<button class="btn btn-remove no-print" onclick="removeItem('${cat}','${item.id}')">✕ মুছুন</button>
+</div>
+<div class="input-group">
+<div>
+<label>সংখ্যা:</label>
+<input type="number" value="${item.qty}" min="1" max="100" onchange="updateItem('${cat}','${item.id}','qty',this.value)" style="width:55px;">
+</div>
+<div>
+<label>ওয়াট:</label>
+<input type="number" value="${item.watt}" min="0" onchange="updateItem('${cat}','${item.id}','watt',this.value)" style="width:65px;">
+</div>
+<div>
+<label>ঘণ্টা/দিন:</label>
+<input type="number" value="${item.hours}" min="0" max="24" step="0.5" onchange="updateItem('${cat}','${item.id}','hours',this.value)" style="width:60px;">
+</div>
+</div>
+<div class="item-result">
+দৈনিক: ${daily.toFixed(3)} kWh | মাসিক: ${monthly.toFixed(2)} kWh
+</div>
+</div>`;
+});
+container.innerHTML = html;
+}
+
+// ==================== CALCULATIONS ====================
+function getCatTotals(cat){
+let totalW = 0, dailyKWh = 0;
+allItems[cat].forEach(item => {
+totalW += item.watt * item.qty;
+dailyKWh += (item.watt * item.qty * item.hours) / 1000;
+});
+return {totalW, dailyKWh, monthlyKWh: dailyKWh * 30};
+}
+
+function getTotalAll(){
+let totalW = 0, dailyKWh = 0;
+categories.forEach(cat => {
+let t = getCatTotals(cat);
+totalW += t.totalW;
+dailyKWh += t.dailyKWh;
+});
+return {totalW, dailyKWh, monthlyKWh: dailyKWh * 30};
+}
+
+function recalcAll(){
+categories.forEach(cat => {
+let t = getCatTotals(cat);
+let el = document.getElementById(cat + 'TotalW');
+if(el) el.textContent = `${t.totalW}W | ${t.dailyKWh.toFixed(2)} kWh/দিন | ${t.monthlyKWh.toFixed(1)} kWh/মাস`;
+});
+calcIPS();
+calcSolar();
+calcBill();
+autoSave();
+}
+
+// ==================== IPS CALCULATOR ====================
+function calcIPSFromPercent(){
+let pct = parseFloat(document.getElementById('ipsLoadPercent').value) || 0;
+let total = getTotalAll();
+let load = Math.round(total.totalW * pct / 100);
+document.getElementById('ipsLoad').value = load;
+calcIPS();
+}
+
+function calcIPS(){
+let ah = parseInt(document.getElementById('batteryAh').value);
+let count = parseInt(document.getElementById('batteryCount').value) || 1;
+let volt = parseInt(document.getElementById('batteryVolt').value);
+let conn = document.getElementById('batteryConnection').value;
+let chargingAmp = parseInt(document.getElementById('chargingAmp').value);
+let eff = parseFloat(document.getElementById('ipsEfficiency').value);
+let dod = parseFloat(document.getElementById('ipsDOD').value);
+let load = parseInt(document.getElementById('ipsLoad').value) || 0;
+
+let totalAh, systemVolt;
+if(conn === 'parallel'){
+totalAh = ah * count;
+systemVolt = volt;
+} else {
+totalAh = ah;
+systemVolt = volt * count;
+}
+
+let totalWh = totalAh * systemVolt;
+let usableWh = totalWh * dod * eff;
+let backupHours = load > 0 ? usableWh / load : 0;
+let chargeTime = totalAh / chargingAmp * 1.2; // 20% overhead
+let chargingWatt = chargingAmp * systemVolt;
+let chargingKWh = (chargingWatt * chargeTime) / 1000;
+let monthlyChargingKWh = chargingKWh * (24 / (backupHours + chargeTime)) * 0.5 * 30; // rough estimate
+
+let html = `
+<div class="summary-box">
+<h3 style="color:#a78bfa;margin-bottom:10px;">🔋 IPS ফলাফল</h3>
+<div class="summary-row"><span>মোট ব্যাটারি ক্যাপাসিটি:</span><span>${totalAh} Ah (${systemVolt}V)</span></div>
+<div class="summary-row"><span>মোট এনার্জি:</span><span>${totalWh.toFixed(0)} Wh (${(totalWh/1000).toFixed(2)} kWh)</span></div>
+<div class="summary-row"><span>ব্যবহারযোগ্য এনার্জি (DoD ${dod*100}%, Eff ${eff*100}%):</span><span>${usableWh.toFixed(0)} Wh</span></div>
+<div class="summary-row"><span>IPS লোড:</span><span>${load}W</span></div>
+<div class="summary-row total"><span>⏱️ ব্যাকআপ টাইম:</span><span>${backupHours.toFixed(1)} ঘণ্টা (${(backupHours*60).toFixed(0)} মিনিট)</span></div>
+<div class="summary-row"><span>চার্জিং কারেন্ট:</span><span>${chargingAmp}A @ ${systemVolt}V = ${chargingWatt}W</span></div>
+<div class="summary-row"><span>ফুল চার্জ টাইম (আনুমানিক):</span><span>${chargeTime.toFixed(1)} ঘণ্টা</span></div>
+<div class="summary-row"><span>প্রতি চার্জে খরচ:</span><span>${chargingKWh.toFixed(2)} kWh</span></div>
+</div>
+
+<div class="summary-box" style="margin-top:10px;">
+<h3 style="color:#fbbf24;margin-bottom:10px;">📋 বিভিন্ন চার্জিং রেটে সময়</h3>
+${[5,10,15,20,25,30].map(a => {
+let t = (totalAh / a * 1.2);
+return `<div class="summary-row"><span>${a}A চার্জিং:</span><span>${t.toFixed(1)} ঘণ্টা</span></div>`;
+}).join('')}
+</div>
+
+<div class="summary-box" style="margin-top:10px;">
+<h3 style="color:#34d399;margin-bottom:10px;">📋 বিভিন্ন ব্যাটারিতে ব্যাকআপ (${load}W লোডে)</h3>
+${[60,80,100,130,150,180,200].map(a => {
+let wh = a * systemVolt * dod * eff;
+let h = load > 0 ? wh / load : 0;
+return `<div class="summary-row"><span>${a}Ah ব্যাটারি:</span><span>${h.toFixed(1)} ঘণ্টা</span></div>`;
+}).join('')}
+</div>`;
+
+document.getElementById('ipsResult').innerHTML = html;
+}
+
+// ==================== SOLAR CALCULATOR ====================
+function calcSolar(){
+let panelW = parseInt(document.getElementById('solarPanelWatt').value);
+let panelCount = parseInt(document.getElementById('solarPanelCount').value) || 1;
+let peakHours = parseFloat(document.getElementById('solarPeakHours').value);
+let loss = parseFloat(document.getElementById('solarLoss').value);
+let netMeter = document.getElementById('netMetering').value;
+let hasBattery = document.getElementById('solarBattery').value;
+let batAh = parseInt(document.getElementById('solarBatteryAh').value) || 0;
+let batCount = parseInt(document.getElementById('solarBatteryCount').value) || 1;
+let investment = parseInt(document.getElementById('solarInvestment').value) || 0;
+let unitRate = parseFloat(document.getElementById('solarUnitRate').value) || 8;
+
+let totalPanelW = panelW * panelCount;
+let dailyGen = totalPanelW * peakHours * (1 - loss) / 1000; // kWh
+let monthlyGen = dailyGen * 30;
+let yearlyGen = dailyGen * 365;
+
+let totalLoad = getTotalAll();
+let monthlyConsumption = totalLoad.monthlyKWh;
+let selfConsume = Math.min(monthlyGen, monthlyConsumption);
+let excess = Math.max(0, monthlyGen - monthlyConsumption);
+
+let monthlySaving = selfConsume * unitRate;
+if(netMeter === 'yes') monthlySaving += excess * unitRate * 0.65; // net metering offset rate
+let yearlySaving = monthlySaving * 12;
+let paybackYears = yearlySaving > 0 ? investment / yearlySaving : 0;
+
+let batStorageWh = hasBattery === 'yes' ? batAh * batCount * 12 * 0.5 * 0.8 : 0;
+
+let html = `
+<div class="summary-box" style="border-color:#22c55e;">
+<h3 style="color:#4ade80;margin-bottom:10px;">☀️ সোলার ফলাফল</h3>
+<div class="summary-row"><span>মোট প্যানেল ক্যাপাসিটি:</span><span>${totalPanelW}W (${(totalPanelW/1000).toFixed(2)} kW)</span></div>
+<div class="summary-row"><span>দৈনিক উৎপাদন:</span><span>${dailyGen.toFixed(2)} kWh</span></div>
+<div class="summary-row"><span>মাসিক উৎপাদন:</span><span>${monthlyGen.toFixed(1)} kWh</span></div>
+<div class="summary-row"><span>বার্ষিক উৎপাদন:</span><span>${yearlyGen.toFixed(0)} kWh</span></div>
+<div class="summary-row"><span>বাসার মাসিক খরচ:</span><span>${monthlyConsumption.toFixed(1)} kWh</span></div>
+<div class="summary-row"><span>সোলার দিয়ে কভার:</span><span>${monthlyConsumption > 0 ? ((selfConsume/monthlyConsumption)*100).toFixed(1) : 0}%</span></div>
+${netMeter === 'yes' ? `<div class="summary-row"><span>এক্সেস (নেট মিটার):</span><span>${excess.toFixed(1)} kWh/মাস</span></div>` : ''}
+${hasBattery === 'yes' ? `<div class="summary-row"><span>ব্যাটারি স্টোরেজ:</span><span>${(batStorageWh/1000).toFixed(2)} kWh</span></div>` : ''}
+<div class="summary-row total"><span>💰 মাসিক সেভিং:</span><span>৳${monthlySaving.toFixed(0)}</span></div>
+<div class="summary-row"><span>বার্ষিক সেভিং:</span><span>৳${yearlySaving.toFixed(0)}</span></div>
+${investment > 0 ? `<div class="summary-row grand-total"><span>🔄 পেব্যাক পিরিয়ড:</span><span>${paybackYears.toFixed(1)} বছর</span></div>` : ''}
+</div>
+
+<div class="summary-box" style="margin-top:10px;border-color:#22c55e;">
+<h3 style="color:#4ade80;margin-bottom:10px;">📋 বিভিন্ন প্যানেল কম্বিনেশন</h3>
+${[1,2,3,4,5,6,8,10].map(n => {
+let d = panelW * n * peakHours * (1-loss) / 1000;
+let m = d * 30;
+return `<div class="summary-row"><span>${n}× ${panelW}W (${panelW*n}W):</span><span>${d.toFixed(2)} kWh/দিন | ${m.toFixed(0)} kWh/মাস</span></div>`;
+}).join('')}
+</div>`;
+
+document.getElementById('solarResult').innerHTML = html;
+}
+
+// ==================== BILL CALCULATOR ====================
+function calcBill(){
+let total = getTotalAll();
+let billingDays = parseInt(document.getElementById('billingDays').value) || 30;
+let manualUnits = document.getElementById('manualUnits').value;
+let totalUnits;
+if(manualUnits && parseFloat(manualUnits) > 0){
+totalUnits = parseFloat(manualUnits);
+} else {
+totalUnits = total.dailyKWh * billingDays;
+}
+
+let demandCharge = parseFloat(document.getElementById('demandCharge').value) || 0;
+let connectedLoad = parseFloat(document.getElementById('connectedLoad').value) || 0;
+let meterRent = parseFloat(document.getElementById('meterRent').value) || 0;
+let serviceCharge = parseFloat(document.getElementById('serviceCharge').value) || 0;
+let vatPct = parseFloat(document.getElementById('vatPercent').value) || 0;
+let surchargePct = parseFloat(document.getElementById('surchargePercent').value) || 0;
+let taxPct = parseFloat(document.getElementById('taxPercent').value) || 0;
+let rebate = parseFloat(document.getElementById('rebateAmount').value) || 0;
+
+// Calculate slab-wise
+let remainingUnits = totalUnits;
+let energyCharge = 0;
+let slabDetails = [];
+
+for(let s of slabs){
+if(remainingUnits <= 0) break;
+let slabUnits = Math.min(remainingUnits, s.to - s.from + 1);
+if(s.from === 0) slabUnits = Math.min(remainingUnits, s.to + 1);
+let slabCost = slabUnits * s.rate;
+energyCharge += slabCost;
+slabDetails.push({from:s.from, to:s.to, units:slabUnits, rate:s.rate, cost:slabCost});
+remainingUnits -= slabUnits;
+}
+
+let demandTotal = demandCharge * connectedLoad;
+let subTotal = energyCharge + demandTotal + meterRent + serviceCharge;
+let vat = subTotal * vatPct / 100;
+let surcharge = subTotal * surchargePct / 100;
+let tax = subTotal * taxPct / 100;
+let grandTotal = subTotal + vat + surcharge + tax - rebate;
+let avgRate = totalUnits > 0 ? grandTotal / totalUnits : 0;
+
+let html = `
+<div class="summary-box" style="border-color:#fbbf24;">
+<h3 style="color:#fbbf24;margin-bottom:10px;">💰 বিদ্যুৎ বিল বিস্তারিত</h3>
+<div class="summary-row"><span>মোট ইউনিট:</span><span>${totalUnits.toFixed(2)} kWh (${billingDays} দিন)</span></div>
+<hr style="border-color:#334155;margin:8px 0;">
+<h4 style="color:#60a5fa;margin-bottom:5px;">📊 স্ল্যাব অনুযায়ী:</h4>
+${slabDetails.map((s,i) => `
+<div class="summary-row">
+<span>স্ল্যাব ${i+1} (${s.from}-${s.to}): ${s.units.toFixed(2)} ইউনিট × ৳${s.rate}</span>
+<span>৳${s.cost.toFixed(2)}</span>
+</div>`).join('')}
+<div class="summary-row" style="color:#fb923c;font-weight:bold;"><span>এনার্জি চার্জ:</span><span>৳${energyCharge.toFixed(2)}</span></div>
+<hr style="border-color:#334155;margin:8px 0;">
+<div class="summary-row"><span>ডিমান্ড চার্জ (${connectedLoad}kW × ৳${demandCharge}):</span><span>৳${demandTotal.toFixed(2)}</span></div>
+<div class="summary-row"><span>মিটার ভাড়া:</span><span>৳${meterRent.toFixed(2)}</span></div>
+${serviceCharge > 0 ? `<div class="summary-row"><span>সার্ভিস চার্জ:</span><span>৳${serviceCharge.toFixed(2)}</span></div>` : ''}
+<div class="summary-row" style="font-weight:bold;"><span>সাব-টোটাল:</span><span>৳${subTotal.toFixed(2)}</span></div>
+<hr style="border-color:#334155;margin:8px 0;">
+${vatPct > 0 ? `<div class="summary-row"><span>ভ্যাট (${vatPct}%):</span><span>৳${vat.toFixed(2)}</span></div>` : ''}
+${surchargePct > 0 ? `<div class="summary-row"><span>সারচার্জ (${surchargePct}%):</span><span>৳${surcharge.toFixed(2)}</span></div>` : ''}
+${taxPct > 0 ? `<div class="summary-row"><span>ট্যাক্স/ডিউটি (${taxPct}%):</span><span>৳${tax.toFixed(2)}</span></div>` : ''}
+${rebate > 0 ? `<div class="summary-row" style="color:#22c55e;"><span>রিবেট/ছাড়:</span><span>-৳${rebate.toFixed(2)}</span></div>` : ''}
+<div class="summary-row grand-total"><span>🧾 মোট বিল:</span><span>৳${grandTotal.toFixed(2)}</span></div>
+<div class="summary-row"><span>গড় রেট/ইউনিট:</span><span>৳${avgRate.toFixed(2)}/kWh</span></div>
+<div class="summary-row"><span>দৈনিক গড় খরচ:</span><span>৳${(grandTotal/billingDays).toFixed(2)}/দিন</span></div>
+</div>`;
+
+document.getElementById('billResult').innerHTML = html;
+return {totalUnits, energyCharge, demandTotal, meterRent, serviceCharge, vat, surcharge, tax, rebate, subTotal, grandTotal, avgRate, slabDetails, billingDays};
+}
+
+// ==================== SUMMARY ====================
+function buildSummary(){
+let total = getTotalAll();
+let billingDays = parseInt(document.getElementById('billingDays').value) || 30;
+let bill = calcBill();
+
+let now = new Date();
+let dateStr = now.toLocaleDateString('bn-BD', {year:'numeric',month:'long',day:'numeric'});
+let timeStr = now.toLocaleTimeString('bn-BD');
+
+let html = `
+<div class="summary-box" style="border-color:#3b82f6;">
+<div style="text-align:center;margin-bottom:15px;">
+<h2 style="color:#60a5fa;">🏠 বাসার ইলেকট্রিক লোড রিপোর্ট</h2>
+<p style="color:#94a3b8;font-size:.85em;">তারিখ: ${dateStr} | সময়: ${timeStr}</p>
+</div>
+
+<h3 style="color:#fbbf24;margin:15px 0 8px;">📋 ক্যাটাগরি অনুযায়ী লোড</h3>`;
+
+categories.forEach(cat => {
+let t = getCatTotals(cat);
+if(allItems[cat].length === 0) return;
+html += `
+<div style="background:#0f172a;border-radius:8px;padding:10px;margin-bottom:8px;">
+<h4 style="color:#60a5fa;">${catIcons[cat]} ${catNames[cat]}</h4>`;
+allItems[cat].forEach(item => {
+let daily = (item.watt * item.qty * item.hours) / 1000;
+html += `<div class="summary-row"><span>${item.name} (${item.watt}W × ${item.qty} × ${item.hours}h)</span><span>${daily.toFixed(3)} kWh/দিন</span></div>`;
+});
+html += `<div class="summary-row" style="color:#fbbf24;font-weight:bold;"><span>সাব-টোটাল:</span><span>${t.totalW}W | ${t.dailyKWh.toFixed(2)} kWh/দিন | ${t.monthlyKWh.toFixed(1)} kWh/মাস</span></div>
+</div>`;
+});
+
+html += `
+<div class="summary-row total" style="margin-top:15px;">
+<span>⚡ মোট পিক লোড:</span>
+<span>${total.totalW}W (${(total.totalW/1000).toFixed(2)} kW)</span>
+</div>
+<div class="summary-row total">
+<span>📊 দৈনিক খরচ:</span>
+<span>${total.dailyKWh.toFixed(2)} kWh</span>
+</div>
+<div class="summary-row total">
+<span>📊 মাসিক খরচ (${billingDays} দিন):</span>
+<span>${total.monthlyKWh.toFixed(1)} kWh (${(total.dailyKWh*billingDays).toFixed(1)} kWh)</span>
+</div>`;
+
+if(bill){
+html += `
+<h3 style="color:#22c55e;margin:20px 0 8px;">💰 বিল সামারি</h3>
+<div class="summary-row"><span>মোট ইউনিট:</span><span>${bill.totalUnits.toFixed(2)} kWh</span></div>
+<div class="summary-row"><span>এনার্জি চার্জ:</span><span>৳${bill.energyCharge.toFixed(2)}</span></div>
+<div class="summary-row"><span>ডিমান্ড চার্জ:</span><span>৳${bill.demandTotal.toFixed(2)}</span></div>
+<div class="summary-row"><span>মিটার ভাড়া:</span><span>৳${bill.meterRent.toFixed(2)}</span></div>
+<div class="summary-row"><span>ভ্যাট+ট্যাক্স:</span><span>৳${(bill.vat + bill.surcharge + bill.tax).toFixed(2)}</span></div>
+${bill.rebate > 0 ? `<div class="summary-row"><span>ছাড়:</span><span>-৳${bill.rebate.toFixed(2)}</span></div>` : ''}
+<div class="summary-row grand-total"><span>🧾 মোট বিল:</span><span>৳${bill.grandTotal.toFixed(2)}</span></div>
+<div class="summary-row"><span>গড় রেট:</span><span>৳${bill.avgRate.toFixed(2)}/kWh</span></div>
+<div class="summary-row"><span>দৈনিক গড়:</span><span>৳${(bill.grandTotal/bill.billingDays).toFixed(2)}/দিন</span></div>
+<div class="summary-row"><span>বার্ষিক আনুমানিক:</span><span>৳${(bill.grandTotal*12).toFixed(0)}/বছর</span></div>`;
+}
+
+// Pie chart text-based
+let catData = [];
+categories.forEach(cat => {
+let t = getCatTotals(cat);
+if(t.monthlyKWh > 0) catData.push({name: catNames[cat], icon: catIcons[cat], kWh: t.monthlyKWh, pct: total.monthlyKWh > 0 ? (t.monthlyKWh / total.monthlyKWh * 100) : 0});
+});
+catData.sort((a,b) => b.kWh - a.kWh);
+
+if(catData.length > 0){
+html += `<h3 style="color:#a78bfa;margin:20px 0 8px;">📊 খরচের অনুপাত</h3>`;
+let barColors = ['#3b82f6','#22c55e','#ef4444','#f59e0b','#8b5cf6','#ec4899','#06b6d4','#f97316','#14b8a6','#6366f1','#64748b','#84cc16'];
+catData.forEach((d,i) => {
+let color = barColors[i % barColors.length];
+html += `
+<div style="margin-bottom:6px;">
+<div style="display:flex;justify-content:space-between;font-size:.85em;margin-bottom:2px;">
+<span>${d.icon} ${d.name}</span>
+<span>${d.kWh.toFixed(1)} kWh (${d.pct.toFixed(1)}%)</span>
+</div>
+<div style="background:#0f172a;border-radius:4px;height:20px;overflow:hidden;">
+<div style="background:${color};height:100%;width:${d.pct}%;border-radius:4px;transition:width .5s;"></div>
+</div>
+</div>`;
+});
+}
+
+// Item count
+let totalItems = 0;
+categories.forEach(cat => {
+allItems[cat].forEach(item => totalItems += item.qty);
+});
+
+html += `
+<div style="margin-top:20px;padding-top:10px;border-top:2px solid #334155;">
+<div class="summary-row"><span>মোট ডিভাইস সংখ্যা:</span><span>${totalItems} টি</span></div>
+<div class="summary-row"><span>মোট ক্যাটাগরি ব্যবহৃত:</span><span>${catData.length} টি</span></div>
+<div class="summary-row"><span>সর্বোচ্চ খরচকারী:</span><span>${catData.length > 0 ? catData[0].icon + ' ' + catData[0].name + ' (' + catData[0].pct.toFixed(1) + '%)' : '-'}</span></div>
+</div>
+</div>`;
+
+document.getElementById('summaryContent').innerHTML = html;
+}
+
+// ==================== TAB MANAGEMENT ====================
+function showTab(tab){
+['load','ips','solar','bill','summary'].forEach(t => {
+document.getElementById('tab-' + t).classList.toggle('hidden', t !== tab);
+});
+document.querySelectorAll('.tab-btn').forEach((btn,i) => {
+let tabs = ['load','ips','solar','bill','summary'];
+btn.classList.toggle('active', tabs[i] === tab);
+});
+if(tab === 'summary') buildSummary();
+if(tab === 'bill') calcBill();
+if(tab === 'ips') calcIPS();
+if(tab === 'solar') calcSolar();
+}
+
+// ==================== COLLAPSIBLE SECTIONS ====================
+function toggleSection(id){
+let el = document.getElementById(id);
+let icon = document.getElementById(id + 'Icon');
+if(el.classList.contains('collapsed')){
+el.classList.remove('collapsed');
+if(icon) icon.classList.remove('collapsed');
+} else {
+el.classList.add('collapsed');
+if(icon) icon.classList.add('collapsed');
+}
+}
+
+// ==================== SAVE/LOAD ====================
+function autoSave(){
+try{
+let data = {
+items: allItems,
+slabs: slabs,
+settings: {
+billingDays: document.getElementById('billingDays').value,
+demandCharge: document.getElementById('demandCharge').value,
+connectedLoad: document.getElementById('connectedLoad').value,
+meterRent: document.getElementById('meterRent').value,
+serviceCharge: document.getElementById('serviceCharge').value,
+vatPercent: document.getElementById('vatPercent').value,
+surchargePercent: document.getElementById('surchargePercent').value,
+taxPercent: document.getElementById('taxPercent').value,
+rebateAmount: document.getElementById('rebateAmount').value,
+batteryAh: document.getElementById('batteryAh').value,
+batteryCount: document.getElementById('batteryCount').value,
+batteryVolt: document.getElementById('batteryVolt').value,
+chargingAmp: document.getElementById('chargingAmp').value,
+ipsLoad: document.getElementById('ipsLoad').value,
+ipsEfficiency: document.getElementById('ipsEfficiency').value,
+ipsDOD: document.getElementById('ipsDOD').value,
+batteryConnection: document.getElementById('batteryConnection').value,
+solarPanelWatt: document.getElementById('solarPanelWatt').value,
+solarPanelCount: document.getElementById('solarPanelCount').value,
+solarPeakHours: document.getElementById('solarPeakHours').value,
+solarLoss: document.getElementById('solarLoss').value,
+netMetering: document.getElementById('netMetering').value,
+solarBattery: document.getElementById('solarBattery').value,
+solarBatteryAh: document.getElementById('solarBatteryAh').value,
+solarBatteryCount: document.getElementById('solarBatteryCount').value,
+solarInvestment: document.getElementById('solarInvestment').value,
+solarUnitRate: document.getElementById('solarUnitRate').value,
+},
+counter: itemCounter
+};
+localStorage.setItem('electricCalcData', JSON.stringify(data));
+}catch(e){}
+}
+
+function saveData(){
+autoSave();
+alert('✅ ডাটা সেভ হয়েছে!');
+}
+
+function loadData(){
+try{
+let saved = localStorage.getItem('electricCalcData');
+if(!saved){alert('কোনো সেভ করা ডাটা নেই!');return;}
+let data = JSON.parse(saved);
+allItems = data.items || {};
+categories.forEach(c => { if(!allItems[c]) allItems[c] = []; });
+itemCounter = data.counter || 0;
+if(data.slabs) slabs = data.slabs;
+initSlabs();
+
+if(data.settings){
+let s = data.settings;
+Object.keys(s).forEach(key => {
+let el = document.getElementById(key);
+if(el) el.value = s[key];
+});
+}
+
+categories.forEach(cat => renderItems(cat));
+recalcAll();
+alert('✅ ডাটা লোড হয়েছে!');
+}catch(e){alert('ডাটা লোড করতে সমস্যা!');}
+}
+
+// ==================== INIT ====================
+function init(){
+initSlabs();
+
+// Try auto-load
+try{
+let saved = localStorage.getItem('electricCalcData');
+if(saved){
+let data = JSON.parse(saved);
+allItems = data.items || {};
+categories.forEach(c => { if(!allItems[c]) allItems[c] = []; });
+itemCounter = data.counter || 0;
+if(data.slabs) slabs = data.slabs;
+initSlabs();
+if(data.settings){
+let s = data.settings;
+Object.keys(s).forEach(key => {
+let el = document.getElementById(key);
+if(el) el.value = s[key];
+});
+}
+categories.forEach(cat => renderItems(cat));
+}
+}catch(e){}
+
+recalcAll();
+}
+
+init();
+</script>
+</body>
+</html>
